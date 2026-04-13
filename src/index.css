@@ -89,6 +89,151 @@
 }
 .screen-off { animation: screenOff 0.35s ease-in forwards; }
 
+/* Enhanced CRT Turn-Off Animation - More Intense */
+@keyframes crtTurnOff {
+  0% { 
+    transform: scaleY(1) scaleX(1); 
+    filter: brightness(1) contrast(1) saturate(1);
+    opacity: 1;
+  }
+  8% {
+    transform: scaleY(1) scaleX(1.02);
+    filter: brightness(3) contrast(2) saturate(2);
+  }
+  20% { 
+    transform: scaleY(0.015) scaleX(1); 
+    filter: brightness(8) contrast(3) saturate(3);
+  }
+  35% { 
+    transform: scaleY(0.005) scaleX(0.7); 
+    filter: brightness(15) contrast(4) saturate(4);
+  }
+  50% {
+    transform: scaleY(0.002) scaleX(0.2);
+    filter: brightness(20) contrast(5) saturate(5);
+    opacity: 0.9;
+  }
+  100% { 
+    transform: scaleY(0) scaleX(0); 
+    filter: brightness(0) contrast(0) saturate(0);
+    opacity: 0;
+  }
+}
+
+.crt-turn-off {
+  animation: crtTurnOff 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Digital Glitch Lines - Intense */
+@keyframes glitchLines {
+  0% { transform: translateY(-100%); opacity: 0; }
+  10% { opacity: 1; }
+  30% { transform: translateY(100vh) skewX(20deg); }
+  45% { transform: translateY(-30vh) skewX(-15deg); opacity: 1; }
+  60% { transform: translateY(100vh) skewX(10deg); }
+  100% { transform: translateY(100vh) skewX(0); opacity: 0; }
+}
+
+@keyframes glitchLineFast {
+  0% { transform: translateY(-100%) scaleX(0.5); opacity: 0; }
+  5% { opacity: 1; transform: translateY(10vh) scaleX(1.5); }
+  15% { transform: translateY(50vh) scaleX(0.8); }
+  30% { transform: translateY(120vh) scaleX(1.2); opacity: 0.8; }
+  100% { transform: translateY(200vh) scaleX(1); opacity: 0; }
+}
+
+.glitch-line {
+  position: absolute;
+  left: -10%;
+  right: -10%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--t-color, #ffb000), var(--t-color, #ffb000), transparent);
+  box-shadow: 
+    0 0 10px var(--t-color, #ffb000), 
+    0 0 30px var(--t-color, #ffb000),
+    0 0 60px var(--t-color, #ffb000);
+  animation: glitchLines 0.4s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+}
+
+.glitch-line-fast {
+  animation: glitchLineFast 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Flash Effect - Intense */
+@keyframes flashEffect {
+  0% { opacity: 0; }
+  15% { opacity: 1; }
+  30% { opacity: 0.3; }
+  45% { opacity: 0.9; }
+  60% { opacity: 0.2; }
+  100% { opacity: 0; }
+}
+
+@keyframes colorFlash {
+  0%, 100% { opacity: 0; }
+  20% { opacity: 0.7; background: var(--t-color, #ffb000); }
+  40% { opacity: 0.3; }
+  60% { opacity: 0.5; background: #fff; }
+}
+
+.crt-flash {
+  position: absolute;
+  inset: 0;
+  background: white;
+  pointer-events: none;
+  z-index: 100;
+  animation: flashEffect 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+}
+
+.crt-flash-color {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 99;
+  mix-blend-mode: overlay;
+  animation: colorFlash 0.6s ease-out forwards;
+}
+
+/* Digital Pixelate Transition - Intense */
+@keyframes pixelateIn {
+  0% {
+    opacity: 0;
+    filter: blur(40px) brightness(3) contrast(2);
+    transform: scale(1.2);
+  }
+  20% {
+    opacity: 0.2;
+    filter: blur(30px) brightness(4) contrast(3);
+  }
+  40% {
+    opacity: 0.4;
+    filter: blur(20px) brightness(2) contrast(2);
+  }
+  70% {
+    filter: blur(8px) brightness(1.5) contrast(1.5);
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0) brightness(1) contrast(1);
+    transform: scale(1);
+  }
+}
+
+.digital-emerge {
+  animation: pixelateIn 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Scan Collapse Effect */
+@keyframes scanCollapse {
+  0% { clip-path: inset(0 0 0 0); opacity: 1; }
+  50% { clip-path: inset(40% 0 40% 0); opacity: 0.8; }
+  100% { clip-path: inset(50% 0 50% 0); opacity: 0; }
+}
+
+.scan-collapse {
+  animation: scanCollapse 0.5s cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
+}
+
 .plastic-texture {
   background-image:
     url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");

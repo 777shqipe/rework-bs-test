@@ -15,6 +15,8 @@ export default function App() {
   const [autoProceeding, setAutoProceeding] = useState(false);
   const [terminalColor, setTerminalColor] = useState('amber');
   const [showModernHint, setShowModernHint] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [showGlitchOverlay, setShowGlitchOverlay] = useState(false);
 
   const COLOR_PROFILES = useMemo(() => ({
     amber: { main: '#ffb000', glow: 'rgba(255,176,0,0.2)', glowStrong: 'rgba(255,176,0,0.4)', beam: 'rgba(255,176,0,0.01)', beamStrong: 'rgba(255,176,0,0.03)' },
@@ -117,14 +119,25 @@ export default function App() {
       setAutoProceeding(false);
       // Se ha già fatto il boot, salta l'animazione e va direto a ready
     } else {
-      setScreenAnim('screen-off');
+      // Avvia la transizione epica CRT → Modern
+      setIsTransitioning(true);
+      setShowGlitchOverlay(true);
+      setScreenAnim('crt-turn-off');
+      
+      // Dopo l'animazione CRT turn-off, mostra la vista moderna
       setTimeout(() => {
         setBootPhase('off');
         setScreenAnim('');
         setBootLog([]);
         setAutoProceeding(false);
         setSelectedService(null);
-      }, 400);
+        setShowGlitchOverlay(false);
+      }, 600);
+      
+      // Resetta lo stato di transizione dopo che tutto è finito
+      setTimeout(() => {
+        setIsTransitioning(false);
+      }, 1400);
     }
   }, [bootPhase]);
 
@@ -227,13 +240,60 @@ export default function App() {
           {/* ── SCREEN AREA ── */}
           <div className="flex-1 relative" style={{ minHeight: 0, marginLeft: bootPhase === 'off' ? 0 : '8px', marginRight: bootPhase === 'off' ? 0 : '8px' }}>
             
+            {/* Glitch Overlay - appears during transition - INTENSE */}
+            {showGlitchOverlay && (
+              <div className="absolute inset-0 z-50 overflow-hidden pointer-events-none">
+                {/* Flash effects */}
+                <div className="crt-flash" />
+                <div className="crt-flash-color" style={{ '--t-color': profile.main }} />
+                {/* Animated glitch lines - many more for intensity */}
+                <div className="glitch-line glitch-line-fast" style={{ top: '10%', animationDelay: '0.02s', height: '4px' }} />
+                <div className="glitch-line" style={{ top: '25%', animationDelay: '0.05s', height: '3px' }} />
+                <div className="glitch-line glitch-line-fast" style={{ top: '40%', animationDelay: '0.08s' }} />
+                <div className="glitch-line" style={{ top: '55%', animationDelay: '0.12s', height: '5px' }} />
+                <div className="glitch-line glitch-line-fast" style={{ top: '68%', animationDelay: '0.16s', height: '2px' }} />
+                <div className="glitch-line" style={{ top: '80%', animationDelay: '0.20s', height: '3px' }} />
+                <div className="glitch-line glitch-line-fast" style={{ top: '15%', animationDelay: '0.25s' }} />
+                <div className="glitch-line" style={{ top: '92%', animationDelay: '0.30s', height: '4px' }} />
+                <div className="glitch-line glitch-line-fast" style={{ top: '33%', animationDelay: '0.35s', height: '2px' }} />
+                <div className="glitch-line" style={{ top: '48%', animationDelay: '0.40s', height: '6px' }} />
+                {/* Horizontal noise bars */}
+                <div className="absolute left-0 right-0 h-8 opacity-60"
+                  style={{ 
+                    top: '30%', 
+                    background: `linear-gradient(90deg, transparent, ${profile.main}66, transparent)`,
+                    animation: 'glitchLines 0.3s ease-out forwards',
+                    animationDelay: '0.1s'
+                  }} />
+                <div className="absolute left-0 right-0 h-6 opacity-50"
+                  style={{ 
+                    top: '60%', 
+                    background: `linear-gradient(90deg, transparent, ${profile.main}44, transparent)`,
+                    animation: 'glitchLines 0.35s ease-out forwards',
+                    animationDelay: '0.22s'
+                  }} />
+                {/* Digital noise overlay */}
+                <div className="absolute inset-0 opacity-50"
+                  style={{
+                    background: `repeating-linear-gradient(0deg, transparent, transparent 2px, ${profile.main}33 2px, ${profile.main}33 4px)`,
+                    animation: 'scanCollapse 0.4s ease-out forwards'
+                  }} />
+                {/* Vignette darkening */}
+                <div className="absolute inset-0"
+                  style={{
+                    background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.8) 100%)',
+                    animation: 'scanCollapse 0.5s ease-out forwards'
+                  }} />
+              </div>
+            )}
+            
             {/* OFF STATE: claymorphism site — fills entire screen area, no bezel */}
             {bootPhase === 'off' && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.4, duration: 0.5 }}
-                className="absolute inset-0 overflow-y-auto modern-mode"
+                className={`absolute inset-0 overflow-y-auto modern-mode ${isTransitioning ? 'digital-emerge' : ''}`}
                 style={{ background: '#f5f2ec' }}>
                 <ModernSite togglePower={togglePower} currentPage={currentPage} setCurrentPage={setCurrentPage} />
               </motion.div>
@@ -725,20 +785,79 @@ function Progetti({ setCurrentPage }) {
 
 function Servizi({ setCurrentPage, onSelectService }) {
   const [selectedService, setSelectedService] = useState(null);
+  const [selectedPackage, setSelectedPackage] = useState(null);
 
   const servizi = [
-    { id: '01', title: 'Siti Web', items: ['Vetrina', 'E-commerce', 'Landing Page'], 
-      details: 'Creiamo siti web che funzionano alla grande. Dal semplice sito vetrina al negozio online completo, pensiamo a tutto noi: grafica, testi, ottimizzazione per Google. Il tuo sito sarà veloce, facile da usare e pronto per far crescere il tuo business.' },
-    { id: '02', title: 'Marketing', items: ['Meta Ads', 'Google Ads', 'Strategy'],
-      details: 'Vuoi più clienti? Ti aiutiamo a trovarli online. Gestiamo campagne pubblicitarie su Facebook, Instagram e Google che portano risultati veri, non solo numeri. Tu ci dici chi è il tuo cliente ideale, noi lo andiamo a prendere.' },
-    { id: '03', title: 'Foto & Video', items: ['Shooting', 'Corporate', 'Social'],
-      details: 'La tua immagine conta. Offriamo servizi fotografici professionali, video aziendali e contenuti per i social per farti distinguere dalla concorrenza. Che tu debba rifare le foto del team o girare un video, ci pensiamo noi.' },
-    { id: '04', title: 'Grafica', items: ['Brand Identity', 'Copy SEO', 'Design'],
-      details: 'Il tuo marchio merita di brillare. Creiamo loghi, identità visive e testi che funzionano per il tuo business. Dal restyling del marchio alla scrittura del sito, curiamo ogni dettaglio per farti fare bella figura.' },
-    { id: '05', title: 'Software', items: ['CRM', 'Automazioni', 'Hosting'],
-      details: 'Hai processi complicati che potrebbero essere più semplici? Sviluppiamo software su misura: gestionali, CRM, sistemi di prenotazione e tanto altro. Niente pacchetti pronti che non funzionano, solo cose fatte apposta per te.' },
-    { id: '06', title: 'Case Famiglia', items: ['Pacchetto 6 Mesi', 'Social', 'Campagne'],
-      details: 'Un servizio dedicato alle strutture che ospitano famiglie in difficoltà. Gestiamo tutto: sito, social, campagne pubblicitarie e prenotazioni. Un pacchetto completo per far crescere la tua struttura senza pensieri.' },
+    { 
+      id: '01', 
+      title: 'Case Famiglia', 
+      subtitle: 'Pacchetti completi',
+      items: ['6 Mesi', '3 Mesi', 'Campagna Spot'],
+      packages: [
+        { name: 'Pacchetto Completo 6 Mesi', desc: 'Soluzione completa per 6 mesi: sito, social, campagne e prenotazioni' },
+        { name: 'Pacchetto Completo 3 Mesi', desc: 'Soluzione completa per 3 mesi: sito, social, campagne e prenotazioni' },
+        { name: 'Pacchetto Campagna Spot 6 Mesi', desc: 'Campagna spot per 6 mesi con gestione completa' }
+      ],
+      details: 'Servizio dedicato alle strutture che ospitano famiglie in difficoltà. Gestiamo tutto: sito web, social media, campagne pubblicitarie mirate e sistema di prenotazioni. Pacchetti flessibili da 3 o 6 mesi.' 
+    },
+    { 
+      id: '02', 
+      title: 'Siti e Landing', 
+      subtitle: 'Web professionali',
+      items: ['Sito 5-10 Pagine', 'Landing Page'],
+      packages: [
+        { name: 'Sito Web (5-10 pagine)', desc: 'Sito web completo con 5-10 pagine, responsive e ottimizzato' },
+        { name: 'Landing Page (1 pagina)', desc: 'Landing page ottimizzata per conversioni e lead generation' }
+      ],
+      details: 'Siti web professionali e landing page ottimizzate per le conversioni. Dal sito aziendale completo alla landing page mirata, tutto responsive e pronto per Google.' 
+    },
+    { 
+      id: '03', 
+      title: 'Marketing & ADS', 
+      subtitle: 'Campagne mirate',
+      items: ['Analisi Marketing', 'Meta Ads', 'Google Ads'],
+      packages: [
+        { name: 'Analisi Marketing ADS', desc: 'Analisi completa per campagne pubblicitarie efficaci' },
+        { name: 'Meta Ads / Altri Canali', desc: 'Campagne su Meta e altri canali social' },
+        { name: 'Google Ads', desc: 'Campagne pubblicitarie su Google Search e Display' }
+      ],
+      details: 'Strategie di marketing digitale e campagne pubblicitarie mirate. Analisi, pianificazione e gestione completa delle tue campagne su Meta e Google.' 
+    },
+    { 
+      id: '04', 
+      title: 'Foto & Video', 
+      subtitle: 'Contenuti professionali',
+      items: ['Fotografico', 'Video Drone', 'Video Staff'],
+      packages: [
+        { name: 'Servizio Fotografico', desc: 'Servizi fotografici professionali per aziende e prodotti' },
+        { name: 'Video - Drone', desc: 'Riprese video aeree con drone professionale' },
+        { name: 'Video - Staff', desc: 'Riprese video con staff professionale' }
+      ],
+      details: 'Servizi professionali di fotografia e video per la tua azienda. Shooting fotografici, riprese con drone, video corporate e contenuti per i social.' 
+    },
+    { 
+      id: '05', 
+      title: 'Grafica & Copy', 
+      subtitle: 'Design e testi',
+      items: ['Grafica', 'Copywriting'],
+      packages: [
+        { name: 'Grafica', desc: 'Servizi di design grafico, visual e brand identity' },
+        { name: 'Copywriting', desc: 'Servizi di scrittura, comunicazione e testi SEO' }
+      ],
+      details: 'Servizi di design grafico e copywriting per la tua comunicazione. Loghi, identità visiva, materiali grafici e testi che parlano al tuo pubblico.' 
+    },
+    { 
+      id: '06', 
+      title: 'Digitali Avanzati', 
+      subtitle: 'Soluzioni custom',
+      items: ['Gestionali', 'Applicazioni', 'API'],
+      packages: [
+        { name: 'Gestionali', desc: 'Sistemi gestionali personalizzati per la tua azienda' },
+        { name: 'Applicazioni', desc: 'Applicazioni web e mobile su misura' },
+        { name: 'Collegamento API', desc: 'Integrazioni e collegamenti API con altri servizi' }
+      ],
+      details: 'Soluzioni digitali avanzate per la gestione aziendale. Software su misura, gestionali, applicazioni web/mobile e integrazioni API.' 
+    },
   ];
 
   if (selectedService) {
@@ -747,7 +866,7 @@ function Servizi({ setCurrentPage, onSelectService }) {
         <div className="border-b-2 border-double border-[var(--t-color)] opacity-70 mb-4 pb-2 text-xl sm:text-3xl font-bold shrink-0 tracking-wider flex justify-between items-center">
           <span>{selectedService.id} — {selectedService.title}</span>
           <motion.button
-            onClick={() => setSelectedService(null)}
+            onClick={() => { setSelectedService(null); setSelectedPackage(null); }}
             className="text-sm sm:text-lg hover:bg-[var(--t-color)] hover:text-[#080c08] transition-all px-3 py-1 border border-[var(--t-color)]"
             whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
           >
@@ -758,34 +877,76 @@ function Servizi({ setCurrentPage, onSelectService }) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ type: "spring", stiffness: 200 }}
-          className="flex-1 flex flex-col justify-center max-w-3xl space-y-6"
+          className="flex-1 flex flex-col overflow-hidden"
         >
-          <div className="text-2xl sm:text-3xl font-bold text-[var(--t-color)] text-glow-strong mb-4">
-            {selectedService.title}
-          </div>
-          <div className="p-6 sm:p-8 border-2 border-[var(--t-color)] opacity-70 space-y-4">
-            <p className="text-lg sm:text-xl text-[var(--t-color)] leading-relaxed">
-              {selectedService.details}
-            </p>
-          </div>
-          <div className="space-y-2">
-            <div className="text-sm sm:text-lg text-[var(--t-color)] opacity-70 uppercase font-bold">Cosa include:</div>
-            <ul className="space-y-2">
-              {selectedService.items.map((item, j) => (
-                <li key={j} className="flex items-center gap-3 text-base sm:text-xl text-[var(--t-color)]">
-                  <span className="text-glow-strong">▸</span>
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <motion.button
-            onClick={() => { onSelectService(selectedService.title); setCurrentPage(pages.CONTATTI); }}
-            className="text-[var(--t-color)] text-glow-strong font-bold text-xl sm:text-2xl cursor-pointer hover:bg-[var(--t-color)] hover:text-[#080c08] transition-all px-6 py-4 border-2 border-[var(--t-color)] uppercase"
-            whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-          >
-            ▸ RICHIEDI QUESTO SERVIZIO
-          </motion.button>
+          {!selectedPackage ? (
+            <>
+              <div className="text-xl sm:text-2xl font-bold text-[var(--t-color)] text-glow-strong mb-4">
+                {selectedService.subtitle}
+              </div>
+              <div className="p-4 sm:p-6 border-2 border-[var(--t-color)] opacity-70 mb-4">
+                <p className="text-base sm:text-lg text-[var(--t-color)] leading-relaxed">
+                  {selectedService.details}
+                </p>
+              </div>
+              <div className="text-sm sm:text-lg text-[var(--t-color)] opacity-70 uppercase font-bold mb-3">
+                Scegli un pacchetto:
+              </div>
+              <div className="flex-1 overflow-y-auto space-y-3 pr-2">
+                {selectedService.packages.map((pkg, idx) => (
+                  <motion.div
+                    key={idx}
+                    className="border-2 border-[var(--t-color)] opacity-70 p-4 cursor-pointer hover:bg-[var(--t-color)] hover:text-[#080c08] transition-all group"
+                    onClick={() => setSelectedPackage(pkg)}
+                    whileHover={{ scale: 1.01, x: 4 }}
+                    whileTap={{ scale: 0.99 }}
+                  >
+                    <div className="flex justify-between items-center">
+                      <span className="text-base sm:text-lg font-bold">{pkg.name}</span>
+                      <span className="text-xs sm:text-sm opacity-0 group-hover:opacity-100 transition-opacity">▸ Seleziona</span>
+                    </div>
+                    <p className="text-xs sm:text-sm opacity-70 mt-1 group-hover:opacity-100">{pkg.desc}</p>
+                  </motion.div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="flex-1 flex flex-col"
+            >
+              <div className="text-xl sm:text-2xl font-bold text-[var(--t-color)] text-glow-strong mb-4">
+                {selectedPackage.name}
+              </div>
+              <div className="p-4 sm:p-6 border-2 border-[var(--t-color)] opacity-70 mb-4 flex-1">
+                <p className="text-base sm:text-lg text-[var(--t-color)] leading-relaxed">
+                  {selectedPackage.desc}
+                </p>
+                <div className="mt-6 pt-4 border-t border-[var(--t-color)] opacity-50">
+                  <p className="text-sm text-[var(--t-color)] opacity-70">
+                    Contattaci per un preventivo personalizzato su questo pacchetto.
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <motion.button
+                  onClick={() => setSelectedPackage(null)}
+                  className="text-[var(--t-color)] font-bold text-base cursor-pointer hover:bg-[var(--t-color)] hover:text-[#080c08] transition-all px-4 py-3 border-2 border-[var(--t-color)]"
+                  whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                >
+                  ◂ Altri pacchetti
+                </motion.button>
+                <motion.button
+                  onClick={() => { onSelectService(selectedPackage.name); setCurrentPage(pages.CONTATTI); }}
+                  className="flex-1 text-[var(--t-color)] text-glow-strong font-bold text-base cursor-pointer hover:bg-[var(--t-color)] hover:text-[#080c08] transition-all px-4 py-3 border-2 border-[var(--t-color)] uppercase"
+                  whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                >
+                  ▸ Richiedi preventivo
+                </motion.button>
+              </div>
+            </motion.div>
+          )}
         </motion.div>
         <BackButton onClick={() => setCurrentPage(pages.HOME)} />
       </div>
@@ -1416,30 +1577,72 @@ function ModernSite({ togglePower, currentPage, setCurrentPage }) {
   const services = useMemo(() => [
     {
       icon: <IconWeb />,
-      title: 'Siti Web',
-      desc: 'Vetrine, e-commerce, landing page. Cose che funzionano, non cose che fanno solo scena.',
-      details: 'Creiamo siti web veloci, chiari e pensati per chi li visita. Dalla semplice pagina informativa al negozio online, curiamo ogni dettaglio perché il tuo sito lavori per te — non il contrario.',
+      title: 'Case Famiglia',
+      desc: 'Pacchetti completi per strutture che ospitano famiglie in difficoltà.',
+      details: 'Servizio dedicato alle strutture che ospitano famiglie in difficoltà. Gestiamo tutto: sito web, social media, campagne pubblicitarie mirate e sistema di prenotazioni.',
+      packages: [
+        { name: '6 Mesi', desc: 'Soluzione completa per 6 mesi: sito, social, campagne e prenotazioni' },
+        { name: '3 Mesi', desc: 'Soluzione completa per 3 mesi: sito, social, campagne e prenotazioni' },
+        { name: 'Campagna Spot', desc: 'Campagna spot per 6 mesi con gestione completa' }
+      ],
       span: 'md:col-span-2'
     },
     {
-      icon: <IconCode />,
-      title: 'Software',
-      desc: 'Gestionali, CRM, app web. Costruiti per il modo in cui lavori tu, non il contrario.',
-      details: 'Sviluppiamo software su misura per la tua azienda. Niente licenze costose, niente funzionalità inutili — solo strumenti che risolvono problemi reali, costruiti insieme a te.',
+      icon: <IconWeb />,
+      title: 'Siti e Landing',
+      desc: 'Siti web professionali e landing page ottimizzate per conversioni.',
+      details: 'Siti web professionali e landing page ottimizzate per le conversioni. Dal sito aziendale completo alla landing page mirata, tutto responsive e pronto per Google.',
+      packages: [
+        { name: 'Sito 5-10 Pagine', desc: 'Sito web completo con 5-10 pagine, responsive e ottimizzato' },
+        { name: 'Landing Page', desc: 'Landing page ottimizzata per conversioni e lead generation' }
+      ],
       span: ''
     },
     {
       icon: <IconChart />,
-      title: 'Marketing',
-      desc: 'Campagne su Meta e Google. Risultati misurabili, non promesse.',
-      details: 'Gestiamo la tua presenza online dove conta: Facebook, Instagram, Google. Ti aiutiamo a raggiungere le persone giuste, con messaggi chiari e budget sotto controllo.',
+      title: 'Marketing & ADS',
+      desc: 'Analisi, Meta Ads e Google Ads. Strategie che portano risultati.',
+      details: 'Strategie di marketing digitale e campagne pubblicitarie mirate. Analisi, pianificazione e gestione completa delle tue campagne su Meta e Google.',
+      packages: [
+        { name: 'Analisi Marketing', desc: 'Analisi completa per campagne pubblicitarie efficaci' },
+        { name: 'Meta Ads', desc: 'Campagne su Meta e altri canali social' },
+        { name: 'Google Ads', desc: 'Campagne pubblicitarie su Google Search e Display' }
+      ],
       span: ''
     },
     {
       icon: <IconCamera />,
-      title: 'Foto, Video & Brand',
-      desc: 'Immagini, video, identità visiva. Perché la prima impressione conta.',
-      details: 'Shooting fotografici, video aziendali, logo e restyling del marchio. Ci occupiamo dell\'immagine della tua azienda con la stessa cura che metteresti tu.',
+      title: 'Foto & Video',
+      desc: 'Servizi fotografici e video professionali per la tua azienda.',
+      details: 'Servizi professionali di fotografia e video per la tua azienda. Shooting fotografici, riprese con drone, video corporate e contenuti per i social.',
+      packages: [
+        { name: 'Servizio Fotografico', desc: 'Servizi fotografici professionali per aziende e prodotti' },
+        { name: 'Video Drone', desc: 'Riprese video aeree con drone professionale' },
+        { name: 'Video Staff', desc: 'Riprese video con staff professionale' }
+      ],
+      span: ''
+    },
+    {
+      icon: <IconCode />,
+      title: 'Grafica & Copy',
+      desc: 'Design grafico e copywriting per la tua comunicazione.',
+      details: 'Servizi di design grafico e copywriting per la tua comunicazione. Loghi, identità visiva, materiali grafici e testi che parlano al tuo pubblico.',
+      packages: [
+        { name: 'Grafica', desc: 'Servizi di design grafico, visual e brand identity' },
+        { name: 'Copywriting', desc: 'Servizi di scrittura, comunicazione e testi SEO' }
+      ],
+      span: ''
+    },
+    {
+      icon: <IconCode />,
+      title: 'Digitali Avanzati',
+      desc: 'Gestionali, applicazioni e integrazioni API su misura.',
+      details: 'Soluzioni digitali avanzate per la gestione aziendale. Software su misura, gestionali, applicazioni web/mobile e integrazioni API.',
+      packages: [
+        { name: 'Gestionali', desc: 'Sistemi gestionali personalizzati per la tua azienda' },
+        { name: 'Applicazioni', desc: 'Applicazioni web e mobile su misura' },
+        { name: 'Collegamento API', desc: 'Integrazioni e collegamenti API con altri servizi' }
+      ],
       span: 'md:col-span-2'
     },
   ], []);
@@ -1481,33 +1684,53 @@ function ModernSite({ togglePower, currentPage, setCurrentPage }) {
   if (selectedService) {
     return (
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        className="p-6 sm:p-10 lg:p-20 h-full flex flex-col font-sans modern-mode relative"
+        className="p-6 sm:p-10 lg:p-20 h-full flex flex-col font-sans modern-mode relative overflow-y-auto"
         style={{ background: '#f5f2ec' }}>
         <div className="absolute inset-0 crt-glitch-overlay" />
-        <div className="modern-crt-flicker">
-          <div className="max-w-3xl mx-auto">
-            <motion.button onClick={() => setSelectedService(null)}
-              className="clay-btn px-6 py-3 mb-8 text-sm font-bold !rounded-xl text-[#3d3828] flex items-center gap-2"
-              whileHover={{ x: -5 }} whileTap={{ scale: 0.95 }}>
-              ← Torna ai servizi
-            </motion.button>
-            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 200 }}
-              className="clay-card p-10 sm:p-14">
-              <div className="text-6xl mb-6">{selectedService.icon}</div>
-              <h2 className="text-4xl sm:text-5xl font-black text-[#2d2818] mb-6 tracking-tight">{selectedService.title}</h2>
-              <p className="text-xl leading-relaxed text-[#6a6050] font-medium mb-8">{selectedService.details}</p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <button onClick={() => { setSelectedService(null); setShowContactForm(true); }}
-                  className="clay-btn px-8 py-4 text-lg font-bold !rounded-2xl text-[#3d3828] bg-white hover:scale-105 transition-transform">
-                  Richiedi questo servizio →
-                </button>
-                <button onClick={() => setSelectedService(null)}
-                  className="clay-btn px-8 py-4 text-lg font-bold !rounded-2xl text-[#6a6050]">
-                  Guarda gli altri
-                </button>
+        <div className="modern-crt-flicker max-w-4xl mx-auto w-full">
+          <motion.button onClick={() => setSelectedService(null)}
+            className="clay-btn px-6 py-3 mb-8 text-sm font-bold !rounded-xl text-[#3d3828] flex items-center gap-2"
+            whileHover={{ x: -5 }} whileTap={{ scale: 0.95 }}>
+            ← Torna ai servizi
+          </motion.button>
+          <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 200 }}>
+            <div className="clay-card p-8 sm:p-12 mb-8">
+              <div className="text-5xl mb-4">{selectedService.icon}</div>
+              <h2 className="text-3xl sm:text-4xl font-black text-[#2d2818] mb-4 tracking-tight">{selectedService.title}</h2>
+              <p className="text-lg leading-relaxed text-[#6a6050] font-medium">{selectedService.details}</p>
+            </div>
+            
+            {/* Pacchetti disponibili */}
+            <div className="mb-6">
+              <h3 className="text-xl font-bold text-[#2d2818] mb-4 px-2">Scegli il pacchetto:</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {selectedService.packages?.map((pkg, idx) => (
+                  <motion.div
+                    key={idx}
+                    className="clay-card p-6 cursor-pointer group hover:scale-[1.02] transition-transform"
+                    onClick={() => { setSelectedService(null); setFormData(prev => ({ ...prev, servizio: `${selectedService.title} - ${pkg.name}` })); setShowContactForm(true); }}
+                    whileHover={{ y: -4 }} whileTap={{ scale: 0.98 }}>
+                    <h4 className="text-lg font-black text-[#2d2818] mb-2 group-hover:text-[#7c6f5b] transition-colors">{pkg.name}</h4>
+                    <p className="text-sm text-[#6a6050] leading-relaxed">{pkg.desc}</p>
+                    <div className="mt-4 text-xs font-bold text-[#7c6f5b] opacity-0 group-hover:opacity-100 transition-opacity">
+                      Richiedi preventivo →
+                    </div>
+                  </motion.div>
+                ))}
               </div>
-            </motion.div>
-          </div>
+            </div>
+            
+            <div className="flex gap-4 px-2">
+              <button onClick={() => { setSelectedService(null); setShowContactForm(true); setFormData(prev => ({ ...prev, servizio: selectedService.title })); }}
+                className="clay-btn px-6 py-3 text-base font-bold !rounded-2xl text-[#3d3828] bg-white hover:scale-105 transition-transform">
+                Richiedi info generale →
+              </button>
+              <button onClick={() => setSelectedService(null)}
+                className="clay-btn px-6 py-3 text-base font-bold !rounded-2xl text-[#6a6050]">
+                Altri servizi
+              </button>
+            </div>
+          </motion.div>
         </div>
       </motion.div>
     );
