@@ -739,19 +739,138 @@ function Home({ setCurrentPage }) {
 }
 
 function Progetti({ setCurrentPage }) {
+  const [selectedProject, setSelectedProject] = useState(null);
+
   const projects = [
-    { n: 'Gest. Cantina', t: 'Gestionale', y: '2025' },
-    { n: 'CRM Magazzino', t: 'Gestionale', y: '2024' },
-    { n: 'BPresenze', t: 'Gestionale', y: '2024' },
-    { n: 'Autodemolizioni', t: 'Gestionale', y: '2024' },
-    { n: '7Lakes Aparthotel', t: 'Sito Web', y: '2024' },
-    { n: 'Salute a Domicilio', t: 'Sito Web', y: '2024' },
-    { n: 'CRM Task&Progetti', t: 'Gestionale', y: '2024' },
-    { n: 'My Place Malpensa', t: 'Sito Web', y: '2024' },
-    { n: 'Marazzato Moto', t: 'Sito Web', y: '2024' },
-    { n: 'Villa Katia', t: 'Casa Famiglia', y: '2024' },
-    { n: 'Quercia', t: 'Casa Famiglia', y: '2024' },
+    { 
+      n: 'Sistema Gestione Cantina', 
+      t: 'Gestionale', 
+      y: '2025',
+      desc: 'Sistema di gestione vitivinicolo completo per cantina con vendita online di esperienze, gestione coupon regali e spedizioni internazionali.'
+    },
+    { 
+      n: 'CRM Magazzino', 
+      t: 'Gestionale', 
+      y: '2024',
+      desc: 'Sistema gestionale su misura per gestione magazzino, stoccaggio e spedizioni con ottimizzazione logistica avanzata.'
+    },
+    { 
+      n: 'BPres Presenze', 
+      t: 'Gestionale', 
+      y: '2024',
+      desc: 'Sistema presenze completo per gestire ingressi, uscite, pause. Calcolo permessi automatici e richiesta ferie/malattia con approvazione via email.'
+    },
+    { 
+      n: 'Sistema Autodemolizioni', 
+      t: 'CRM', 
+      y: '2024',
+      desc: 'CRM completo per pratiche bonifica, registrazione portali statali, API Rentri, vendita componenti, gestione serbatoi e controllo codici CER.'
+    },
+    { 
+      n: '7Lakes Aparthotel', 
+      t: 'Sito Web', 
+      y: '2024',
+      desc: 'Sito web con shooting drone per tour virtuale, collegamento Octorate per booking engine centralizzato con Booking.com e Airbnb.'
+    },
+    { 
+      n: 'Salute a Domicilio', 
+      t: 'Sito Web', 
+      y: '2024',
+      desc: 'Sito web, analisi marketing intelligence con Sunlight Marketing, landing page pubblicitarie e campagne Google Search + retargeting social.'
+    },
+    { 
+      n: 'CRM Task e Progetti', 
+      t: 'Gestionale', 
+      y: '2024',
+      desc: 'Sistema gestionale per progetti, task e andamento lavorazioni aziendali. Gestione clienti e collaboratori con integrazione AI tramite API.'
+    },
+    { 
+      n: 'My Place Malpensa', 
+      t: 'Sito Web', 
+      y: '2024',
+      desc: 'Sito web multilingua con collegamento a Octorate per booking engine centralizzato e gestione prenotazioni automatizzata.'
+    },
+    { 
+      n: 'Marazzato Moto', 
+      t: 'Sito Web', 
+      y: '2024',
+      desc: 'Sito web vetrina con caricamento dinamico prodotti da pannello dedicato e vetrina online per vendita moto e accessori.'
+    },
+    { 
+      n: 'Casa Famiglia Villa Katia', 
+      t: 'Marketing', 
+      y: '2024',
+      desc: 'Soluzione completa: sito web, landing page e sponsorizzazioni Meta Ads con focus su Facebook e target di riferimento specifico.'
+    },
+    { 
+      n: 'Casa Famiglia Quercia', 
+      t: 'Marketing', 
+      y: '2024',
+      desc: 'Sito web, landing page e campagne sponsorizzate Meta Ads per casa famiglia con strategia marketing mirata.'
+    },
+    { 
+      n: 'Casa Famiglia Gramsci', 
+      t: 'Marketing', 
+      y: '2024',
+      desc: 'Progetto completo con sito web istituzionale, landing page dedicate e campagne pubblicitarie social mirate.'
+    },
+    { 
+      n: 'Casa Famiglia Benissimo', 
+      t: 'Marketing', 
+      y: '2024',
+      desc: 'Sviluppo sito web, landing page ottimizzate e strategia marketing digitale con campagne Facebook Ads mirate.'
+    },
+    { 
+      n: 'Casa Alloggio Sociale Anziani', 
+      t: 'Marketing', 
+      y: '2024',
+      desc: 'Casa alloggio sociale per anziani ad Abbiategrasso: sito web istituzionale, landing page e campagne marketing dedicate.'
+    },
   ];
+  if (selectedProject) {
+    return (
+      <div className="flex flex-col h-full">
+        <div className="border-b-2 border-double border-[var(--t-color)] opacity-70 mb-4 pb-2 text-xl sm:text-3xl font-bold shrink-0 tracking-wider flex justify-between items-center uppercase">
+          <span>/PROGETTO — {selectedProject.n}</span>
+          <motion.button
+            onClick={() => setSelectedProject(null)}
+            className="text-sm sm:text-lg hover:bg-[var(--t-color)] hover:text-[#080c08] transition-all px-3 py-1 border border-[var(--t-color)]"
+            whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+          >
+            ◂ INDIETRO
+          </motion.button>
+        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 200 }}
+          className="flex-1 flex flex-col overflow-hidden"
+        >
+          <div className="text-2xl sm:text-3xl font-bold text-[var(--t-color)] text-glow-strong mb-4 uppercase">
+            {selectedProject.n}
+          </div>
+          <div className="flex gap-4 mb-4 text-base sm:text-lg text-[var(--t-color)] opacity-70 uppercase">
+            <span className="border border-[var(--t-color)] px-3 py-1">{selectedProject.t}</span>
+            <span className="border border-[var(--t-color)] px-3 py-1">{selectedProject.y}</span>
+          </div>
+          <div className="p-4 sm:p-6 border-2 border-[var(--t-color)] opacity-70 flex-1 overflow-y-auto">
+            <p className="text-base sm:text-xl text-[var(--t-color)] leading-relaxed normal-case">
+              {selectedProject.desc}
+            </p>
+          </div>
+          <motion.button
+            onClick={() => { setCurrentPage(pages.CONTATTI); }}
+            className="mt-4 text-[var(--t-color)] text-glow-strong font-bold text-lg sm:text-xl cursor-pointer hover:bg-[var(--t-color)] hover:text-[#080c08] transition-all px-6 py-4 border-2 border-[var(--t-color)] uppercase"
+            whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+          >
+            ▸ HO UN PROGETTO SIMILE
+          </motion.button>
+        </motion.div>
+        <BackButton onClick={() => setCurrentPage(pages.HOME)} />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full uppercase">
       <div className="border-b-2 border-double border-[var(--t-color)] opacity-70 mb-4 pb-2 text-xl sm:text-3xl font-bold shrink-0 tracking-wider">
@@ -767,16 +886,21 @@ function Progetti({ setCurrentPage }) {
         {/* Table body */}
         <div className="space-y-1">
           {projects.map((p, i) => (
-            <div key={i} className="flex hover:bg-[var(--t-color)] hover:text-[#080c08] transition-all duration-150 py-2 px-1 text-base sm:text-2xl font-medium group cursor-default">
+            <motion.div 
+              key={i} 
+              className="flex hover:bg-[var(--t-color)] hover:text-[#080c08] transition-all duration-150 py-2 px-1 text-base sm:text-2xl font-medium group cursor-pointer"
+              onClick={() => setSelectedProject(p)}
+              whileHover={{ x: 4 }} whileTap={{ scale: 0.99 }}
+            >
               <div className="w-[50%] truncate font-bold">{p.n}</div>
               <div className="w-[30%] truncate opacity-80 group-hover:opacity-100">{p.t}</div>
               <div className="w-[20%] text-right opacity-60 group-hover:opacity-100">{p.y}</div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
       <div className="text-[var(--t-color)] opacity-70 text-sm sm:text-lg mt-4 font-bold border-l-4 border-[var(--t-color)] opacity-70 pl-3">
-        * Il prossimo potrebbe essere il tuo!
+        * Clicca un progetto per i dettagli
       </div>
       <BackButton onClick={() => setCurrentPage(pages.HOME)} />
     </div>
@@ -1648,10 +1772,90 @@ function ModernSite({ togglePower, currentPage, setCurrentPage }) {
   ], []);
 
   const projects = [
-    { n: 'Sistema Gestione Cantina', tags: ['Software', 'PWA'], year: '2025' },
-    { n: 'CRM Magazzino Intelligente', tags: ['Automazione'], year: '2024' },
-    { n: '7Lakes Digital Booking', tags: ['Booking Engine'], year: '2024' },
-    { n: 'Marazzato Moto Store', tags: ['E-commerce'], year: '2024' },
+    { 
+      n: 'Sistema Gestione Cantina', 
+      tags: ['Gestionale', 'PWA', 'E-commerce'], 
+      year: '2025',
+      desc: 'Sistema di gestione vitivinicolo completo per cantina con vendita online di esperienze, gestione coupon regali e spedizioni internazionali.'
+    },
+    { 
+      n: 'CRM Magazzino', 
+      tags: ['Gestionale', 'Logistica'], 
+      year: '2024',
+      desc: 'Sistema gestionale su misura per gestione magazzino, stoccaggio e spedizioni con ottimizzazione logistica avanzata.'
+    },
+    { 
+      n: 'BPres Presenze', 
+      tags: ['Gestionale', 'HR'], 
+      year: '2024',
+      desc: 'Sistema presenze completo per gestire ingressi, uscite, pause. Calcolo permessi automatici e richiesta ferie/malattia con approvazione via email.'
+    },
+    { 
+      n: 'Sistema Autodemolizioni', 
+      tags: ['CRM', 'API', 'Compliance'], 
+      year: '2024',
+      desc: 'CRM completo per pratiche bonifica, registrazione portali statali, API Rentri, vendita componenti, gestione serbatoi e controllo codici CER.'
+    },
+    { 
+      n: '7Lakes Aparthotel', 
+      tags: ['Sito Web', 'Booking', 'Drone'], 
+      year: '2024',
+      desc: 'Sito web con shooting drone per tour virtuale, collegamento Octorate per booking engine centralizzato con Booking.com e Airbnb.'
+    },
+    { 
+      n: 'Salute a Domicilio', 
+      tags: ['Sito Web', 'Marketing', 'ADS'], 
+      year: '2024',
+      desc: 'Sito web, analisi marketing intelligence, landing page pubblicitarie e campagne Google Search + retargeting social.'
+    },
+    { 
+      n: 'CRM Task e Progetti', 
+      tags: ['Gestionale', 'AI', 'Project'], 
+      year: '2024',
+      desc: 'Sistema gestionale per progetti, task e andamento lavorazioni. Gestione clienti e collaboratori con integrazione AI tramite API.'
+    },
+    { 
+      n: 'My Place Malpensa', 
+      tags: ['Sito Web', 'Booking', 'Multilingua'], 
+      year: '2024',
+      desc: 'Sito web multilingua con collegamento a Octorate per booking engine centralizzato e gestione prenotazioni automatizzata.'
+    },
+    { 
+      n: 'Marazzato Moto', 
+      tags: ['Sito Web', 'Vetrina', 'E-commerce'], 
+      year: '2024',
+      desc: 'Sito web vetrina con caricamento dinamico prodotti da pannello dedicato e vetrina online per vendita moto e accessori.'
+    },
+    { 
+      n: 'Casa Famiglia Villa Katia', 
+      tags: ['Marketing', 'Meta Ads', 'Landing'], 
+      year: '2024',
+      desc: 'Soluzione completa: sito web, landing page e sponsorizzazioni Meta Ads con focus su Facebook e target di riferimento specifico.'
+    },
+    { 
+      n: 'Casa Famiglia Quercia', 
+      tags: ['Marketing', 'Meta Ads', 'Social'], 
+      year: '2024',
+      desc: 'Sito web, landing page e campagne sponsorizzate Meta Ads per casa famiglia con strategia marketing mirata.'
+    },
+    { 
+      n: 'Casa Famiglia Gramsci', 
+      tags: ['Marketing', 'Social', 'Landing'], 
+      year: '2024',
+      desc: 'Progetto completo con sito web istituzionale, landing page dedicate e campagne pubblicitarie social mirate.'
+    },
+    { 
+      n: 'Casa Famiglia Benissimo', 
+      tags: ['Marketing', 'Facebook Ads', 'Web'], 
+      year: '2024',
+      desc: 'Sviluppo sito web, landing page ottimizzate e strategia marketing digitale con campagne Facebook Ads mirate.'
+    },
+    { 
+      n: 'Casa Alloggio Sociale Anziani', 
+      tags: ['Marketing', 'Web', 'Social'], 
+      year: '2024',
+      desc: 'Casa alloggio sociale per anziani ad Abbiategrasso: sito web istituzionale, landing page e campagne marketing dedicate.'
+    },
   ];
 
   // Contact form state
@@ -1955,27 +2159,32 @@ function ModernSite({ togglePower, currentPage, setCurrentPage }) {
         <div className="mb-16 border-b border-[#a09a88]/20 pb-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
           <div>
             <h3 className="text-4xl sm:text-5xl font-black text-[#2d2818] mb-4 tracking-tight">Galleria Progetti</h3>
-            <p className="text-lg text-[#6a6050] font-bold uppercase tracking-[4px] opacity-60">Successi Recenti</p>
+            <p className="text-lg text-[#6a6050] font-bold uppercase tracking-[4px] opacity-60">{projects.length} Successi Reali</p>
           </div>
           <p className="text-base text-[#8a7f6a] max-w-xs font-medium text-right italic">
-            Ogni soluzione è unica, progettata esclusivamente per risolvere sfide specifiche.
+            Clicca su un progetto per scoprire i dettagli.
           </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
           {projects.map((p, i) => (
-            <motion.div key={i} variants={itemVariants} whileHover={{ scale: 1.02 }}
-              className="clay-card clay-card-accent p-8 lg:p-12 cursor-pointer group overflow-hidden relative">
-              <div className="absolute top-0 right-0 p-8 opacity-5 text-8xl font-black tracking-tighter transition-opacity group-hover:opacity-10">{p.year}</div>
-              <div className="flex justify-between items-start mb-12">
-                <h4 className="text-2xl lg:text-4xl font-black text-[#2d2818] leading-tight max-w-[70%]">{p.n}</h4>
-                <div className="clay-btn w-12 h-12 flex items-center justify-center rounded-full shadow-sm text-xl transition-transform group-hover:rotate-45">↗</div>
+            <motion.div key={i} variants={itemVariants} whileHover={{ y: -8 }}
+              onClick={() => setSelectedService({ title: p.n, icon: '', details: p.desc })}
+              className="clay-card p-6 lg:p-8 cursor-pointer group overflow-hidden relative hover:scale-[1.02] transition-transform">
+              <div className="absolute top-0 right-0 p-6 opacity-5 text-6xl font-black tracking-tighter transition-opacity group-hover:opacity-10">{p.year}</div>
+              <div className="flex justify-between items-start mb-6">
+                <h4 className="text-xl lg:text-2xl font-black text-[#2d2818] leading-tight max-w-[80%] group-hover:text-[#7c6f5b] transition-colors">{p.n}</h4>
+                <div className="clay-btn w-10 h-10 flex items-center justify-center rounded-full shadow-sm text-lg transition-transform group-hover:rotate-45">↗</div>
               </div>
-              <div className="flex flex-wrap gap-3">
-                {p.tags.map(t => (
-                  <span key={t} className="clay-pill px-4 py-2 text-xs lg:text-sm font-black text-[#8a7f6a] border border-white/40 uppercase tracking-widest">
+              <p className="text-sm text-[#6a6050] leading-relaxed mb-4 line-clamp-2">{p.desc}</p>
+              <div className="flex flex-wrap gap-2">
+                {p.tags.slice(0, 3).map(t => (
+                  <span key={t} className="clay-pill px-3 py-1.5 text-xs font-black text-[#8a7f6a] border border-white/40 uppercase tracking-wider">
                     {t}
                   </span>
                 ))}
+              </div>
+              <div className="mt-4 text-xs font-bold text-[#7c6f5b] opacity-0 group-hover:opacity-100 transition-opacity">
+                Scopri di più →
               </div>
             </motion.div>
           ))}
