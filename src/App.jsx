@@ -19,9 +19,9 @@ export default function App() {
   const [showGlitchOverlay, setShowGlitchOverlay] = useState(false);
 
   const COLOR_PROFILES = useMemo(() => ({
-    amber: { main: '#ffb000', glow: 'rgba(255,176,0,0.2)', glowStrong: 'rgba(255,176,0,0.4)', beam: 'rgba(255,176,0,0.01)', beamStrong: 'rgba(255,176,0,0.03)' },
-    green: { main: '#33ff33', glow: 'rgba(51,255,51,0.2)', glowStrong: 'rgba(51,255,51,0.4)', beam: 'rgba(51,255,51,0.01)', beamStrong: 'rgba(51,255,51,0.03)' },
-    pink: { main: '#ff00cc', glow: 'rgba(255,0,204,0.2)', glowStrong: 'rgba(255,0,204,0.4)', beam: 'rgba(255,0,204,0.01)', beamStrong: 'rgba(255,0,204,0.03)' },
+    amber: { main: '#ffcc00', glow: 'rgba(255,204,0,0.35)', glowStrong: 'rgba(255,204,0,0.6)', beam: 'rgba(255,204,0,0.02)', beamStrong: 'rgba(255,204,0,0.05)' },
+    green: { main: '#00ff66', glow: 'rgba(0,255,102,0.35)', glowStrong: 'rgba(0,255,102,0.6)', beam: 'rgba(0,255,102,0.02)', beamStrong: 'rgba(0,255,102,0.05)' },
+    pink: { main: '#ff33dd', glow: 'rgba(255,51,221,0.35)', glowStrong: 'rgba(255,51,221,0.6)', beam: 'rgba(255,51,221,0.02)', beamStrong: 'rgba(255,51,221,0.05)' },
   }), []);
 
   // Boot sequence - only runs on first load
@@ -652,9 +652,9 @@ function Screw() {
 function MenuBox({ title, options, onSelect }) {
   const [hoverIdx, setHoverIdx] = useState(-1);
   return (
-    <div className="border-2 border-[var(--t-color)] opacity-70 p-4 sm:p-6 lg:p-8 flex-1 flex flex-col justify-center">
-      <div className="border-b-2 border-[var(--t-color)] opacity-70 pb-2 mb-4 font-bold uppercase tracking-[0.2em] text-[var(--t-color)] text-sm sm:text-lg lg:text-xl animate-gentle-pulse">{title}</div>
-      <div className="space-y-3 sm:space-y-5">
+    <div className="border-2 border-[var(--t-color)] opacity-70 p-3 sm:p-6 lg:p-8 flex-1 flex flex-col justify-center">
+      <div className="border-b-2 border-[var(--t-color)] opacity-70 pb-2 mb-3 sm:mb-4 font-bold uppercase tracking-[0.15em] text-[var(--t-color)] text-xs sm:text-lg lg:text-xl animate-gentle-pulse">{title}</div>
+      <div className="space-y-2 sm:space-y-5">
         {options.map((opt, i) => (
           <motion.div 
             key={i} 
@@ -662,18 +662,19 @@ function MenuBox({ title, options, onSelect }) {
             onMouseEnter={() => setHoverIdx(i)}
             onMouseLeave={() => setHoverIdx(-1)}
             onClick={() => onSelect(opt.action)}
-            whileHover={{ x: 8 }}
+            whileHover={{ x: 6 }}
+            whileTap={{ scale: 0.98 }}
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
           >
             <motion.span 
-              className="w-8 text-[var(--t-color)] text-xl sm:text-2xl"
+              className="w-6 sm:w-8 text-[var(--t-color)] text-lg sm:text-2xl"
               animate={{ rotate: hoverIdx === i ? [0, -10, 10, 0] : 0 }}
               transition={{ duration: 0.4 }}
             >
               {hoverIdx === i ? '▸' : '›'}
             </motion.span>
             <motion.span 
-              className={`px-3 py-1 text-lg sm:text-2xl transition-all duration-200 inline-block ${hoverIdx === i ? 'bg-[var(--t-color)] text-[#080c08] font-bold scale-105 ml-2' : 'text-[var(--t-color)]'}`}
+              className={`px-2 sm:px-3 py-1 text-sm sm:text-xl lg:text-2xl transition-all duration-200 inline-block ${hoverIdx === i ? 'bg-[var(--t-color)] text-[#080c08] font-bold scale-105 ml-1 sm:ml-2' : 'text-[var(--t-color)]'}`}
               animate={hoverIdx === i ? { scale: [1, 1.05, 1] } : {}}
               transition={{ duration: 0.3 }}
             >
@@ -688,10 +689,10 @@ function MenuBox({ title, options, onSelect }) {
 
 function BackButton({ onClick }) {
   return (
-    <div className="mt-3 pt-3 border-t-2 border-[var(--t-color)] opacity-70 shrink-0">
+    <div className="mt-auto pt-2 sm:pt-3">
       <motion.span
-        className="cursor-pointer hover:bg-[var(--t-color)] hover:text-[#080c08] px-4 py-2 transition-all duration-200 text-sm sm:text-lg font-bold uppercase inline-block border border-transparent hover:border-[var(--t-color)]"
         onClick={onClick}
+        className="cursor-pointer text-xs sm:text-sm lg:text-lg font-bold text-[var(--t-color)] opacity-70 hover:opacity-100 transition-opacity inline-block"
         whileHover={{ x: -5, scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >
@@ -707,9 +708,9 @@ function BackButton({ onClick }) {
 function Home({ setCurrentPage }) {
   return (
     <div className="flex flex-col h-full">
-      <div className="flex flex-col lg:flex-row gap-5 sm:gap-8 flex-1 min-h-0">
+      <div className="flex flex-col lg:flex-row gap-4 sm:gap-8 flex-1 min-h-0">
         <div className="flex-1 flex flex-col justify-center pr-0 lg:pr-8 lg:border-r-2 border-[var(--t-color)] opacity-70 shrink-0">
-          <pre className="text-[7px] sm:text-[10px] md:text-[12px] lg:text-[14px] font-bold leading-[1.2] mb-6 select-none text-[var(--t-color)] text-glow-strong whitespace-pre overflow-x-hidden">
+          <pre className="text-[6px] sm:text-[9px] md:text-[11px] lg:text-[14px] font-bold leading-[1.2] mb-4 sm:mb-6 select-none text-[var(--t-color)] text-glow-strong whitespace-pre overflow-x-hidden">
 {`██████╗  █████╗  ██████╗██╗  ██╗    ███████╗ ██████╗ ███████╗████████╗
 ██╔══██╗██╔══██╗██╔════╝██║ ██╔╝    ██╔════╝██╔═══██╗██╔════╝╚══██╔══╝
 ██████╔╝███████║██║     █████╔╝     ███████╗██║   ██║█████╗     ██║
@@ -717,12 +718,12 @@ function Home({ setCurrentPage }) {
 ██████╔╝██║  ██║╚██████╗██║  ██╗    ███████║╚██████╔╝██║        ██║
 ╚═════╝ ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝    ╚══════╝ ╚═════╝ ╚═╝        ╚═╝`}
           </pre>
-          <div className="text-lg sm:text-2xl border-l-4 border-[var(--t-color)] opacity-70 pl-5 space-y-4">
+          <div className="text-base sm:text-xl lg:text-2xl border-l-4 border-[var(--t-color)] opacity-70 pl-3 sm:pl-5 space-y-3 sm:space-y-4">
             <p className="text-[var(--t-color)] leading-relaxed font-bold">Costruiamo il tuo software<br/>come se fosse il nostro.</p>
-            <p className="text-[var(--t-color)] opacity-70 leading-relaxed text-base sm:text-lg lg:text-xl font-medium">Tecnologia che semplifica, non complica.<br/>Parlaci del tuo progetto.</p>
+            <p className="text-[var(--t-color)] opacity-70 leading-relaxed text-sm sm:text-base lg:text-xl font-medium">Tecnologia che semplifica, non complica.<br/>Parlaci del tuo progetto.</p>
           </div>
         </div>
-        <div className="flex-1 flex mt-6 lg:mt-0">
+        <div className="flex-1 flex mt-4 lg:mt-0">
           <MenuBox title="COSA VUOI FARE?" options={[
             { label: 'I NOSTRI LAVORI', action: pages.PROGETTI },
             { label: 'I NOSTRI SERVIZI', action: pages.SERVIZI },
@@ -730,7 +731,7 @@ function Home({ setCurrentPage }) {
           ]} onSelect={setCurrentPage} />
         </div>
       </div>
-      <div className="pt-3 mt-auto flex justify-between text-sm sm:text-lg font-bold text-[var(--t-color)] opacity-70 border-t-2 border-[var(--t-color)] opacity-70 shrink-0 uppercase tracking-widest">
+      <div className="pt-2 sm:pt-3 mt-auto flex justify-between text-xs sm:text-sm lg:text-lg font-bold text-[var(--t-color)] opacity-70 border-t-2 border-[var(--t-color)] opacity-70 shrink-0 uppercase tracking-widest">
         <span>⚡ Operativo</span>
         <span>Risposta {'<'} 24h</span>
       </div>
@@ -873,12 +874,12 @@ function Progetti({ setCurrentPage }) {
 
   return (
     <div className="flex flex-col h-full uppercase">
-      <div className="border-b-2 border-double border-[var(--t-color)] opacity-70 mb-4 pb-2 text-xl sm:text-3xl font-bold shrink-0 tracking-wider">
+      <div className="border-b-2 border-double border-[var(--t-color)] opacity-70 mb-3 sm:mb-4 pb-2 text-lg sm:text-3xl font-bold shrink-0 tracking-wider">
         /PROGETTI — {projects.length}
       </div>
       <div className="flex-1 overflow-y-auto min-h-0 pr-4">
         {/* Table header */}
-        <div className="flex border-b-2 border-[var(--t-color)] opacity-70 pb-2 mb-3 text-[var(--t-color)] opacity-70 text-lg sm:text-xl font-bold tracking-widest">
+        <div className="flex border-b-2 border-[var(--t-color)] opacity-70 pb-2 mb-2 sm:mb-3 text-[var(--t-color)] opacity-70 text-sm sm:text-xl font-bold tracking-widest">
           <div className="w-[50%]">PROGETTO</div>
           <div className="w-[30%]">TIPO</div>
           <div className="w-[20%] text-right">ANNO</div>
@@ -888,13 +889,13 @@ function Progetti({ setCurrentPage }) {
           {projects.map((p, i) => (
             <motion.div 
               key={i} 
-              className="flex hover:bg-[var(--t-color)] hover:text-[#080c08] transition-all duration-150 py-2 px-1 text-base sm:text-2xl font-medium group cursor-pointer"
+              className="flex hover:bg-[var(--t-color)] hover:text-[#080c08] transition-all duration-150 py-2 sm:py-2 px-2 sm:px-1 text-sm sm:text-2xl font-medium group cursor-pointer"
               onClick={() => setSelectedProject(p)}
               whileHover={{ x: 4 }} whileTap={{ scale: 0.99 }}
             >
-              <div className="w-[50%] truncate font-bold">{p.n}</div>
-              <div className="w-[30%] truncate opacity-80 group-hover:opacity-100">{p.t}</div>
-              <div className="w-[20%] text-right opacity-60 group-hover:opacity-100">{p.y}</div>
+              <div className="w-[50%] truncate font-bold text-sm sm:text-base">{p.n}</div>
+              <div className="w-[30%] truncate opacity-80 group-hover:opacity-100 text-xs sm:text-sm">{p.t}</div>
+              <div className="w-[20%] text-right opacity-60 group-hover:opacity-100 text-xs sm:text-sm">{p.y}</div>
             </motion.div>
           ))}
         </div>
@@ -987,11 +988,11 @@ function Servizi({ setCurrentPage, onSelectService }) {
   if (selectedService) {
     return (
       <div className="flex flex-col h-full">
-        <div className="border-b-2 border-double border-[var(--t-color)] opacity-70 mb-4 pb-2 text-xl sm:text-3xl font-bold shrink-0 tracking-wider flex justify-between items-center">
-          <span>{selectedService.id} — {selectedService.title}</span>
+        <div className="border-b-2 border-double border-[var(--t-color)] opacity-70 mb-3 sm:mb-4 pb-2 text-lg sm:text-3xl font-bold shrink-0 tracking-wider flex justify-between items-center">
+          <span className="text-sm sm:text-base lg:text-xl">{selectedService.id} — {selectedService.title}</span>
           <motion.button
             onClick={() => { setSelectedService(null); setSelectedPackage(null); }}
-            className="text-sm sm:text-lg hover:bg-[var(--t-color)] hover:text-[#080c08] transition-all px-3 py-1 border border-[var(--t-color)]"
+            className="text-xs sm:text-sm lg:text-lg hover:bg-[var(--t-color)] hover:text-[#080c08] transition-all px-2 sm:px-3 py-1 border border-[var(--t-color)]"
             whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
           >
             ◂ INDIETRO
@@ -1005,31 +1006,31 @@ function Servizi({ setCurrentPage, onSelectService }) {
         >
           {!selectedPackage ? (
             <>
-              <div className="text-xl sm:text-2xl font-bold text-[var(--t-color)] text-glow-strong mb-4">
+              <div className="text-lg sm:text-2xl font-bold text-[var(--t-color)] text-glow-strong mb-3 sm:mb-4">
                 {selectedService.subtitle}
               </div>
-              <div className="p-4 sm:p-6 border-2 border-[var(--t-color)] opacity-70 mb-4">
-                <p className="text-base sm:text-lg text-[var(--t-color)] leading-relaxed">
+              <div className="p-3 sm:p-6 border-2 border-[var(--t-color)] opacity-70 mb-3 sm:mb-4">
+                <p className="text-sm sm:text-base lg:text-lg text-[var(--t-color)] leading-relaxed">
                   {selectedService.details}
                 </p>
               </div>
-              <div className="text-sm sm:text-lg text-[var(--t-color)] opacity-70 uppercase font-bold mb-3">
+              <div className="text-xs sm:text-base lg:text-lg text-[var(--t-color)] opacity-70 uppercase font-bold mb-2 sm:mb-3">
                 Scegli un pacchetto:
               </div>
               <div className="flex-1 overflow-y-auto space-y-3 pr-2">
                 {selectedService.packages.map((pkg, idx) => (
                   <motion.div
                     key={idx}
-                    className="border-2 border-[var(--t-color)] opacity-70 p-4 cursor-pointer hover:bg-[var(--t-color)] hover:text-[#080c08] transition-all group"
+                    className="border-2 border-[var(--t-color)] opacity-70 p-3 sm:p-4 cursor-pointer hover:bg-[var(--t-color)] hover:text-[#080c08] transition-all group"
                     onClick={() => setSelectedPackage(pkg)}
                     whileHover={{ scale: 1.01, x: 4 }}
                     whileTap={{ scale: 0.99 }}
                   >
                     <div className="flex justify-between items-center">
-                      <span className="text-base sm:text-lg font-bold">{pkg.name}</span>
-                      <span className="text-xs sm:text-sm opacity-0 group-hover:opacity-100 transition-opacity">▸ Seleziona</span>
+                      <span className="text-sm sm:text-base lg:text-lg font-bold">{pkg.name}</span>
+                      <span className="text-[10px] sm:text-xs opacity-0 group-hover:opacity-100 transition-opacity">▸ Seleziona</span>
                     </div>
-                    <p className="text-xs sm:text-sm opacity-70 mt-1 group-hover:opacity-100">{pkg.desc}</p>
+                    <p className="text-[10px] sm:text-xs lg:text-sm opacity-70 mt-1 group-hover:opacity-100">{pkg.desc}</p>
                   </motion.div>
                 ))}
               </div>
@@ -1079,24 +1080,24 @@ function Servizi({ setCurrentPage, onSelectService }) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="bg-[var(--t-color)] text-[#080c08] font-bold px-4 py-1 mb-6 w-max uppercase text-xl sm:text-3xl tracking-widest shrink-0">
+      <div className="bg-[var(--t-color)] text-[#080c08] font-bold px-3 sm:px-4 py-1 mb-4 sm:mb-6 w-max uppercase text-lg sm:text-3xl tracking-widest shrink-0">
         SERVIZI
       </div>
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 flex-1 overflow-y-auto min-h-0 pr-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 flex-1 overflow-y-auto min-h-0 pr-2">
         {servizi.map((s) => (
           <motion.div 
             key={s.id} 
-            className="border-2 border-[var(--t-color)] opacity-70 p-4 sm:p-5 relative group hover:bg-[var(--t-color)] hover:text-[#080c08] transition-all duration-200 cursor-pointer"
+            className="border-2 border-[var(--t-color)] opacity-70 p-3 sm:p-5 relative group hover:bg-[var(--t-color)] hover:text-[#080c08] transition-all duration-200 cursor-pointer"
             onClick={() => setSelectedService(s)}
             whileHover={{ scale: 1.02, y: -2 }}
             whileTap={{ scale: 0.98 }}
           >
-            <div className="absolute top-0 right-0 bg-[var(--t-color)] text-[#080c08] text-sm sm:text-lg px-2 font-black leading-tight border-b-2 border-l-2 border-[var(--t-color)]">{s.id}</div>
-            <h3 className="text-lg sm:text-xl mb-3 font-black text-[var(--t-color)] text-glow uppercase mt-2 group-hover:text-[#080c08]">{s.title}</h3>
-            <ul className="space-y-1.5 text-sm sm:text-lg text-[var(--t-color)] opacity-70 group-hover:opacity-100">
+            <div className="absolute top-0 right-0 bg-[var(--t-color)] text-[#080c08] text-xs sm:text-lg px-1.5 sm:px-2 font-black leading-tight border-b-2 border-l-2 border-[var(--t-color)]">{s.id}</div>
+            <h3 className="text-sm sm:text-xl font-black text-[var(--t-color)] text-glow uppercase mt-2 mb-2 sm:mb-3 group-hover:text-[#080c08]">{s.title}</h3>
+            <ul className="space-y-1 sm:space-y-1.5 text-xs sm:text-lg text-[var(--t-color)] opacity-70 group-hover:opacity-100">
               {s.items.map((item, j) => <li key={j} className="flex gap-2"><span>·</span> <span>{item}</span></li>)}
             </ul>
-            <div className="mt-3 text-xs text-[var(--t-color)] opacity-0 group-hover:opacity-100 transition-opacity font-bold uppercase">
+            <div className="mt-2 sm:mt-3 text-[10px] sm:text-xs text-[var(--t-color)] opacity-0 group-hover:opacity-100 transition-opacity font-bold uppercase">
               Clicca per scoprire di più ▸
             </div>
           </motion.div>
@@ -2156,34 +2157,34 @@ function ModernSite({ togglePower, currentPage, setCurrentPage }) {
 
       {/* ── PROGETTI Section ── */}
       <motion.section id="progetti" variants={itemVariants} className="mb-32 sm:mb-48 scroll-mt-32 px-2 lg:px-8 shrink-0">
-        <div className="mb-16 border-b border-[#a09a88]/20 pb-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
+        <div className="mb-12 sm:mb-16 border-b border-[#a09a88]/20 pb-8 sm:pb-10 flex flex-col md:flex-row md:items-center justify-between gap-6 sm:gap-8">
           <div>
-            <h3 className="text-4xl sm:text-5xl font-black text-[#2d2818] mb-4 tracking-tight">Galleria Progetti</h3>
-            <p className="text-lg text-[#6a6050] font-bold uppercase tracking-[4px] opacity-60">{projects.length} Successi Reali</p>
+            <h3 className="text-3xl sm:text-5xl font-black text-[#2d2818] mb-3 sm:mb-4 tracking-tight">Galleria Progetti</h3>
+            <p className="text-base sm:text-lg text-[#6a6050] font-bold uppercase tracking-[4px] opacity-60">{projects.length} Successi Reali</p>
           </div>
-          <p className="text-base text-[#8a7f6a] max-w-xs font-medium text-right italic">
-            Clicca su un progetto per scoprire i dettagli.
+          <p className="text-sm sm:text-base text-[#8a7f6a] max-w-xs font-medium text-right italic">
+            Clicca per i dettagli
           </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
           {projects.map((p, i) => (
-            <motion.div key={i} variants={itemVariants} whileHover={{ y: -8 }}
+            <motion.div key={i} variants={itemVariants} whileHover={{ y: -6 }}
               onClick={() => setSelectedService({ title: p.n, icon: '', details: p.desc })}
-              className="clay-card p-6 lg:p-8 cursor-pointer group overflow-hidden relative hover:scale-[1.02] transition-transform">
-              <div className="absolute top-0 right-0 p-6 opacity-5 text-6xl font-black tracking-tighter transition-opacity group-hover:opacity-10">{p.year}</div>
-              <div className="flex justify-between items-start mb-6">
-                <h4 className="text-xl lg:text-2xl font-black text-[#2d2818] leading-tight max-w-[80%] group-hover:text-[#7c6f5b] transition-colors">{p.n}</h4>
-                <div className="clay-btn w-10 h-10 flex items-center justify-center rounded-full shadow-sm text-lg transition-transform group-hover:rotate-45">↗</div>
+              className="clay-card p-5 sm:p-6 lg:p-8 cursor-pointer group overflow-hidden relative hover:scale-[1.02] transition-transform">
+              <div className="absolute top-0 right-0 p-4 sm:p-6 opacity-5 text-5xl sm:text-6xl font-black tracking-tighter transition-opacity group-hover:opacity-10">{p.year}</div>
+              <div className="flex justify-between items-start mb-4 sm:mb-6">
+                <h4 className="text-lg sm:text-xl lg:text-2xl font-black text-[#2d2818] leading-tight max-w-[80%] group-hover:text-[#7c6f5b] transition-colors">{p.n}</h4>
+                <div className="clay-btn w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full shadow-sm text-base sm:text-lg transition-transform group-hover:rotate-45">↗</div>
               </div>
-              <p className="text-sm text-[#6a6050] leading-relaxed mb-4 line-clamp-2">{p.desc}</p>
-              <div className="flex flex-wrap gap-2">
+              <p className="text-xs sm:text-sm text-[#6a6050] leading-relaxed mb-3 sm:mb-4 line-clamp-2">{p.desc}</p>
+              <div className="flex flex-wrap gap-1.5 sm:gap-2">
                 {p.tags.slice(0, 3).map(t => (
-                  <span key={t} className="clay-pill px-3 py-1.5 text-xs font-black text-[#8a7f6a] border border-white/40 uppercase tracking-wider">
+                  <span key={t} className="clay-pill px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-black text-[#8a7f6a] border border-[#d4cfc5]/40 uppercase tracking-wider">
                     {t}
                   </span>
                 ))}
               </div>
-              <div className="mt-4 text-xs font-bold text-[#7c6f5b] opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="mt-3 sm:mt-4 text-[10px] sm:text-xs font-bold text-[#7c6f5b] opacity-0 group-hover:opacity-100 transition-opacity">
                 Scopri di più →
               </div>
             </motion.div>
@@ -2192,23 +2193,23 @@ function ModernSite({ togglePower, currentPage, setCurrentPage }) {
       </motion.section>
 
       {/* ── CONTATTI Section ── */}
-      <motion.section id="contatti" variants={itemVariants} className="mb-20 scroll-mt-32 px-2 lg:px-8 shrink-0">
-        <div className="clay-card p-10 sm:p-20 text-center relative overflow-hidden bg-gradient-to-br from-[#f8f6f2] to-[#eeeae0] border-2 border-[#d4cfc5]/40">
+      <motion.section id="contatti" variants={itemVariants} className="mb-16 sm:mb-20 scroll-mt-32 px-2 lg:px-8 shrink-0">
+        <div className="clay-card p-6 sm:p-12 lg:p-20 text-center relative overflow-hidden bg-gradient-to-br from-[#f8f6f2] to-[#eeeae0] border-2 border-[#d4cfc5]/40">
           <div className="absolute -bottom-20 -right-20 w-64 h-64 clay-pill opacity-10 blur-3xl" />
-          <h3 className="text-4xl sm:text-6xl lg:text-7xl font-black text-[#2d2818] mb-8 tracking-tighter">Parliamo del<br/>tuo futuro.</h3>
-          <p className="text-xl sm:text-2xl text-[#6a6050] max-w-2xl mx-auto font-bold mb-16 leading-relaxed">
+          <h3 className="text-3xl sm:text-6xl lg:text-7xl font-black text-[#2d2818] mb-6 sm:mb-8 tracking-tighter">Parliamo del<br/>tuo futuro.</h3>
+          <p className="text-base sm:text-2xl text-[#6a6050] max-w-2xl mx-auto font-bold mb-10 sm:mb-16 leading-relaxed">
             Parlaci del tuo progetto. Prima analizziamo, poi ti diciamo cosa serve davvero.
           </p>
-          <div className="flex flex-col sm:flex-row justify-center items-center gap-6">
-            <button onClick={() => setShowContactForm(true)} className="clay-btn px-12 py-5 text-xl font-black !rounded-2xl text-[#3d3828] bg-[#fdfcf9] hover:scale-105 transition-transform flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-6">
+            <button onClick={() => setShowContactForm(true)} className="clay-btn px-8 sm:px-12 py-4 sm:py-5 text-lg sm:text-xl font-black !rounded-2xl text-[#3d3828] bg-[#fdfcf9] hover:scale-105 transition-transform flex items-center justify-center gap-2 sm:gap-3">
               Compila il form
             </button>
-            <a href="mailto:info@backsoftware.it" className="clay-btn px-8 py-5 text-lg font-bold !rounded-2xl text-[#6a6050] hover:text-[#3d3828] transition-colors flex items-center gap-3">
-              <span className="text-2xl">✉</span> E-mail
+            <a href="mailto:info@backsoftware.it" className="clay-btn px-6 sm:px-8 py-4 sm:py-5 text-base sm:text-lg font-bold !rounded-2xl text-[#6a6050] hover:text-[#3d3828] transition-colors flex items-center gap-2 sm:gap-3">
+              <span className="text-xl sm:text-2xl">✉</span> E-mail
             </a>
             <a href="tel:+393513052627" className="group flex flex-col items-start gap-1">
-              <span className="text-sm font-black text-[#8a856f] uppercase tracking-widest opacity-60">O chiamaci:</span>
-              <span className="text-xl sm:text-2xl font-black text-[#3d3828] border-b-2 border-[#7c6f5b]/20 group-hover:border-[#7c6f5b] transition-colors">+39 351 305 2627</span>
+              <span className="text-xs sm:text-sm font-black text-[#8a856f] uppercase tracking-widest opacity-60">O chiamaci:</span>
+              <span className="text-base sm:text-2xl font-black text-[#3d3828] border-b-2 border-[#7c6f5b]/20 group-hover:border-[#7c6f5b] transition-colors">+39 351 305 2627</span>
             </a>
           </div>
         </div>
