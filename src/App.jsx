@@ -1926,7 +1926,7 @@ function ModernSite({ togglePower, currentPage, setCurrentPage }) {
             
             <div className="flex gap-4 px-2">
               <button onClick={() => { setSelectedService(null); setShowContactForm(true); setFormData(prev => ({ ...prev, servizio: selectedService.title })); }}
-                className="clay-btn px-6 py-3 text-base font-bold !rounded-2xl text-[#3d3828] bg-white hover:scale-105 transition-transform">
+                className="clay-btn px-6 py-3 text-base font-bold !rounded-2xl text-[#3d3828] bg-[#fdfcf9] hover:scale-105 transition-transform">
                 Richiedi info generale →
               </button>
               <button onClick={() => setSelectedService(null)}
@@ -1971,11 +1971,11 @@ function ModernSite({ togglePower, currentPage, setCurrentPage }) {
               <motion.div initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="space-y-4">
                 <h3 className="text-xl font-black text-[#2d2818]">I tuoi dati</h3>
                 <input type="text" placeholder="Nome" value={formData.nome} onChange={(e) => handleInputChange('nome', e.target.value)}
-                  className="w-full p-4 rounded-2xl border-2 border-[#e4dfd4] bg-white focus:border-[#7c6f5b] focus:outline-none transition-colors text-[#2d2818]" />
+                  className="w-full p-4 rounded-2xl border-2 border-[#d4cfc5] bg-[#fdfcf9] focus:border-[#7c6f5b] focus:outline-none focus:bg-[#f8f6f2] transition-colors text-[#2d2818]" />
                 <input type="email" placeholder="Email" value={formData.email} onChange={(e) => handleInputChange('email', e.target.value)}
-                  className="w-full p-4 rounded-2xl border-2 border-[#e4dfd4] bg-white focus:border-[#7c6f5b] focus:outline-none transition-colors text-[#2d2818]" />
+                  className="w-full p-4 rounded-2xl border-2 border-[#d4cfc5] bg-[#fdfcf9] focus:border-[#7c6f5b] focus:outline-none focus:bg-[#f8f6f2] transition-colors text-[#2d2818]" />
                 <input type="tel" placeholder="Telefono (opzionale)" value={formData.telefono} onChange={(e) => handleInputChange('telefono', e.target.value)}
-                  className="w-full p-4 rounded-2xl border-2 border-[#e4dfd4] bg-white focus:border-[#7c6f5b] focus:outline-none transition-colors text-[#2d2818]" />
+                  className="w-full p-4 rounded-2xl border-2 border-[#d4cfc5] bg-[#fdfcf9] focus:border-[#7c6f5b] focus:outline-none focus:bg-[#f8f6f2] transition-colors text-[#2d2818]" />
               </motion.div>
             )}
 
@@ -1986,7 +1986,7 @@ function ModernSite({ togglePower, currentPage, setCurrentPage }) {
                 <div className="grid grid-cols-2 gap-3">
                   {serviziOptions.map(s => (
                     <button key={s} onClick={() => handleInputChange('servizio', s)}
-                      className={`p-4 rounded-2xl border-2 text-left text-sm font-bold transition-all ${formData.servizio === s ? 'bg-[#7c6f5b] text-white border-[#7c6f5b]' : 'bg-white border-[#e4dfd4] hover:border-[#7c6f5b] text-[#2d2818]'}`}>
+                      className={`p-4 rounded-2xl border-2 text-left text-sm font-bold transition-all ${formData.servizio === s ? 'bg-[#7c6f5b] text-[#f5f2ec] border-[#7c6f5b]' : 'bg-[#fdfcf9] border-[#d4cfc5] hover:border-[#7c6f5b] text-[#2d2818]'}`}>
                       {s}
                     </button>
                   ))}
@@ -2000,10 +2000,10 @@ function ModernSite({ togglePower, currentPage, setCurrentPage }) {
                 <h3 className="text-xl font-black text-[#2d2818]">Raccontaci</h3>
                 <div className="relative">
                   <textarea
-                    placeholder=" "
+                    placeholder="Descrivi il tuo progetto..."
                     value={formData.descrizione}
                     onChange={(e) => handleInputChange('descrizione', e.target.value)}
-                    className="w-full p-4 rounded-2xl border-2 border-[#e4dfd4] bg-white focus:border-[#7c6f5b] focus:outline-none transition-colors min-h-[120px] resize-none text-[#2d2818]" />
+                    className="w-full p-4 rounded-2xl border-2 border-[#d4cfc5] bg-[#fdfcf9] focus:border-[#7c6f5b] focus:outline-none focus:bg-[#f8f6f2] transition-colors min-h-[120px] resize-none text-[#2d2818] placeholder:text-[#8a856f]/50" />
                   {!formData.descrizione && (
                     <ModernTypewriter servizio={formData.servizio} />
                   )}
@@ -2015,7 +2015,7 @@ function ModernSite({ togglePower, currentPage, setCurrentPage }) {
             {formStep === 4 && (
               <motion.div initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="space-y-5">
                 <h3 className="text-xl font-black text-[#2d2818]">Riepilogo</h3>
-                <div className="p-5 rounded-2xl bg-white border-2 border-[#e4dfd4] space-y-2 text-sm">
+                <div className="p-5 rounded-2xl bg-[#fdfcf9] border-2 border-[#d4cfc5] space-y-2 text-sm">
                   <p><span className="font-bold text-[#8a856f]">Nome:</span> {formData.nome}</p>
                   <p><span className="font-bold text-[#8a856f]">Email:</span> {formData.email}</p>
                   {formData.telefono && <p><span className="font-bold text-[#8a856f]">Telefono:</span> {formData.telefono}</p>}
@@ -2049,7 +2049,7 @@ function ModernSite({ togglePower, currentPage, setCurrentPage }) {
                 </button>
                 <button onClick={() => setFormStep(p => p + 1)}
                   disabled={(formStep === 1 && (!formData.nome || !formData.email)) || (formStep === 2 && !formData.servizio) || (formStep === 3 && !formData.descrizione)}
-                  className="flex-1 clay-btn px-6 py-4 font-bold !rounded-2xl text-[#3d3828] bg-white disabled:opacity-30 disabled:cursor-not-allowed hover:scale-105 transition-transform">
+                  className="flex-1 clay-btn px-6 py-4 font-bold !rounded-2xl text-[#3d3828] bg-[#fdfcf9] disabled:opacity-30 disabled:cursor-not-allowed hover:scale-105 transition-transform">
                   {formStep === 3 ? 'Riepilogo →' : 'Avanti →'}
                 </button>
               </div>
@@ -2070,14 +2070,14 @@ function ModernSite({ togglePower, currentPage, setCurrentPage }) {
       
       {/* ── HEADER ── */}
       <motion.nav variants={itemVariants}
-        className="flex items-center justify-between mb-4 sm:mb-6 shrink-0 sticky top-0 z-50 py-3 px-6 sm:px-10 -mx-6 sm:-mx-10 rounded-2xl bg-[#f5f2ec]/60 backdrop-blur-xl border border-white/40 shadow-sm shadow-[#a69f93]/5">
+        className="flex items-center justify-between mb-4 sm:mb-6 shrink-0 sticky top-0 z-50 py-3 px-6 sm:px-10 -mx-6 sm:-mx-10 rounded-2xl bg-[#f5f2ec]/60 backdrop-blur-xl border border-[#d4cfc5]/40 shadow-sm shadow-[#a69f93]/5">
         <div className="flex items-center gap-4">
           <div className="clay-btn w-12 h-12 flex items-center justify-center !rounded-[16px] shadow-md">
             <span className="text-2xl font-black text-[#5a5040]">B.</span>
           </div>
           <div>
             <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-[#2d2818]">Back Software</h1>
-            <p className="text-[10px] sm:text-xs font-bold text-[#8a856f] opacity-70">Ivrea</p>
+            <p className="text-[10px] sm:text-xs font-bold text-[#8a856f] opacity-70">Software su misura</p>
           </div>
         </div>
         <div className="flex items-center gap-3 sm:gap-6">
@@ -2107,15 +2107,15 @@ function ModernSite({ togglePower, currentPage, setCurrentPage }) {
         <div className="absolute top-40 -right-10 w-32 h-32 clay-pill opacity-10 animate-float-delayed pointer-events-none" />
 
         <div className="max-w-5xl">
-          <motion.div variants={itemVariants} className="inline-block px-5 py-2 mb-8 text-xs font-black tracking-[3px] uppercase clay-pill text-[#6a6050] border border-white/50">
-            Design & Tecnologia a Ivrea
+          <motion.div variants={itemVariants} className="inline-block px-5 py-2 mb-8 text-xs font-black tracking-[3px] uppercase clay-pill text-[#6a6050] border border-[#d4cfc5]/40">
+            Design & Tecnologia
           </motion.div>
           <motion.h2 variants={itemVariants} className="text-5xl sm:text-7xl lg:text-8xl font-black leading-[1.05] mb-8 tracking-tighter text-[#2d2818]">
-            L'atelier digitale<br/>
-            <span className="text-[#8a7f6a] drop-shadow-sm">per il tuo software.</span>
+            Software che funziona.<br/>
+            <span className="text-[#8a7f6a] drop-shadow-sm">Fatto da persone reali.</span>
           </motion.h2>
           <motion.p variants={itemVariants} className="text-xl sm:text-2xl lg:text-3xl leading-relaxed max-w-3xl font-medium mb-12 text-[#6a6050]">
-            Evoluzione tecnologica e cura artigianale. Sviluppiamo soluzioni su misura nate nel cuore dell'innovazione Olivetti.
+            Tecnologia che semplifica, non complica. Costruiamo il tuo progetto come se fosse il nostro.
           </motion.p>
           <motion.div variants={itemVariants} className="flex flex-wrap gap-8 items-center">
             <a href="#contatti" className="clay-btn px-10 py-5 text-lg font-bold !rounded-2xl text-[#3d3828] bg-[#f8f6f2] hover:scale-105 active:scale-95 transition-transform">
@@ -2129,9 +2129,9 @@ function ModernSite({ togglePower, currentPage, setCurrentPage }) {
       <motion.section id="servizi" variants={itemVariants} className="mb-32 sm:mb-48 scroll-mt-32 px-2 lg:px-8 shrink-0">
         <div className="mb-16 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="max-w-2xl">
-            <h3 className="text-4xl sm:text-5xl font-black text-[#2d2818] mb-6 tracking-tight">Competenze sartoriali.</h3>
-            <p className="text-lg sm:text-xl text-[#6a6050] font-medium leading-relaxed italic border-l-4 border-[#e4dfd4] pl-6">
-              "Il design non è come sembra, ma come funziona." — Portiamo questa filosofia in ogni riga di codice.
+            <h3 className="text-4xl sm:text-5xl font-black text-[#2d2818] mb-6 tracking-tight">Cosa facciamo.</h3>
+            <p className="text-lg sm:text-xl text-[#6a6050] font-medium leading-relaxed border-l-4 border-[#7c6f5b] pl-6">
+              Niente fronzoli. Solo soluzioni concrete che risolvono problemi reali.
             </p>
           </div>
         </div>
@@ -2140,7 +2140,7 @@ function ModernSite({ togglePower, currentPage, setCurrentPage }) {
             <motion.div key={i} variants={itemVariants}
               whileHover={{ y: -8 }}
               onClick={() => setSelectedService(s)}
-              className={`clay-card p-10 flex flex-col items-start bg-white/5 cursor-pointer group ${s.span}`}>
+              className={`clay-card p-10 flex flex-col items-start bg-[#fdfcf9]/30 cursor-pointer group ${s.span}`}>
               <span className="w-16 h-16 flex items-center justify-center text-4xl mb-8 clay-pill bg-[#f5f2ec] shadow-md group-hover:scale-110 transition-transform">{s.icon}</span>
               <h4 className="text-2xl lg:text-3xl font-black mb-4 text-[#2d2818] tracking-tight group-hover:text-[#7c6f5b] transition-colors">{s.title}</h4>
               <p className="text-base lg:text-lg leading-relaxed text-[#6a6050] font-medium opacity-90 max-w-sm">
@@ -2193,15 +2193,15 @@ function ModernSite({ togglePower, currentPage, setCurrentPage }) {
 
       {/* ── CONTATTI Section ── */}
       <motion.section id="contatti" variants={itemVariants} className="mb-20 scroll-mt-32 px-2 lg:px-8 shrink-0">
-        <div className="clay-card p-10 sm:p-20 text-center relative overflow-hidden bg-gradient-to-br from-[#f8f6f2] to-[#eeeae0] border-2 border-white/50">
+        <div className="clay-card p-10 sm:p-20 text-center relative overflow-hidden bg-gradient-to-br from-[#f8f6f2] to-[#eeeae0] border-2 border-[#d4cfc5]/40">
           <div className="absolute -bottom-20 -right-20 w-64 h-64 clay-pill opacity-10 blur-3xl" />
           <h3 className="text-4xl sm:text-6xl lg:text-7xl font-black text-[#2d2818] mb-8 tracking-tighter">Parliamo del<br/>tuo futuro.</h3>
-          <p className="text-xl sm:text-2xl text-[#6a6050] max-w-2xl mx-auto font-bold mb-16 opacity-80 uppercase tracking-wide leading-relaxed">
-            Consulenze sartoriali gratuite per trovare insieme la rotta digitale migliore.
+          <p className="text-xl sm:text-2xl text-[#6a6050] max-w-2xl mx-auto font-bold mb-16 leading-relaxed">
+            Parlaci del tuo progetto. Prima analizziamo, poi ti diciamo cosa serve davvero.
           </p>
           <div className="flex flex-col sm:flex-row justify-center items-center gap-6">
-            <button onClick={() => setShowContactForm(true)} className="clay-btn px-12 py-5 text-xl font-black !rounded-2xl text-[#3d3828] bg-white hover:scale-105 transition-transform flex items-center gap-3">
-              📝 Compila il form
+            <button onClick={() => setShowContactForm(true)} className="clay-btn px-12 py-5 text-xl font-black !rounded-2xl text-[#3d3828] bg-[#fdfcf9] hover:scale-105 transition-transform flex items-center gap-3">
+              Compila il form
             </button>
             <a href="mailto:info@backsoftware.it" className="clay-btn px-8 py-5 text-lg font-bold !rounded-2xl text-[#6a6050] hover:text-[#3d3828] transition-colors flex items-center gap-3">
               <span className="text-2xl">✉</span> E-mail
@@ -2217,7 +2217,7 @@ function ModernSite({ togglePower, currentPage, setCurrentPage }) {
       {/* ── FOOTER ── */}
       <motion.footer variants={itemVariants} className="mt-20 pt-12 flex flex-col md:flex-row items-center justify-between gap-4 text-xs font-black px-2 lg:px-8 shrink-0 pb-12 border-t border-[#a09a88]/15"
         style={{ color: '#8a7f6a', letterSpacing: '2px' }}>
-        <div className="uppercase">© {new Date().getFullYear()} Back Software. Ivrea, IT.</div>
+        <div className="uppercase">© {new Date().getFullYear()} Back Software</div>
       </motion.footer>
       </div>
     </motion.div>
