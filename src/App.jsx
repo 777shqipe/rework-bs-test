@@ -19,6 +19,7 @@ export default function App() {
   const [showGlitchOverlay, setShowGlitchOverlay] = useState(false);
   const [introText, setIntroText] = useState('');
   const [introIndex, setIntroIndex] = useState(0);
+  const [introLine, setIntroLine] = useState(0);
 
   const COLOR_PROFILES = useMemo(() => ({
     amber: { main: '#ffcc00', glow: 'rgba(255,204,0,0.35)', glowStrong: 'rgba(255,204,0,0.6)', beam: 'rgba(255,204,0,0.02)', beamStrong: 'rgba(255,204,0,0.05)' },
@@ -26,25 +27,54 @@ export default function App() {
     pink: { main: '#ff33dd', glow: 'rgba(255,51,221,0.35)', glowStrong: 'rgba(255,51,221,0.6)', beam: 'rgba(255,51,221,0.02)', beamStrong: 'rgba(255,51,221,0.05)' },
   }), []);
 
-  // Intro sequence - typewriter effect for BACK SOFTWARE
+  // Intro sequence - typewriter effect for BACK SOFTWARE and avvio terminale
   useEffect(() => {
     if (bootPhase === 'intro') {
-      const text = 'BACK SOFTWARE';
-      if (introIndex < text.length) {
+      const lines = ['BACK SOFTWARE', 'avvio terminale'];
+      const currentLineText = lines[introLine];
+      
+      if (introIndex < currentLineText.length) {
         const timer = setTimeout(() => {
-          setIntroText(prev => prev + text[introIndex]);
+          setIntroText(prev => {
+            const textArray = prev.split('\n');
+            while (textArray.length <= introLine) textArray.push('');
+            textArray[introLine] = textArray[introLine] + currentLineText[introIndex];
+            return textArray.join('\n');
+          });
           setIntroIndex(prev => prev + 1);
-        }, 150);
+        }, 120);
         return () => clearTimeout(timer);
       } else {
-        // After typing completes, wait a moment then start boot
-        const bootTimer = setTimeout(() => {
-          setBootPhase('boot');
-        }, 800);
-        return () => clearTimeout(bootTimer);
+        // Move to next line or finish
+        if (introLine < lines.length - 1) {
+          const nextLineTimer = setTimeout(() => {
+            setIntroLine(prev => prev + 1);
+            setIntroIndex(0);
+          }, 300);
+          return () => clearTimeout(nextLineTimer);
+        } else {
+          // After all typing completes, wait a moment then start boot
+          const bootTimer = setTimeout(() => {
+            setBootPhase('boot');
+          }, 800);
+          return () => clearTimeout(bootTimer);
+        }
       }
     }
-  }, [bootPhase, introIndex]);
+  }, [bootPhase, introIndex, introLine]);
+
+  // Keyboard shortcut to skip intro
+  useEffect(() => {
+    if (bootPhase === 'intro') {
+      const handleKeyPress = (e) => {
+        if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') {
+          setBootPhase('boot');
+        }
+      };
+      window.addEventListener('keydown', handleKeyPress);
+      return () => window.removeEventListener('keydown', handleKeyPress);
+    }
+  }, [bootPhase]);
 
   // Boot sequence - only runs on first load
   useEffect(() => {
@@ -198,12 +228,18 @@ export default function App() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="absolute inset-0 flex items-center justify-center bg-[#fdfcf9]"
+          className="absolute inset-0 flex flex-col items-center justify-center bg-[#fdfcf9]"
         >
-          <div className="text-center">
+          <div className="text-center space-y-4">
             <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tighter text-[#2d2818]">
-              {introText}<span className="animate-pulse">|</span>
+              {introText.split('\n')[0]}{introLine === 0 && introIndex < 'BACK SOFTWARE'.length && <span className="animate-pulse">|</span>}
             </h1>
+            <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-[#6a6050] uppercase tracking-widest">
+              {introText.split('\n')[1] || ''}{introLine === 1 && introIndex < 'avvio terminale'.length && <span className="animate-pulse">|</span>}
+            </p>
+            <p className="text-sm sm:text-base text-[#8a856f] opacity-60 mt-8">
+              Premi [ENTER] o [SPAZIO] per saltare
+            </p>
           </div>
         </motion.div>
       )}
