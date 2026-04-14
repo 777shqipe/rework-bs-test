@@ -230,11 +230,11 @@ export default function App() {
           exit={{ opacity: 0 }}
           className="absolute inset-0 flex flex-col items-center justify-center bg-[#fdfcf9]"
         >
-          <div className="text-center space-y-4">
-            <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tighter text-[#2d2818]">
+          <div className="text-center space-y-6">
+            <h1 className="text-6xl sm:text-8xl lg:text-9xl xl:text-[10rem] font-black tracking-tighter text-[#2d2818]">
               {introText.split('\n')[0]}{introLine === 0 && introIndex < 'BACK SOFTWARE'.length && <span className="animate-pulse">|</span>}
             </h1>
-            <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-[#6a6050] uppercase tracking-widest">
+            <p className="text-xl sm:text-3xl lg:text-4xl font-bold text-[#6a6050] uppercase tracking-widest">
               {introText.split('\n')[1] || ''}{introLine === 1 && introIndex < 'avvio terminale'.length && <span className="animate-pulse">|</span>}
             </p>
             <p className="text-sm sm:text-base text-[#8a856f] opacity-60 mt-8">
@@ -909,6 +909,14 @@ function Progetti({ setCurrentPage }) {
       desc: 'Casa alloggio sociale per anziani ad Abbiategrasso: sito web istituzionale, landing page e campagne marketing dedicate.'
     },
   ];
+
+  // Group projects by category
+  const categories = ['Gestionale', 'Sito Web', 'Marketing', 'CRM'];
+  const groupedProjects = categories.map(cat => ({
+    name: cat,
+    projects: projects.filter(p => p.t === cat)
+  })).filter(g => g.projects.length > 0);
+
   if (selectedProject) {
     return (
       <div className="flex flex-col h-full">
@@ -965,19 +973,30 @@ function Progetti({ setCurrentPage }) {
           <div className="w-[30%]">TIPO</div>
           <div className="w-[20%] text-right">ANNO</div>
         </div>
-        {/* Table body */}
-        <div className="space-y-1">
-          {projects.map((p, i) => (
-            <motion.div 
-              key={i} 
-              className="flex hover:bg-[var(--t-color)] hover:text-[#080c08] transition-all duration-150 py-2 sm:py-2 px-2 sm:px-1 text-sm sm:text-2xl font-medium group cursor-pointer"
-              onClick={() => setSelectedProject(p)}
-              whileHover={{ x: 4 }} whileTap={{ scale: 0.99 }}
-            >
-              <div className="w-[50%] truncate font-bold text-sm sm:text-base">{p.n}</div>
-              <div className="w-[30%] truncate opacity-80 group-hover:opacity-100 text-xs sm:text-sm">{p.t}</div>
-              <div className="w-[20%] text-right opacity-60 group-hover:opacity-100 text-xs sm:text-sm">{p.y}</div>
-            </motion.div>
+        {/* Table body grouped by category */}
+        <div className="space-y-4">
+          {groupedProjects.map((group, groupIdx) => (
+            <div key={groupIdx}>
+              {/* Category header */}
+              <div className="text-[var(--t-color)] text-glow-strong font-bold text-base sm:text-lg mb-2 mt-4 first:mt-0 tracking-widest opacity-90">
+                ▸ {group.name.toUpperCase()}
+              </div>
+              {/* Projects in this category */}
+              <div className="space-y-1">
+                {group.projects.map((p, i) => (
+                  <motion.div 
+                    key={`${groupIdx}-${i}`}
+                    className="flex hover:bg-[var(--t-color)] hover:text-[#080c08] transition-all duration-150 py-2 sm:py-2 px-2 sm:px-1 text-sm sm:text-2xl font-medium group cursor-pointer"
+                    onClick={() => setSelectedProject(p)}
+                    whileHover={{ x: 4 }} whileTap={{ scale: 0.99 }}
+                  >
+                    <div className="w-[50%] truncate font-bold text-sm sm:text-base">{p.n}</div>
+                    <div className="w-[30%] truncate opacity-80 group-hover:opacity-100 text-xs sm:text-sm">{p.t}</div>
+                    <div className="w-[20%] text-right opacity-60 group-hover:opacity-100 text-xs sm:text-sm">{p.y}</div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       </div>
@@ -1854,91 +1873,112 @@ function ModernSite({ togglePower, currentPage, setCurrentPage }) {
   ], []);
 
   const projects = [
-    { 
-      n: 'Sistema Gestione Cantina', 
-      tags: ['Gestionale', 'PWA', 'E-commerce'], 
+    {
+      n: 'Sistema Gestione Cantina',
+      category: 'Gestionale',
+      tags: ['Gestionale', 'PWA', 'E-commerce'],
       year: '2025',
       desc: 'Sistema di gestione vitivinicolo completo per cantina con vendita online di esperienze, gestione coupon regali e spedizioni internazionali.'
     },
-    { 
-      n: 'CRM Magazzino', 
-      tags: ['Gestionale', 'Logistica'], 
+    {
+      n: 'CRM Magazzino',
+      category: 'Gestionale',
+      tags: ['Gestionale', 'Logistica'],
       year: '2024',
       desc: 'Sistema gestionale su misura per gestione magazzino, stoccaggio e spedizioni con ottimizzazione logistica avanzata.'
     },
-    { 
-      n: 'BPres Presenze', 
-      tags: ['Gestionale', 'HR'], 
+    {
+      n: 'BPres Presenze',
+      category: 'Gestionale',
+      tags: ['Gestionale', 'HR'],
       year: '2024',
       desc: 'Sistema presenze completo per gestire ingressi, uscite, pause. Calcolo permessi automatici e richiesta ferie/malattia con approvazione via email.'
     },
-    { 
-      n: 'Sistema Autodemolizioni', 
-      tags: ['CRM', 'API', 'Compliance'], 
+    {
+      n: 'Sistema Autodemolizioni',
+      category: 'CRM',
+      tags: ['CRM', 'API', 'Compliance'],
       year: '2024',
       desc: 'CRM completo per pratiche bonifica, registrazione portali statali, API Rentri, vendita componenti, gestione serbatoi e controllo codici CER.'
     },
-    { 
-      n: '7Lakes Aparthotel', 
-      tags: ['Sito Web', 'Booking', 'Drone'], 
+    {
+      n: '7Lakes Aparthotel',
+      category: 'Sito Web',
+      tags: ['Sito Web', 'Booking', 'Drone'],
       year: '2024',
       desc: 'Sito web con shooting drone per tour virtuale, collegamento Octorate per booking engine centralizzato con Booking.com e Airbnb.'
     },
-    { 
-      n: 'Salute a Domicilio', 
-      tags: ['Sito Web', 'Marketing', 'ADS'], 
+    {
+      n: 'Salute a Domicilio',
+      category: 'Sito Web',
+      tags: ['Sito Web', 'Marketing', 'ADS'],
       year: '2024',
       desc: 'Sito web, analisi marketing intelligence, landing page pubblicitarie e campagne Google Search + retargeting social.'
     },
-    { 
-      n: 'CRM Task e Progetti', 
-      tags: ['Gestionale', 'AI', 'Project'], 
+    {
+      n: 'CRM Task e Progetti',
+      category: 'Gestionale',
+      tags: ['Gestionale', 'AI', 'Project'],
       year: '2024',
       desc: 'Sistema gestionale per progetti, task e andamento lavorazioni. Gestione clienti e collaboratori con integrazione AI tramite API.'
     },
-    { 
-      n: 'My Place Malpensa', 
-      tags: ['Sito Web', 'Booking', 'Multilingua'], 
+    {
+      n: 'My Place Malpensa',
+      category: 'Sito Web',
+      tags: ['Sito Web', 'Booking', 'Multilingua'],
       year: '2024',
       desc: 'Sito web multilingua con collegamento a Octorate per booking engine centralizzato e gestione prenotazioni automatizzata.'
     },
-    { 
-      n: 'Marazzato Moto', 
-      tags: ['Sito Web', 'Vetrina', 'E-commerce'], 
+    {
+      n: 'Marazzato Moto',
+      category: 'Sito Web',
+      tags: ['Sito Web', 'Vetrina', 'E-commerce'],
       year: '2024',
       desc: 'Sito web vetrina con caricamento dinamico prodotti da pannello dedicato e vetrina online per vendita moto e accessori.'
     },
-    { 
-      n: 'Casa Famiglia Villa Katia', 
-      tags: ['Marketing', 'Meta Ads', 'Landing'], 
+    {
+      n: 'Casa Famiglia Villa Katia',
+      category: 'Marketing',
+      tags: ['Marketing', 'Meta Ads', 'Landing'],
       year: '2024',
       desc: 'Soluzione completa: sito web, landing page e sponsorizzazioni Meta Ads con focus su Facebook e target di riferimento specifico.'
     },
-    { 
-      n: 'Casa Famiglia Quercia', 
-      tags: ['Marketing', 'Meta Ads', 'Social'], 
+    {
+      n: 'Casa Famiglia Quercia',
+      category: 'Marketing',
+      tags: ['Marketing', 'Meta Ads', 'Social'],
       year: '2024',
       desc: 'Sito web, landing page e campagne sponsorizzate Meta Ads per casa famiglia con strategia marketing mirata.'
     },
-    { 
-      n: 'Casa Famiglia Gramsci', 
-      tags: ['Marketing', 'Social', 'Landing'], 
+    {
+      n: 'Casa Famiglia Gramsci',
+      category: 'Marketing',
+      tags: ['Marketing', 'Social', 'Landing'],
       year: '2024',
       desc: 'Progetto completo con sito web istituzionale, landing page dedicate e campagne pubblicitarie social mirate.'
     },
-    { 
-      n: 'Casa Famiglia Benissimo', 
-      tags: ['Marketing', 'Facebook Ads', 'Web'], 
+    {
+      n: 'Casa Famiglia Benissimo',
+      category: 'Marketing',
+      tags: ['Marketing', 'Facebook Ads', 'Web'],
       year: '2024',
       desc: 'Sviluppo sito web, landing page ottimizzate e strategia marketing digitale con campagne Facebook Ads mirate.'
     },
-    { 
-      n: 'Casa Alloggio Sociale Anziani', 
-      tags: ['Marketing', 'Web', 'Social'], 
+    {
+      n: 'Casa Alloggio Sociale Anziani',
+      category: 'Marketing',
+      tags: ['Marketing', 'Web', 'Social'],
       year: '2024',
       desc: 'Casa alloggio sociale per anziani ad Abbiategrasso: sito web istituzionale, landing page e campagne marketing dedicate.'
     },
   ];
+
+  // Group projects by category for modern view
+  const modernCategories = ['Gestionale', 'Sito Web', 'Marketing', 'CRM'];
+  const groupedModernProjects = modernCategories.map(cat => ({
+    name: cat,
+    projects: projects.filter(p => p.category === cat)
+  })).filter(g => g.projects.length > 0);
 
   // Contact form state
   const [formData, setFormData] = useState({
@@ -2207,6 +2247,54 @@ function ModernSite({ togglePower, currentPage, setCurrentPage }) {
         </div>
       </motion.section>
 
+      {/* ── DARK SECTION: Why Us ── */}
+      <motion.section variants={itemVariants} className="mb-32 sm:mb-48 -mx-6 sm:-mx-10 lg:-mx-20 px-6 sm:px-10 lg:px-20 py-16 sm:py-24 lg:py-32 relative overflow-hidden" style={{
+        background: 'linear-gradient(135deg, #1a1810 0%, #1c1917 50%, #18181b 100%)'
+      }}>
+        {/* Subtle dark texture overlay */}
+        <div className="absolute inset-0 opacity-[0.02]" style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+          backgroundSize: '256px 256px',
+        }} />
+
+        <div className="relative z-10 max-w-6xl mx-auto">
+          <motion.div variants={itemVariants} className="mb-12 sm:mb-16">
+            <h3 className="text-4xl sm:text-5xl lg:text-6xl font-black mb-6 tracking-tight" style={{ color: '#f5f2ec' }}>
+              Perché Back Software.
+            </h3>
+            <p className="text-lg sm:text-xl leading-relaxed max-w-2xl font-medium" style={{ color: '#a09a88' }}>
+              Non siamo solo sviluppatori. Siamo partner che capiscono il tuo business.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+            {[
+              { num: '01', title: 'Ascolto', desc: 'Prima di scrivere codice, ascoltiamo. Capire il problema è più importante della soluzione tecnica.' },
+              { num: '02', title: 'Chiarezza', desc: 'Niente gergo incomprensibile. Ti spieghiamo tutto in modo semplice, senza sorprese.' },
+              { num: '03', title: 'Risultati', desc: 'Non vendiamo progetti, vendiamo soluzioni che funzionano davvero nel mondo reale.' }
+            ].map((item, i) => (
+              <motion.div key={i} variants={itemVariants}
+                className="p-6 sm:p-8 rounded-3xl relative group transition-all duration-300 hover:scale-[1.02]"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  border: '1px solid rgba(255, 255, 255, 0.06)',
+                  boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+                }}>
+                <div className="text-5xl sm:text-6xl font-black mb-4 tracking-tighter opacity-20 group-hover:opacity-30 transition-opacity" style={{ color: '#f5f2ec' }}>
+                  {item.num}
+                </div>
+                <h4 className="text-xl sm:text-2xl font-black mb-3 tracking-tight" style={{ color: '#f5f2ec' }}>
+                  {item.title}
+                </h4>
+                <p className="text-sm sm:text-base leading-relaxed" style={{ color: '#a09a88' }}>
+                  {item.desc}
+                </p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </motion.section>
+
       {/* ── SERVIZI Section (Bento Grid) ── */}
       <motion.section id="servizi" variants={itemVariants} className="mb-32 sm:mb-48 scroll-mt-32 px-2 lg:px-8 shrink-0">
         <div className="mb-16 flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -2247,28 +2335,73 @@ function ModernSite({ togglePower, currentPage, setCurrentPage }) {
             Clicca per i dettagli
           </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-          {projects.map((p, i) => (
-            <motion.div key={i} variants={itemVariants} whileHover={{ y: -6 }}
-              onClick={() => setSelectedService({ title: p.n, icon: '', details: p.desc })}
-              className="clay-card p-5 sm:p-6 lg:p-8 cursor-pointer group overflow-hidden relative hover:scale-[1.02] transition-transform">
-              <div className="absolute top-0 right-0 p-4 sm:p-6 opacity-5 text-5xl sm:text-6xl font-black tracking-tighter transition-opacity group-hover:opacity-10">{p.year}</div>
-              <div className="flex justify-between items-start mb-4 sm:mb-6">
-                <h4 className="text-lg sm:text-xl lg:text-2xl font-black text-[#2d2818] leading-tight max-w-[80%] group-hover:text-[#7c6f5b] transition-colors">{p.n}</h4>
-                <div className="clay-btn w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full shadow-sm text-base sm:text-lg transition-transform group-hover:rotate-45">↗</div>
+        {/* Projects grouped by category */}
+        <div className="space-y-0">
+          {groupedModernProjects.map((group, groupIdx) => (
+            <motion.section
+              key={groupIdx}
+              variants={itemVariants}
+              className={groupIdx % 2 === 0 ? 'py-12 sm:py-16' : 'py-12 sm:py-16 -mx-6 sm:-mx-10 lg:-mx-20 px-6 sm:px-10 lg:px-20 relative overflow-hidden'}
+              style={groupIdx % 2 === 1 ? {
+                background: 'linear-gradient(135deg, #1a1810 0%, #1c1917 50%, #18181b 100%)'
+              } : {}}
+            >
+              {/* Dark texture overlay for odd sections */}
+              {groupIdx % 2 === 1 && (
+                <div className="absolute inset-0 opacity-[0.02]" style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+                  backgroundSize: '256px 256px',
+                }} />
+              )}
+
+              <div className="relative z-10 max-w-6xl mx-auto">
+                {/* Category header */}
+                <motion.div variants={itemVariants} className="mb-6 sm:mb-8">
+                  <h4 className={`text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-3 ${groupIdx % 2 === 1 ? 'text-[#f5f2ec]' : 'text-[#2d2818]'}`}>
+                    <span className={groupIdx % 2 === 1 ? 'text-[#7c6f5b]' : 'text-[#7c6f5b]'}>&rsaquo;</span>
+                    {group.name}
+                  </h4>
+                  <div className={`h-0.5 bg-gradient-to-r mt-3 opacity-40 ${groupIdx % 2 === 1 ? 'from-[#7c6f5b] to-transparent' : 'from-[#7c6f5b] to-transparent'}`} />
+                </motion.div>
+                {/* Projects in this category */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+                  {group.projects.map((p, i) => (
+                    <motion.div
+                      key={`${groupIdx}-${i}`}
+                      variants={itemVariants}
+                      whileHover={{ y: -6 }}
+                      onClick={() => setSelectedService({ title: p.n, icon: '', details: p.desc })}
+                      className={`p-5 sm:p-6 lg:p-8 cursor-pointer group overflow-hidden relative hover:scale-[1.02] transition-transform ${groupIdx % 2 === 1 ? 'rounded-3xl' : 'clay-card'}`}
+                      style={groupIdx % 2 === 1 ? {
+                        background: 'rgba(255, 255, 255, 0.03)',
+                        border: '1px solid rgba(255, 255, 255, 0.06)',
+                        boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+                      } : {}}
+                    >
+                      <div className={`absolute top-0 right-0 p-4 sm:p-6 opacity-5 text-5xl sm:text-6xl font-black tracking-tighter transition-opacity group-hover:opacity-10 ${groupIdx % 2 === 1 ? 'text-[#f5f2ec]' : 'text-[#2d2818]'}`}>{p.year}</div>
+                      <div className="flex justify-between items-start mb-4 sm:mb-6">
+                        <h4 className={`text-lg sm:text-xl lg:text-2xl font-black leading-tight max-w-[80%] transition-colors ${groupIdx % 2 === 1 ? 'text-[#f5f2ec] group-hover:text-[#a09a88]' : 'text-[#2d2818] group-hover:text-[#7c6f5b]'}`}>{p.n}</h4>
+                        <div className={`w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full text-base sm:text-lg transition-transform group-hover:rotate-45 ${groupIdx % 2 === 1 ? 'bg-white/5 border border-white/10 text-[#f5f2ec]' : 'bg-[#f5f2ec] border-[#d4cfc5] text-[#3d3828]'}`}>↗</div>
+                      </div>
+                      <p className={`text-xs sm:text-sm leading-relaxed mb-3 sm:mb-4 line-clamp-2 ${groupIdx % 2 === 1 ? 'text-[#a09a88]' : 'text-[#6a6050]'}`}>{p.desc}</p>
+                      <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                        {p.tags.slice(0, 3).map(t => (
+                          <span
+                            key={t}
+                            className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-black uppercase tracking-wider ${groupIdx % 2 === 1 ? 'bg-white/5 border-white/10 text-[#a09a88]' : 'clay-pill text-[#8a7f6a] border-[#d4cfc5]/40'}`}
+                          >
+                            {t}
+                          </span>
+                        ))}
+                      </div>
+                      <div className={`mt-3 sm:mt-4 text-[10px] sm:text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity ${groupIdx % 2 === 1 ? 'text-[#7c6f5b]' : 'text-[#7c6f5b]'}`}>
+                        Scopri di più →
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
               </div>
-              <p className="text-xs sm:text-sm text-[#6a6050] leading-relaxed mb-3 sm:mb-4 line-clamp-2">{p.desc}</p>
-              <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                {p.tags.slice(0, 3).map(t => (
-                  <span key={t} className="clay-pill px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-black text-[#8a7f6a] border border-[#d4cfc5]/40 uppercase tracking-wider">
-                    {t}
-                  </span>
-                ))}
-              </div>
-              <div className="mt-3 sm:mt-4 text-[10px] sm:text-xs font-bold text-[#7c6f5b] opacity-0 group-hover:opacity-100 transition-opacity">
-                Scopri di più →
-              </div>
-            </motion.div>
+            </motion.section>
           ))}
         </div>
       </motion.section>
