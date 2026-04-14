@@ -265,6 +265,7 @@
   scroll-behavior: smooth;
   overscroll-behavior-y: none;
   -webkit-overflow-scrolling: touch;
+  will-change: scroll-position;
 }
 
 .modern-snap-section {
@@ -275,6 +276,9 @@
   max-height: 100dvh;
   overflow: hidden;
   flex-shrink: 0;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  contain: layout style paint;
 }
 
 .modern-snap-section.snap-scroll-inner {
@@ -299,6 +303,7 @@
     inset -8px -8px 16px rgba(255, 255, 255, 0.6),
     inset 1px 1px 0px rgba(255, 255, 255, 0.8);
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform: translateZ(0);
 }
 
 .clay-card:hover {
@@ -353,38 +358,42 @@
   background: linear-gradient(135deg, #fdfcf9 0%, #f5f2ed 100%);
 }
 
-/* Dark Claymorphism - Same shape and depth, adapted for dark backgrounds */
+/* Dark Claymorphism 2.0 — Rich pillow depth on warm dark surfaces */
 .clay-card-dark {
   border-radius: 32px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(145deg, #2b2720 0%, #1f1d18 100%);
+  border: 1px solid rgba(255, 248, 230, 0.07);
+  border-top-color: rgba(255, 248, 230, 0.13);
+  border-left-color: rgba(255, 248, 230, 0.10);
   box-shadow:
-    12px 12px 24px rgba(0, 0, 0, 0.4),
-    -8px -8px 20px rgba(255, 255, 255, 0.05),
-    inset 8px 8px 16px rgba(255, 255, 255, 0.03),
-    inset -8px -8px 16px rgba(0, 0, 0, 0.2),
-    inset 1px 1px 0px rgba(255, 255, 255, 0.1);
+    4px 6px 16px rgba(0, 0, 0, 0.3),
+    -3px -3px 10px rgba(58, 52, 40, 0.06),
+    inset 4px 4px 10px rgba(255, 248, 230, 0.025),
+    inset -4px -4px 10px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 248, 230, 0.08);
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .clay-card-dark:hover {
-  transform: translateY(-6px);
+  transform: translateY(-4px);
+  background: linear-gradient(145deg, #302c24 0%, #22201a 100%);
+  border-top-color: rgba(255, 248, 230, 0.16);
   box-shadow:
-    16px 20px 32px rgba(0, 0, 0, 0.45),
-    -10px -10px 24px rgba(255, 255, 255, 0.06),
-    inset 6px 6px 12px rgba(255, 255, 255, 0.04),
-    inset -6px -6px 12px rgba(0, 0, 0, 0.15),
-    inset 1px 1px 0px rgba(255, 255, 255, 0.12);
+    6px 8px 22px rgba(0, 0, 0, 0.35),
+    -4px -4px 14px rgba(58, 52, 40, 0.08),
+    inset 3px 3px 8px rgba(255, 248, 230, 0.03),
+    inset -3px -3px 8px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 248, 230, 0.12);
 }
 
 .clay-pill-dark {
   border-radius: 60px;
-  background: rgba(255, 255, 255, 0.08);
+  background: linear-gradient(145deg, #2a2620 0%, #1e1c17 100%);
   box-shadow:
-    inset 3px 3px 6px rgba(255, 255, 255, 0.04),
-    inset -3px -3px 6px rgba(0, 0, 0, 0.2),
-    2px 2px 4px rgba(0, 0, 0, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+    inset 2px 2px 5px rgba(255, 248, 230, 0.025),
+    inset -2px -2px 5px rgba(0, 0, 0, 0.15),
+    2px 2px 5px rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(255, 248, 230, 0.08);
 }
 
 @keyframes float {

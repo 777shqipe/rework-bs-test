@@ -113,6 +113,8 @@ export default function ModernSite({ onSwitchToTerminal }) {
   const [showContactForm, setShowContactForm] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('Tutti');
+  const [showFooter, setShowFooter] = useState(false);
+  const contactSectionRef = useRef(null);
 
   // Orbiting text around header — pixel-perfect
   const headerRef = useRef(null);
@@ -214,21 +216,48 @@ export default function ModernSite({ onSwitchToTerminal }) {
   // Orbit color: brownish on light, warm beige on dark
   const orbitColor = orbitOnDark ? '#d4cabb' : '#5a5244';
 
+  // Footer reveal on wheel in contact section
+  useEffect(() => {
+    const section = contactSectionRef.current;
+    if (!section) return;
+    let cooldown = false;
+    const onWheel = (e) => {
+      // Only act if this section is actually in view (snapped)
+      const rect = section.getBoundingClientRect();
+      if (Math.abs(rect.top) > 50) return;
+      // When footer is open, block ALL scroll events to prevent snap from firing
+      if (showFooter) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!cooldown && e.deltaY < -30) {
+          setShowFooter(false);
+          cooldown = true;
+          setTimeout(() => { cooldown = false; }, 600);
+        }
+        return;
+      }
+      if (e.deltaY > 30 && !cooldown) {
+        e.preventDefault();
+        setShowFooter(true);
+        cooldown = true;
+        setTimeout(() => { cooldown = false; }, 600);
+      }
+    };
+    section.addEventListener('wheel', onWheel, { passive: false });
+    return () => section.removeEventListener('wheel', onWheel);
+  }, [showFooter]);
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: { staggerChildren: 0.15, delayChildren: 0.3 }
+      transition: { duration: 0.4, ease: 'easeOut' }
     }
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { type: 'spring', stiffness: 100, damping: 12 }
-    }
+    hidden: { opacity: 1 },
+    visible: { opacity: 1 }
   };
 
   const sectionTitleClass = 'text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[0.96]';
@@ -245,34 +274,55 @@ export default function ModernSite({ onSwitchToTerminal }) {
     transition: { duration: 0.58, delay: 0.1, ease: [0.22, 1, 0.36, 1] }
   };
 
-  // Clean SVG icon components
-  const IconWeb = () => (
+  // Clean SVG icon components — unique per service
+  const IconCasaFamiglia = () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-7 h-7">
+      <path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z" />
+      <path d="M12 11.5c.8-.9 2.5-.9 2.5.7 0 1.8-2.5 3.3-2.5 3.3s-2.5-1.5-2.5-3.3c0-1.6 1.7-1.6 2.5-.7z" />
+    </svg>
+  );
+  const IconSitiLanding = () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-7 h-7">
+      <rect x="2" y="3" width="20" height="16" rx="2" />
+      <path d="M2 8h20" />
+      <circle cx="5" cy="5.5" r="0.75" fill="currentColor" stroke="none" />
+      <circle cx="7.5" cy="5.5" r="0.75" fill="currentColor" stroke="none" />
+      <circle cx="10" cy="5.5" r="0.75" fill="currentColor" stroke="none" />
+      <path d="M8 22l4-3 4 3" />
+    </svg>
+  );
+  const IconMarketing = () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-7 h-7">
       <circle cx="12" cy="12" r="10" />
-      <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+      <circle cx="12" cy="12" r="6" />
+      <circle cx="12" cy="12" r="2" />
     </svg>
   );
-  const IconCode = () => (
+  const IconFotoVideo = () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-7 h-7">
-      <polyline points="16 18 22 12 16 6" />
-      <polyline points="8 6 2 12 8 18" />
+      <rect x="1" y="5" width="15" height="14" rx="2" />
+      <path d="M16 9.5l5-3v11l-5-3z" />
     </svg>
   );
-  const IconChart = () => (
+  const IconGraficaCopy = () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-7 h-7">
-      <path d="M18 20V10M12 20V4M6 20v-6" />
+      <path d="M12 2L2 7l10 5 10-5-10-5z" />
+      <path d="M2 17l10 5 10-5" />
+      <path d="M2 12l10 5 10-5" />
     </svg>
   );
-  const IconCamera = () => (
+  const IconDigitali = () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-7 h-7">
-      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-      <circle cx="12" cy="13" r="4" />
+      <rect x="2" y="4" width="20" height="16" rx="2" />
+      <path d="M2 8h20" />
+      <path d="M7 12l3 3-3 3" />
+      <path d="M13 17h4" />
     </svg>
   );
 
   const services = useMemo(() => [
     {
-      icon: <IconWeb />,
+      icon: <IconCasaFamiglia />,
       title: 'Case Famiglia',
       desc: 'Pacchetti completi per strutture che ospitano famiglie in difficoltà.',
       details: 'Servizio dedicato alle strutture che ospitano famiglie in difficoltà. Gestiamo tutto: sito web, social media, campagne pubblicitarie mirate e sistema di prenotazioni.',
@@ -284,7 +334,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
       span: 'md:col-span-2'
     },
     {
-      icon: <IconWeb />,
+      icon: <IconSitiLanding />,
       title: 'Siti e Landing',
       desc: 'Siti web professionali e landing page ottimizzate per conversioni.',
       details: 'Siti web professionali e landing page ottimizzate per le conversioni. Dal sito aziendale completo alla landing page mirata, tutto responsive e pronto per Google.',
@@ -295,7 +345,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
       span: ''
     },
     {
-      icon: <IconChart />,
+      icon: <IconMarketing />,
       title: 'Marketing & ADS',
       desc: 'Analisi, Meta Ads e Google Ads. Strategie che portano risultati.',
       details: 'Strategie di marketing digitale e campagne pubblicitarie mirate. Analisi, pianificazione e gestione completa delle tue campagne su Meta e Google.',
@@ -307,7 +357,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
       span: ''
     },
     {
-      icon: <IconCamera />,
+      icon: <IconFotoVideo />,
       title: 'Foto & Video',
       desc: 'Servizi fotografici e video professionali per la tua azienda.',
       details: 'Servizi professionali di fotografia e video per la tua azienda. Shooting fotografici, riprese con drone, video corporate e contenuti per i social.',
@@ -319,7 +369,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
       span: ''
     },
     {
-      icon: <IconCode />,
+      icon: <IconGraficaCopy />,
       title: 'Grafica & Copy',
       desc: 'Design grafico e copywriting per la tua comunicazione.',
       details: 'Servizi di design grafico e copywriting per la tua comunicazione. Loghi, identità visiva, materiali grafici e testi che parlano al tuo pubblico.',
@@ -330,8 +380,8 @@ export default function ModernSite({ onSwitchToTerminal }) {
       span: ''
     },
     {
-      icon: <IconCode />,
-      title: 'Digitali Avanzati',
+      icon: <IconDigitali />,
+      title: 'Software su Misura',
       desc: 'Gestionali, applicazioni e integrazioni API su misura.',
       details: 'Soluzioni digitali avanzate per la gestione aziendale. Software su misura, gestionali, applicazioni web/mobile e integrazioni API.',
       packages: [
@@ -732,26 +782,9 @@ export default function ModernSite({ onSwitchToTerminal }) {
 
           {/* Logo */}
           <div className="flex items-center gap-3 min-w-0 relative z-10">
-            <div className="relative w-12 h-12 sm:w-[52px] sm:h-[52px] shrink-0">
-              <motion.svg
-                viewBox="0 0 200 200"
-                className="w-full h-full"
-                animate={{ rotate: 360 }}
-                transition={{ repeat: Infinity, ease: 'linear', duration: 12 }}
-              >
-                <defs>
-                  <path id="header-circle-path" d="M100,100 m-78,0 a78,78 0 1,1 156,0 a78,78 0 1,1 -156,0" />
-                </defs>
-                <text fill="#4f4637" className="text-[12px] font-black tracking-[2px] uppercase">
-                  <textPath href="#header-circle-path" startOffset="0%" textLength="490" lengthAdjust="spacing">
-                    backsoftware • backsoftware • backsoftware •
-                  </textPath>
-                </text>
-              </motion.svg>
-            </div>
             <div className="min-w-0">
-              <h1 className="text-[13px] sm:text-[15px] font-black tracking-tight text-[#2f2a1d] leading-none truncate">Back Software</h1>
-              <p className="text-[9px] sm:text-[10px] font-bold text-[#807865] opacity-75 tracking-[0.14em] uppercase truncate">Studio digitale su misura</p>
+              <h1 className="text-[18px] sm:text-[20px] font-black tracking-tight text-[#2f2a1d] leading-none truncate">Back Software</h1>
+              <p className="text-[10px] sm:text-[11px] font-bold text-[#807865] opacity-75 tracking-[0.14em] uppercase truncate">Studio digitale su misura</p>
             </div>
           </div>
 
@@ -797,23 +830,35 @@ export default function ModernSite({ onSwitchToTerminal }) {
 
 
       {/* ── HERO ── */}
-      <motion.section variants={itemVariants} className="modern-snap-section flex items-center relative px-6 sm:px-8">
+      <motion.section variants={itemVariants} className="modern-snap-section flex items-center relative px-6 sm:px-8 pt-24">
         {/* Floating Accents */}
         <div className="absolute -top-10 left-10 w-24 h-24 clay-pill opacity-10 animate-float pointer-events-none" />
         <div className="absolute top-40 right-10 w-32 h-32 clay-pill opacity-10 animate-float-delayed pointer-events-none" />
 
         <div className="max-w-5xl mx-auto">
-          <motion.div variants={itemVariants} className="inline-block px-5 py-2 mb-8 text-xs font-black tracking-[3px] uppercase clay-pill text-[#6a6050] border border-[#d4cfc5]/40">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            className="inline-block px-5 py-2 mb-8 text-xs font-black tracking-[3px] uppercase clay-pill text-[#6a6050] border border-[#d4cfc5]/40">
             Design & Tecnologia
           </motion.div>
-          <motion.h2 variants={itemVariants} className="text-5xl sm:text-7xl lg:text-8xl font-black leading-[1.05] mb-8 tracking-tighter text-[#2d2818]">
+          <motion.h2
+            initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.35, ease: [0.22, 1, 0.36, 1] }}
+            className="text-5xl sm:text-7xl lg:text-8xl font-black leading-[1.05] mb-8 tracking-tighter text-[#2d2818]">
             Software che funziona.<br/>
             <span className="text-[#8a7f6a] drop-shadow-sm">Fatto da persone reali.</span>
           </motion.h2>
-          <motion.p variants={itemVariants} className="text-xl sm:text-2xl lg:text-3xl leading-relaxed max-w-3xl font-medium mb-12 text-[#6a6050]">
+          <motion.p
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            className="text-xl sm:text-2xl lg:text-3xl leading-relaxed max-w-3xl font-medium mb-12 text-[#6a6050]">
             Tecnologia che semplifica, non complica. Costruiamo il tuo progetto come se fosse il nostro.
           </motion.p>
-          <motion.div variants={itemVariants} className="flex flex-wrap gap-8 items-center">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.65, ease: [0.22, 1, 0.36, 1] }}
+            className="flex flex-wrap gap-8 items-center">
             <a href="#contatti" className="clay-btn px-10 py-5 text-lg font-bold !rounded-2xl text-[#3d3828] bg-[#f8f6f2] hover:scale-105 active:scale-95 transition-transform">
               Parlaci del tuo progetto →
             </a>
@@ -832,17 +877,20 @@ export default function ModernSite({ onSwitchToTerminal }) {
       </motion.section>
 
       {/* ── DARK SECTION: Why Us ── */}
-      <motion.section id="come-lavoriamo" data-dark-section variants={itemVariants} className="modern-snap-section flex flex-col justify-center relative px-4 sm:px-6 lg:px-10 py-16 sm:py-20" style={{
-        background: 'linear-gradient(135deg, #1a1810 0%, #1c1917 50%, #18181b 100%)',
+      <motion.section id="come-lavoriamo" data-dark-section variants={itemVariants} className="modern-snap-section flex flex-col justify-center relative px-4 sm:px-6 lg:px-10 pt-24 pb-16 sm:py-20 overflow-hidden" style={{
+        background: 'linear-gradient(135deg, #1a1810 0%, #1c1917 50%, #1a1810 100%)',
       }}>
         {/* Subtle dark texture overlay */}
         <div className="absolute inset-0 opacity-[0.02]" style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
           backgroundSize: '256px 256px',
         }} />
+        {/* Ambient warm glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[60%] rounded-full opacity-[0.04] pointer-events-none" style={{ background: 'radial-gradient(ellipse, #b8a88a 0%, transparent 70%)' }} />
+        <div className="absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full opacity-[0.03] pointer-events-none" style={{ background: 'radial-gradient(circle, #c4a76c 0%, transparent 60%)' }} />
 
         <div className="relative z-10 max-w-6xl mx-auto w-full">
-          <motion.div variants={itemVariants} className="mb-8 space-y-4">
+          <motion.div variants={itemVariants} className="mb-10 sm:mb-12 space-y-4">
             <motion.h3 {...sectionTitleReveal} className={`${sectionTitleClass} text-[#f5f2ec]`}>
               Perché Back Software.
             </motion.h3>
@@ -858,14 +906,17 @@ export default function ModernSite({ onSwitchToTerminal }) {
               { num: '03', title: 'Risultati', desc: 'Non vendiamo progetti, vendiamo soluzioni che funzionano davvero nel mondo reale.' }
             ].map((item, i) => (
               <motion.div key={i} variants={itemVariants}
-                className="clay-card-dark p-6 sm:p-8 relative group transition-all duration-300 hover:scale-[1.02]">
-                <div className="text-5xl sm:text-6xl font-black mb-4 tracking-tighter opacity-20 group-hover:opacity-30 transition-opacity" style={{ color: '#f5f2ec' }}>
+                className="clay-card-dark p-6 sm:p-8 relative group transition-all duration-300 hover:scale-[1.02] overflow-hidden">
+                {/* Top accent line — glows on hover */}
+                <div className="absolute top-0 left-8 right-8 h-px transition-all duration-500 group-hover:left-6 group-hover:right-6" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(196, 180, 148, 0.25) 50%, transparent 100%)' }} />
+                <div className="absolute top-0 left-12 right-12 h-px opacity-0 group-hover:opacity-100 blur-[2px] transition-all duration-500" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(196, 180, 148, 0.4) 50%, transparent 100%)' }} />
+                <div className="text-5xl sm:text-6xl font-black mb-4 tracking-tighter opacity-[0.08] group-hover:opacity-[0.15] transition-opacity duration-500 select-none" style={{ color: '#d4cabb', WebkitTextStroke: '1px rgba(212, 202, 187, 0.15)' }}>
                   {item.num}
                 </div>
-                <h4 className="text-xl sm:text-2xl font-black mb-3 tracking-tight" style={{ color: '#f5f2ec' }}>
+                <h4 className="text-xl sm:text-2xl font-black mb-3 tracking-tight text-[#ede8de] group-hover:text-[#f5f2ec] transition-colors duration-300">
                   {item.title}
                 </h4>
-                <p className="text-sm sm:text-base leading-relaxed" style={{ color: '#a09a88' }}>
+                <p className="text-sm sm:text-base leading-relaxed" style={{ color: '#9a9484' }}>
                   {item.desc}
                 </p>
               </motion.div>
@@ -875,7 +926,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
       </motion.section>
 
       {/* ── SERVIZI Section ── */}
-      <motion.section id="servizi" variants={itemVariants} className="modern-snap-section flex flex-col justify-center px-4 sm:px-6 lg:px-10 py-16 sm:py-20">
+      <motion.section id="servizi" variants={itemVariants} className="modern-snap-section flex flex-col justify-center px-4 sm:px-6 lg:px-10 pt-24 pb-16 sm:py-20">
         <div className="max-w-6xl mx-auto w-full">
           <motion.div variants={itemVariants} className="mb-8 space-y-4">
             <motion.h3 {...sectionTitleReveal} className={`${sectionTitleClass} text-[#2d2818]`}>Cosa facciamo.</motion.h3>
@@ -904,28 +955,37 @@ export default function ModernSite({ onSwitchToTerminal }) {
         </div>
       </motion.section>
 
-      {/* ── PROGETTI Section ── */}
-      <motion.section id="progetti" variants={itemVariants}
-        className="modern-snap-section snap-scroll-inner flex flex-col relative px-4 sm:px-6 lg:px-10 pt-24 sm:pt-28 pb-16 sm:pb-20"
+      {/* ── PROGETTI Section (DARK) ── */}
+      <motion.section id="progetti" data-dark-section variants={itemVariants}
+        className="modern-snap-section flex flex-col px-4 sm:px-6 lg:px-10 pt-24 pb-16 sm:pb-20 overflow-hidden"
         style={{
-          background: 'linear-gradient(180deg, #f5f2ec 0%, #efe9de 100%)',
+          background: 'linear-gradient(135deg, #1a1810 0%, #1c1917 50%, #1a1810 100%)',
         }}
       >
-        <div className="max-w-6xl mx-auto w-full flex flex-col">
-          {/* Header with title and category selector */}
-          <div className="flex flex-col gap-5 sm:gap-6 mb-8 sm:mb-10 lg:mb-12 shrink-0">
-            <div className="space-y-3">
-              <motion.h3 {...sectionTitleReveal} className={`${sectionTitleClass} text-[#2d2818]`}>Galleria Progetti.</motion.h3>
-              <motion.p {...sectionSubtitleReveal} className="text-base sm:text-lg text-[#6a6050] font-medium">{projects.length} Successi Reali</motion.p>
+        {/* Subtle dark texture overlay */}
+        <div className="absolute inset-0 opacity-[0.02]" style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+          backgroundSize: '256px 256px',
+        }} />
+        {/* Ambient warm glows */}
+        <div className="absolute top-1/3 left-1/4 w-[60%] h-[50%] rounded-full opacity-[0.035] pointer-events-none" style={{ background: 'radial-gradient(ellipse, #b8a88a 0%, transparent 70%)' }} />
+        <div className="absolute -bottom-32 -left-32 w-[400px] h-[400px] rounded-full opacity-[0.025] pointer-events-none" style={{ background: 'radial-gradient(circle, #c4a76c 0%, transparent 60%)' }} />
+        
+        {/* Fixed header — stays at same height as "Cosa facciamo" */}
+        <div className="relative z-10 max-w-6xl mx-auto w-full">
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5 sm:gap-6 mb-8 sm:mb-10 lg:mb-12">
+            <div className="space-y-4">
+              <motion.h3 className={`${sectionTitleClass} text-[#f5f2ec]`}>Galleria Progetti.</motion.h3>
+              <p className="text-base sm:text-lg font-medium" style={{ color: '#a09a88' }}>{projects.length} Successi Reali</p>
             </div>
 
             {/* Category Selector - Raycast Style */}
-            <motion.div variants={itemVariants} className="self-start w-full lg:w-auto">
+            <div className="self-start lg:self-auto w-full lg:w-auto">
               <div className="w-full lg:w-auto overflow-x-auto pb-1">
-                <div className="inline-flex min-w-max p-2 rounded-[2rem]" style={{
-                  background: 'rgba(166, 159, 147, 0.12)',
-                  border: '1px solid rgba(166, 159, 147, 0.2)',
-                  boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.05)'
+                <div className="inline-flex min-w-max p-1.5 rounded-[2rem]" style={{
+                  background: 'linear-gradient(145deg, rgba(43, 39, 32, 0.9) 0%, rgba(31, 29, 24, 0.95) 100%)',
+                  border: '1px solid rgba(255, 248, 230, 0.08)',
+                  borderTopColor: 'rgba(255, 248, 230, 0.12)',
                 }}>
                   {['Tutti', ...modernCategories].map((cat) => (
                     <button
@@ -933,8 +993,8 @@ export default function ModernSite({ onSwitchToTerminal }) {
                       onClick={() => setSelectedCategory(cat)}
                       className={`relative px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base font-bold transition-all duration-200 rounded-[1.5rem] ${
                         selectedCategory === cat
-                          ? 'text-[#2d2818]'
-                          : 'text-[#8a7f6a] hover:text-[#6a6050]'
+                          ? 'text-[#f5f2ec]'
+                          : 'text-[#8a7f6a] hover:text-[#c4bba8]'
                       }`}
                     >
                       {selectedCategory === cat && (
@@ -942,9 +1002,10 @@ export default function ModernSite({ onSwitchToTerminal }) {
                           layoutId="categoryPill"
                           className="absolute inset-0 rounded-[1.5rem]"
                           style={{
-                            background: '#f5f2ec',
-                            border: '1px solid rgba(166, 159, 147, 0.3)',
-                            boxShadow: '0 2px 8px rgba(166, 159, 147, 0.2), inset 0 1px 0 rgba(255,255,255,0.8)'
+                            background: 'linear-gradient(145deg, rgba(58, 52, 40, 0.8) 0%, rgba(38, 35, 28, 0.9) 100%)',
+                            border: '1px solid rgba(255, 248, 230, 0.12)',
+                            borderTopColor: 'rgba(255, 248, 230, 0.18)',
+                            boxShadow: '4px 6px 14px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 248, 230, 0.08)'
                           }}
                           transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                         />
@@ -954,66 +1015,106 @@ export default function ModernSite({ onSwitchToTerminal }) {
                   ))}
                 </div>
               </div>
-            </motion.div>
+            </div>
           </div>
+        </div>
 
-          {/* Projects grid */}
-          <div className="w-full">
+        {/* Scrollable cards area */}
+        <div className="relative z-10 max-w-6xl mx-auto w-full flex-1 overflow-y-auto">
+          <AnimatePresence mode="wait">
             {selectedCategory === 'Tutti' ? (
-              /* Compact cards for "Tutti" - show only name and year */
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-4">
+              /* Compact cards for "Tutti" */
+              <motion.div
+                key="tutti"
+                className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-4"
+              >
                 {groupedModernProjects.flatMap(g => g.projects).map((p, i) => (
                   <motion.div
-                    key={i}
-                    variants={itemVariants}
-                    whileHover={{ y: -4 }}
+                    key={p.n}
+                    initial={{ opacity: 0, y: 32, scale: 0.85 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.85, y: -12 }}
+                    transition={{
+                      opacity: { duration: 0.25 },
+                      scale: { type: 'spring', stiffness: 350, damping: 20, mass: 1.0 },
+                      y: { type: 'spring', stiffness: 350, damping: 20, mass: 1.0 },
+                      delay: i * 0.035
+                    }}
+                    whileHover={{ y: -4, scale: 1.02 }}
                     onClick={() => setSelectedService({ title: p.n, icon: '', details: p.desc })}
-                    className="p-3 sm:p-4 cursor-pointer group overflow-hidden relative hover:scale-[1.02] transition-transform clay-card flex flex-col justify-between min-h-[104px]"
+                    className="p-3 sm:p-4 cursor-pointer group overflow-hidden relative hover:scale-[1.02] transition-transform clay-card-dark flex flex-col justify-between min-h-[104px]"
                   >
-                    <div className="absolute top-0 right-0 p-2 opacity-10 text-2xl sm:text-3xl font-black tracking-tighter transition-opacity group-hover:opacity-20 text-[#2d2818]">{p.year}</div>
-                    <h4 className="text-sm font-black leading-tight transition-colors text-[#2d2818] group-hover:text-[#7c6f5b] pr-8">{p.n}</h4>
+                    {/* Top accent line */}
+                    <div className="absolute top-0 left-6 right-6 h-px transition-all duration-500 group-hover:left-4 group-hover:right-4" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(196, 180, 148, 0.2) 50%, transparent 100%)' }} />
+                    <div className="absolute top-0 right-0 p-2 opacity-[0.06] text-2xl sm:text-3xl font-black tracking-tighter transition-opacity duration-500 group-hover:opacity-[0.14] text-[#d4cabb] select-none">{p.year}</div>
+                    <h4 className="text-sm font-black leading-tight transition-colors duration-300 text-[#ede8de] group-hover:text-[#f5f2ec] pr-8">{p.n}</h4>
                     <div className="mt-auto pt-2 flex justify-between items-end">
-                      <span className="text-xs text-[#8a7f6a] font-bold">{p.year}</span>
-                      <div className="w-6 h-6 flex items-center justify-center rounded-full text-xs transition-transform group-hover:rotate-45 bg-[#f5f2ec] border border-[#d4cfc5] text-[#3d3828]">↗</div>
+                      <span className="text-xs text-[#7a7568] font-bold">{p.year}</span>
+                      <div className="w-6 h-6 flex items-center justify-center rounded-full text-xs transition-all duration-300 group-hover:rotate-45 clay-pill-dark text-[#b8ad98] group-hover:text-[#ede8de]">↗</div>
                     </div>
                   </motion.div>
                 ))}
-              </div>
+              </motion.div>
             ) : (
-              /* Full cards for specific categories */
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-6 lg:gap-7">
+              /* Full cards for specific categories — EXPAND animation */
+              <motion.div
+                key={selectedCategory}
+                className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-6 lg:gap-7"
+              >
                 {groupedModernProjects.find(g => g.name === selectedCategory)?.projects.map((p, i) => (
                   <motion.div
-                    key={i}
-                    variants={itemVariants}
-                    whileHover={{ y: -4 }}
+                    key={p.n}
+                    initial={{ opacity: 0, y: 65, scale: 0.7 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.85, y: -12 }}
+                    transition={{
+                      opacity: { duration: 0.3 },
+                      scale: { type: 'spring', stiffness: 200, damping: 12, mass: 1.6 },
+                      y: { type: 'spring', stiffness: 200, damping: 12, mass: 1.6 },
+                      delay: i * 0.09
+                    }}
+                    whileHover={{ y: -4, scale: 1.02 }}
                     onClick={() => setSelectedService({ title: p.n, icon: '', details: p.desc })}
-                    className="p-5 sm:p-6 cursor-pointer group overflow-hidden relative hover:scale-[1.02] transition-transform clay-card min-h-[196px]"
+                    className="p-5 sm:p-6 cursor-pointer group overflow-hidden relative hover:scale-[1.02] transition-transform clay-card-dark min-h-[196px]"
                   >
-                    <div className="absolute top-0 right-0 p-3 sm:p-4 opacity-5 text-4xl sm:text-5xl font-black tracking-tighter transition-opacity group-hover:opacity-10 text-[#2d2818]">{p.year}</div>
+                    {/* Top accent line */}
+                    <div className="absolute top-0 left-8 right-8 h-px transition-all duration-500 group-hover:left-6 group-hover:right-6" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(196, 180, 148, 0.25) 50%, transparent 100%)' }} />
+                    <div className="absolute top-0 left-12 right-12 h-px opacity-0 group-hover:opacity-100 blur-[2px] transition-all duration-500" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(196, 180, 148, 0.4) 50%, transparent 100%)' }} />
+                    <div className="absolute top-0 right-0 p-3 sm:p-4 opacity-[0.04] text-4xl sm:text-5xl font-black tracking-tighter transition-opacity duration-500 group-hover:opacity-[0.1] text-[#d4cabb] select-none">{p.year}</div>
                     <div className="flex justify-between items-start mb-3">
-                      <h4 className="text-base sm:text-lg font-black leading-tight max-w-[80%] transition-colors text-[#2d2818] group-hover:text-[#7c6f5b]">{p.n}</h4>
-                      <div className="w-8 h-8 flex items-center justify-center rounded-full text-sm transition-transform group-hover:rotate-45 bg-[#f5f2ec] border border-[#d4cfc5] text-[#3d3828]">↗</div>
+                      <h4 className="text-base sm:text-lg font-black leading-tight max-w-[80%] transition-colors duration-300 text-[#ede8de] group-hover:text-[#f5f2ec]">{p.n}</h4>
+                      <div className="w-8 h-8 flex items-center justify-center rounded-full text-sm transition-all duration-300 group-hover:rotate-45 clay-pill-dark text-[#b8ad98] group-hover:text-[#ede8de]">↗</div>
                     </div>
-                    <p className="text-xs leading-relaxed mb-2 line-clamp-2 text-[#6a6050]">{p.desc}</p>
+                    <p className="text-xs leading-relaxed mb-2 line-clamp-2" style={{ color: '#9a9484' }}>{p.desc}</p>
                     <div className="flex flex-wrap gap-1.5">
-                      {p.tags.slice(0, 3).map(t => (
-                        <span key={t} className="px-2 py-1 text-[10px] font-black uppercase tracking-wider clay-pill text-[#8a7f6a]">
+                      {p.tags.slice(0, 3).map((t, ti) => (
+                        <motion.span
+                          key={t}
+                          initial={{ opacity: 0, scale: 0.5 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: i * 0.09 + 0.25 + ti * 0.07, type: 'spring', stiffness: 300, damping: 15 }}
+                          className="px-2 py-1 text-[10px] font-black uppercase tracking-wider clay-pill-dark text-[#8a7f6a]"
+                        >
                           {t}
-                        </span>
+                        </motion.span>
                       ))}
                     </div>
                   </motion.div>
                 ))}
-              </div>
+              </motion.div>
             )}
-          </div>
+          </AnimatePresence>
         </div>
       </motion.section>
 
       {/* ── CONTATTI Section ── */}
-      <motion.section id="contatti" variants={itemVariants} className="modern-snap-section flex flex-col justify-center px-4 sm:px-6 lg:px-10 py-16 sm:py-20">
-        <div className="max-w-6xl mx-auto w-full">
+      <motion.section ref={contactSectionRef} id="contatti" variants={itemVariants} className="modern-snap-section flex flex-col justify-center px-4 sm:px-6 lg:px-10 pt-24 pb-16 sm:py-20 relative" style={{ background: '#f5f2ec' }}>
+        {/* Contact content — shifts up when footer appears */}
+        <motion.div
+          className="max-w-6xl mx-auto w-full relative z-10"
+          animate={showFooter ? { y: '-18%', scale: 0.92, opacity: 0.4, filter: 'blur(6px)' } : { y: 0, scale: 1, opacity: 1, filter: 'blur(0px)' }}
+          transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+        >
           <motion.div variants={itemVariants} className="mb-8 text-center space-y-4">
             <motion.h3 {...sectionTitleReveal} className={`${sectionTitleClass} text-[#2d2818]`}>Parliamo del tuo futuro.</motion.h3>
             <motion.p {...sectionSubtitleReveal} className="text-base sm:text-lg text-[#6a6050] font-medium max-w-2xl mx-auto">
@@ -1035,17 +1136,18 @@ export default function ModernSite({ onSwitchToTerminal }) {
             </a>
           </div>
           </div>
-        </div>
-      </motion.section>
+        </motion.div>
 
-      {/* ── FOOTER SNAP ── */}
-      <motion.section
-        id="footer"
-        variants={itemVariants}
-        className="modern-snap-section flex flex-col justify-end px-4 sm:px-6 lg:px-10 py-16 sm:py-20"
-        style={{ background: 'linear-gradient(180deg, #efe9de 0%, #e7dfd2 100%)' }}
-      >
-        <div className="max-w-6xl mx-auto w-full">
+        {/* ── FOOTER (slides up from below, overlaying contact) ── */}
+        <motion.div
+          id="footer"
+          className="absolute inset-x-4 sm:inset-x-6 lg:inset-x-10 bottom-0 z-20 pb-6 sm:pb-10"
+          initial={false}
+          animate={showFooter ? { y: 0, opacity: 1 } : { y: '100%', opacity: 0 }}
+          transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+          style={{ pointerEvents: showFooter ? 'auto' : 'none' }}
+        >
+          <div className="max-w-6xl mx-auto w-full">
           <footer className="clay-card p-7 sm:p-10 lg:p-12 border border-[#d4cfc5]/50 bg-gradient-to-br from-[#f7f4ee] via-[#f3efe7] to-[#ece5d8]">
             <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-8 sm:gap-10 lg:gap-14">
               <div className="flex flex-col items-start gap-4">
@@ -1115,9 +1217,13 @@ export default function ModernSite({ onSwitchToTerminal }) {
                     <a href="mailto:info@backsoftware.it" className="block font-semibold hover:text-[#2d2818] transition-colors">
                       info@backsoftware.it
                     </a>
+                    <a href="mailto:julian.rovera@pec.it" className="block font-semibold hover:text-[#2d2818] transition-colors">
+                      julian.rovera@pec.it (PEC)
+                    </a>
                     <a href="tel:+393513052627" className="block font-semibold hover:text-[#2d2818] transition-colors">
                       +39 351 305 2627
                     </a>
+                    <p className="font-medium text-[#7a705d]">Ivrea (TO)</p>
                   </div>
                 </div>
               </div>
@@ -1126,7 +1232,9 @@ export default function ModernSite({ onSwitchToTerminal }) {
             <div className="mt-8 pt-5 border-t border-[#b8ad98]/30 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between text-xs text-[#7a705d]">
               <p>© {new Date().getFullYear()} Back Software. Tutti i diritti riservati.</p>
               <div className="flex flex-wrap gap-x-3 gap-y-1">
-                <span>P.IVA: 12345678901</span>
+                <span>P.IVA: IT13227980011</span>
+                <span aria-hidden="true">|</span>
+                <span>C.F.: RVRJLN05E26B455T</span>
                 <span aria-hidden="true">|</span>
                 <span>Privacy Policy</span>
                 <span aria-hidden="true">|</span>
@@ -1136,7 +1244,8 @@ export default function ModernSite({ onSwitchToTerminal }) {
               </div>
             </div>
           </footer>
-        </div>
+          </div>
+        </motion.div>
       </motion.section>
     </motion.div>
   );
