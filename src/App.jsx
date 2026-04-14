@@ -7,7 +7,7 @@ const pages = { HOME: 'HOME', PROGETTI: 'PROGETTI', SERVIZI: 'SERVIZI', CONTATTI
    APP
 =========================================================== */
 export default function App() {
-  const [bootPhase, setBootPhase] = useState('boot'); // off, boot, awaiting_input, ready
+  const [bootPhase, setBootPhase] = useState('intro'); // intro, off, boot, awaiting_input, ready
   const [hasBootedBefore, setHasBootedBefore] = useState(false); // Track if boot happened once
   const [currentPage, setCurrentPage] = useState(pages.HOME);
   const [bootLog, setBootLog] = useState([]);
@@ -17,6 +17,8 @@ export default function App() {
   const [showModernHint, setShowModernHint] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showGlitchOverlay, setShowGlitchOverlay] = useState(false);
+  const [introText, setIntroText] = useState('');
+  const [introIndex, setIntroIndex] = useState(0);
 
   const COLOR_PROFILES = useMemo(() => ({
     amber: { main: '#ffcc00', glow: 'rgba(255,204,0,0.35)', glowStrong: 'rgba(255,204,0,0.6)', beam: 'rgba(255,204,0,0.02)', beamStrong: 'rgba(255,204,0,0.05)' },
@@ -24,12 +26,37 @@ export default function App() {
     pink: { main: '#ff33dd', glow: 'rgba(255,51,221,0.35)', glowStrong: 'rgba(255,51,221,0.6)', beam: 'rgba(255,51,221,0.02)', beamStrong: 'rgba(255,51,221,0.05)' },
   }), []);
 
+  // Intro sequence - typewriter effect for BACK SOFTWARE
+  useEffect(() => {
+    if (bootPhase === 'intro') {
+      const text = 'BACK SOFTWARE';
+      if (introIndex < text.length) {
+        const timer = setTimeout(() => {
+          setIntroText(prev => prev + text[introIndex]);
+          setIntroIndex(prev => prev + 1);
+        }, 150);
+        return () => clearTimeout(timer);
+      } else {
+        // After typing completes, wait a moment then start boot
+        const bootTimer = setTimeout(() => {
+          setBootPhase('boot');
+        }, 800);
+        return () => clearTimeout(bootTimer);
+      }
+    }
+  }, [bootPhase, introIndex]);
+
   // Boot sequence - only runs on first load
   useEffect(() => {
-    // Skip boot if already booted before (user just toggled power)
+    // Skip boot if already booted before (user just toggles power)
     if (bootPhase === 'boot' && hasBootedBefore) {
       setScreenAnim('screen-on');
       setBootPhase('ready');
+      return;
+    }
+    // Skip intro if already booted before
+    if (bootPhase === 'intro' && hasBootedBefore) {
+      setBootPhase('boot');
       return;
     }
 
@@ -156,7 +183,7 @@ export default function App() {
   return (
     <div className="w-[100dvw] h-[100dvh] overflow-hidden select-none flex items-center justify-center p-0"
       style={{ 
-        background: '#0a0a0a',
+        background: bootPhase === 'intro' ? '#fdfcf9' : '#0a0a0a',
         '--t-color': profile.main,
         '--t-color-glow': profile.glow,
         '--t-color-glow-strong': profile.glowStrong,
@@ -165,8 +192,25 @@ export default function App() {
         color: profile.main, // Direct inheritance fallback
       }}>
 
+      {/* ========== INTRO SCREEN ========== */}
+      {bootPhase === 'intro' && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="absolute inset-0 flex items-center justify-center bg-[#fdfcf9]"
+        >
+          <div className="text-center">
+            <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tighter text-[#2d2818]">
+              {introText}<span className="animate-pulse">|</span>
+            </h1>
+          </div>
+        </motion.div>
+      )}
+
       {/* ========== VINTAGE MONITOR ========== */}
-      <div className="relative w-full h-full flex flex-col items-center justify-center">
+      {bootPhase !== 'intro' && (
+        <div className="relative w-full h-full flex flex-col items-center justify-center">
 
         {/* MONITOR BODY - Ultra-realistic plastic casing */}
         <div className="w-full h-full relative flex flex-col overflow-hidden"
@@ -601,6 +645,7 @@ export default function App() {
           )}
         </div>
       </div>
+      )}
     </div>
   );
 }
