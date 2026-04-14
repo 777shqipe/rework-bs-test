@@ -307,7 +307,6 @@
 }
 
 .clay-card:hover {
-  transform: translateY(-6px);
   box-shadow:
     16px 20px 32px rgba(166, 159, 147, 0.35),
     -10px -10px 24px rgba(255, 255, 255, 0.9),
@@ -375,7 +374,6 @@
 }
 
 .clay-card-dark:hover {
-  transform: translateY(-4px);
   background: linear-gradient(145deg, #302c24 0%, #22201a 100%);
   border-top-color: rgba(255, 248, 230, 0.16);
   box-shadow:
@@ -541,4 +539,255 @@
 @media (min-width: 1024px) {
   .bento-span-2 { grid-column: span 2; }
   .bento-row-2 { grid-row: span 2; }
+}
+
+/* ===========================================================
+   ELEGANT WARM GLOW EFFECTS — Premium ambient glow for cards
+   Warm amber/gold tones matching the site's palette
+=========================================================== */
+
+/* Base glow animation */
+@keyframes warmGlowPulse {
+  0%, 100% { 
+    opacity: 0.4; 
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.7; 
+    transform: scale(1.02);
+  }
+}
+
+/* Light cards — warm ambient glow on hover */
+.clay-card {
+  position: relative;
+}
+
+.clay-card::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 34px;
+  background: radial-gradient(
+    600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(196, 167, 108, 0.15),
+    rgba(184, 168, 138, 0.08) 40%,
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.clay-card:hover::before {
+  opacity: 1;
+}
+
+/* Subtle border glow for light cards */
+.clay-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 32px;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    rgba(196, 167, 108, 0) 0%,
+    rgba(196, 167, 108, 0) 50%,
+    rgba(196, 167, 108, 0) 100%
+  );
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.5s ease, background 0.5s ease;
+  pointer-events: none;
+}
+
+.clay-card:hover::after {
+  opacity: 1;
+  background: linear-gradient(
+    135deg,
+    rgba(196, 167, 108, 0.4) 0%,
+    rgba(184, 168, 138, 0.2) 50%,
+    rgba(124, 111, 91, 0.3) 100%
+  );
+}
+
+/* Dark cards — warm amber glow on hover */
+.clay-card-dark {
+  position: relative;
+}
+
+.clay-card-dark::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 34px;
+  background: radial-gradient(
+    500px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(196, 167, 108, 0.25),
+    rgba(212, 202, 187, 0.1) 40%,
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.clay-card-dark:hover::before {
+  opacity: 1;
+}
+
+/* Border glow for dark cards — more visible */
+.clay-card-dark::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 32px;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    rgba(196, 180, 148, 0) 0%,
+    rgba(196, 180, 148, 0) 50%,
+    rgba(196, 180, 148, 0) 100%
+  );
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.5s ease, background 0.5s ease;
+  pointer-events: none;
+}
+
+.clay-card-dark:hover::after {
+  opacity: 1;
+  background: linear-gradient(
+    135deg,
+    rgba(196, 180, 148, 0.5) 0%,
+    rgba(180, 165, 135, 0.25) 30%,
+    transparent 50%,
+    rgba(180, 165, 135, 0.25) 70%,
+    rgba(196, 180, 148, 0.4) 100%
+  );
+}
+
+/* Enhanced inner glow for dark cards */
+.clay-card-dark .glow-inner {
+  position: absolute;
+  inset: 0;
+  border-radius: 32px;
+  background: radial-gradient(
+    ellipse at 50% 0%,
+    rgba(196, 180, 148, 0.08) 0%,
+    transparent 60%
+  );
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+
+.clay-card-dark:hover .glow-inner {
+  opacity: 1;
+}
+
+/* Floating ambient glow effect for special cards */
+.card-ambient-glow {
+  position: relative;
+}
+
+.card-ambient-glow::before {
+  content: '';
+  position: absolute;
+  inset: -20px;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(196, 167, 108, 0.08) 0%,
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  pointer-events: none;
+  z-index: -2;
+  filter: blur(20px);
+}
+
+.card-ambient-glow:hover::before {
+  opacity: 1;
+  animation: warmGlowPulse 3s ease-in-out infinite;
+}
+
+/* Compact card glow variant */
+.card-glow-subtle {
+  position: relative;
+}
+
+.card-glow-subtle::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: radial-gradient(
+    300px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(196, 167, 108, 0.12),
+    transparent 60%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.card-glow-subtle:hover::before {
+  opacity: 1;
+}
+
+/* ===== MOBILE OPTIMIZATIONS ===== */
+@media (max-width: 640px) {
+  /* Smaller border radius on mobile for more content space */
+  .clay-card {
+    border-radius: 20px;
+  }
+  
+  .clay-card-dark {
+    border-radius: 20px;
+  }
+  
+  /* Tighter section padding on mobile */
+  .modern-snap-section {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 475px) {
+  .clay-card {
+    border-radius: 16px;
+  }
+  
+  .clay-card-dark {
+    border-radius: 16px;
+  }
+  
+  /* Even tighter padding */
+  .modern-snap-section {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  
+}
+
+/* iOS safe area support */
+@supports (padding: max(0px)) {
+  .modern-snap-container {
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+  }
 }

@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ShinyButton } from './ui/shiny-button';
 
 /* ===========================================================
    MODERN TYPEWRITER — animated placeholder for modern form
@@ -104,6 +105,59 @@ function ModernTypewriter({ servizio }) {
 }
 
 /* ===========================================================
+   PROJECT CARD — Animated card with FLIP layout transitions
+=========================================================== */
+function ProjectCard({ project, index, isCompact, onClick }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -10, scale: 0.98 }}
+      transition={{
+        duration: 0.35,
+        delay: index * 0.03,
+        ease: [0.16, 1, 0.3, 1],
+      }}
+      onClick={onClick}
+      className={`cursor-pointer group overflow-hidden relative clay-card-dark ${
+        isCompact
+          ? 'p-3 sm:p-4 flex flex-col justify-between min-h-[104px]'
+          : 'p-5 sm:p-6 min-h-[196px]'
+      }`}
+      whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
+    >
+      <div className="absolute top-0 left-6 right-6 h-px" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(196, 180, 148, 0.2) 50%, transparent 100%)' }} />
+      <div className="absolute top-0 right-0 p-2 sm:p-3 opacity-[0.05] text-2xl sm:text-4xl font-black tracking-tighter text-[#d4cabb] select-none">{project.year}</div>
+
+      <div className={isCompact ? '' : 'flex justify-between items-start mb-3'}>
+        <h4 className={`font-black leading-tight text-[#ede8de] group-hover:text-[#f5f2ec] ${isCompact ? 'text-sm pr-8' : 'text-base sm:text-lg max-w-[80%]'}`}>
+          {project.n}
+        </h4>
+        {!isCompact && <div className="w-8 h-8 flex items-center justify-center rounded-full text-sm clay-pill-dark text-[#b8ad98] group-hover:rotate-45 transition-transform">↗</div>}
+      </div>
+
+      {!isCompact && (
+        <>
+          <p className="text-xs leading-relaxed mb-2 line-clamp-2" style={{ color: '#9a9484' }}>{project.desc}</p>
+          <div className="flex flex-wrap gap-1.5">
+            {project.tags.slice(0, 3).map(t => (
+              <span key={t} className="px-2 py-1 text-[10px] font-black uppercase tracking-wider clay-pill-dark text-[#8a7f6a]">{t}</span>
+            ))}
+          </div>
+        </>
+      )}
+
+      {isCompact && (
+        <div className="mt-auto pt-2 flex justify-between items-end">
+          <span className="text-xs text-[#7a7568] font-bold">{project.year}</span>
+          <div className="w-6 h-6 flex items-center justify-center rounded-full text-xs clay-pill-dark text-[#b8ad98] group-hover:rotate-45 transition-transform">↗</div>
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
+/* ===========================================================
    MODERN SITE — CLAYMORPHISM MODE (COMPLETE LANDING PAGE)
    NOTE: Only use REAL data from https://backsoftware.it
    NEVER invent information, stats, or claims not present on the official site.
@@ -113,63 +167,126 @@ export default function ModernSite({ onSwitchToTerminal }) {
   const [showContactForm, setShowContactForm] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('Tutti');
+  const [categoryDirection, setCategoryDirection] = useState(1);
   const [showFooter, setShowFooter] = useState(false);
   const contactSectionRef = useRef(null);
+  const footerCardRef = useRef(null);
+  const [footerStrokeActive, setFooterStrokeActive] = useState(false);
 
-  // Orbiting text around header — pixel-perfect
-  const headerRef = useRef(null);
-  const orbitSvgRef = useRef(null);
-  const orbitRef1 = useRef(null);
-  const orbitRef2 = useRef(null);
-  const [headerPath, setHeaderPath] = useState('');
-  const [orbitText, setOrbitText] = useState('');
-  const [pathLen, setPathLen] = useState(0);
+  // Orbiting text around header — pixel-perfect (mobile & desktop refs)
+  const headerRefMobile = useRef(null);
+  const headerRefDesktop = useRef(null);
+  const orbitSvgRefMobile = useRef(null);
+  const orbitSvgRefDesktop = useRef(null);
+  const orbitRef1Mobile = useRef(null);
+  const orbitRef1Desktop = useRef(null);
+  const orbitRef2Mobile = useRef(null);
+  const orbitRef2Desktop = useRef(null);
+  const [headerPathMobile, setHeaderPathMobile] = useState('');
+  const [headerPathDesktop, setHeaderPathDesktop] = useState('');
+  const [orbitTextMobile, setOrbitTextMobile] = useState('');
+  const [orbitTextDesktop, setOrbitTextDesktop] = useState('');
+  const [pathLenMobile, setPathLenMobile] = useState(0);
+  const [pathLenDesktop, setPathLenDesktop] = useState(0);
   const UNIT = 'BACKSOFTWARE \u2022 ';
 
   useEffect(() => {
-    const recalc = () => {
-      const el = headerRef.current;
-      const svg = orbitSvgRef.current;
+    const recalcMobile = () => {
+      const el = headerRefMobile.current;
+      const svg = orbitSvgRefMobile.current;
       if (!el || !svg) return;
 
-      // 1. Build rounded-rect path just outside the header pill
-      const { width: w, height: h } = el.getBoundingClientRect();
-      const out = 4;
-      const rx = 32;
-      const x1 = -out, y1 = -out, x2 = w + out, y2 = h + out;
-      const d = `M ${x1 + rx},${y1} H ${x2 - rx} Q ${x2},${y1} ${x2},${y1 + rx} V ${y2 - rx} Q ${x2},${y2} ${x2 - rx},${y2} H ${x1 + rx} Q ${x1},${y2} ${x1},${y2 - rx} V ${y1 + rx} Q ${x1},${y1} ${x1 + rx},${y1} Z`;
-      setHeaderPath(d);
+      const w = el.clientWidth;
+      const h = el.clientHeight;
+      const r = Math.min(h / 2, 16);
+      const pad = 12;
+      const left = -pad;
+      const right = w + pad;
+      const top = -pad;
+      const bottom = h + pad;
+      const rr = Math.min(r + pad, h / 2 + pad);
 
-      // 2. Measure perimeter + one text unit (next frame so the path DOM is ready)
-      requestAnimationFrame(() => {
-        const pathEl = svg.querySelector('#header-orbit-path');
-        if (!pathEl) return;
-        const perimeter = pathEl.getTotalLength();
-        setPathLen(perimeter);
+      const path = [
+        `M ${left + rr} ${top}`,
+        `H ${right - rr}`,
+        `A ${rr} ${rr} 0 0 1 ${right} ${top + rr}`,
+        `V ${bottom - rr}`,
+        `A ${rr} ${rr} 0 0 1 ${right - rr} ${bottom}`,
+        `H ${left + rr}`,
+        `A ${rr} ${rr} 0 0 1 ${left} ${bottom - rr}`,
+        `V ${top + rr}`,
+        `A ${rr} ${rr} 0 0 1 ${left + rr} ${top}`,
+        'Z',
+      ].join(' ');
 
-        // Measure one "BACKSOFTWARE • " unit
-        const ns = 'http://www.w3.org/2000/svg';
-        const tmp = document.createElementNS(ns, 'text');
-        tmp.setAttribute('font-size', '8');
-        tmp.setAttribute('font-weight', '800');
-        tmp.setAttribute('letter-spacing', '2');
-        tmp.textContent = UNIT;
-        svg.appendChild(tmp);
-        const unitW = tmp.getComputedTextLength();
-        svg.removeChild(tmp);
-
-        if (unitW <= 0) return;
-
-        // 3. Repeat to fill exactly one perimeter
-        //    textLength on textPath will stretch/compress to exactly pathLen
-        const count = Math.round(perimeter / unitW);
-        setOrbitText(UNIT.repeat(Math.max(count, 1)));
-      });
+      setHeaderPathMobile(path);
+      
+      // Calcolo preciso perimetro del bordo
+      const straight = (w + 24 - rr * 2) * 2;
+      const curved = 2 * Math.PI * rr;
+      const perimeter = straight + curved;
+      
+      // Dimensione font e larghezza unità calcolata
+      const unit = 'BACK SOFTWARE ·';
+      const unitWidth = 46; // px, larghezza esatta a fontSize 6px
+      
+      // Quante ripetizioni servono per coprire il perimetro + overlap loop
+      const reps = Math.ceil(perimeter / unitWidth) + 2;
+      const text = Array(reps).fill(unit).join(' ');
+      
+      setPathLenMobile(Math.round(perimeter));
+      setOrbitTextMobile(text);
     };
 
-    recalc();
-    const ro = new ResizeObserver(recalc);
-    if (headerRef.current) ro.observe(headerRef.current);
+    const recalcDesktop = () => {
+      const el = headerRefDesktop.current;
+      const svg = orbitSvgRefDesktop.current;
+      if (!el || !svg) return;
+
+      const w = el.clientWidth;
+      const h = el.clientHeight;
+      const r = Math.min(h / 2, 24);
+      const pad = 6;
+      const left = -pad;
+      const right = w + pad;
+      const top = -pad;
+      const bottom = h + pad;
+      const rr = Math.min(r + pad, h / 2 + pad);
+
+      const path = [
+        `M ${left + rr} ${top}`,
+        `H ${right - rr}`,
+        `A ${rr} ${rr} 0 0 1 ${right} ${top + rr}`,
+        `V ${bottom - rr}`,
+        `A ${rr} ${rr} 0 0 1 ${right - rr} ${bottom}`,
+        `H ${left + rr}`,
+        `A ${rr} ${rr} 0 0 1 ${left} ${bottom - rr}`,
+        `V ${top + rr}`,
+        `A ${rr} ${rr} 0 0 1 ${left + rr} ${top}`,
+        'Z',
+      ].join(' ');
+
+      setHeaderPathDesktop(path);
+      const straight = (w + pad * 2 - rr * 2) * 2;
+      const curved = 2 * Math.PI * rr;
+      setPathLenDesktop(Math.round(straight + curved));
+
+      const slot = 90;
+      const reps = Math.max(2, Math.ceil((w + pad * 2 + 60) / slot));
+      setOrbitTextDesktop(Array(reps).fill('BACK SOFTWARE •').join(' '));
+    };
+
+    recalcMobile();
+    recalcDesktop();
+    
+    const ro = new ResizeObserver(() => {
+      recalcMobile();
+      recalcDesktop();
+    });
+    
+    if (headerRefMobile.current) ro.observe(headerRefMobile.current);
+    if (headerRefDesktop.current) ro.observe(headerRefDesktop.current);
+    
     return () => ro.disconnect();
   }, []);
 
@@ -178,35 +295,42 @@ export default function ModernSite({ onSwitchToTerminal }) {
 
   useEffect(() => {
     const check = () => {
-      const header = headerRef.current;
+      const headerDesktop = headerRefDesktop.current;
+      const headerMobile = headerRefMobile.current;
+      
+      const header = headerDesktop || headerMobile;
       if (!header) return;
-      const mid = header.getBoundingClientRect().top + header.getBoundingClientRect().height / 2;
+      
+      const rect = header.getBoundingClientRect();
+      const mid = rect.top + rect.height / 2;
       const darkSections = document.querySelectorAll('[data-dark-section]');
-      let dark = false;
-      darkSections.forEach(s => {
-        const r = s.getBoundingClientRect();
-        if (mid >= r.top && mid <= r.bottom) dark = true;
+      let inDark = false;
+      darkSections.forEach((sec) => {
+        const r = sec.getBoundingClientRect();
+        if (r.top <= mid && r.bottom >= mid) inDark = true;
       });
-      setOrbitOnDark(dark);
+      setOrbitOnDark(inDark);
     };
-    const container = document.querySelector('.modern-snap-container');
-    if (container) container.addEventListener('scroll', check, { passive: true });
-    window.addEventListener('scroll', check, { passive: true });
     check();
+    const scroller = document.querySelector('.modern-snap-container');
+    if (scroller) scroller.addEventListener('scroll', check, { passive: true });
+    window.addEventListener('resize', check);
     return () => {
-      if (container) container.removeEventListener('scroll', check);
-      window.removeEventListener('scroll', check);
+      if (scroller) scroller.removeEventListener('scroll', check);
+      window.removeEventListener('resize', check);
     };
   }, []);
 
-  // Animate orbit with rAF
+  // Animate orbiting text (both mobile and desktop)
   useEffect(() => {
     let offset = 0;
     let raf;
     const step = () => {
-      offset = (offset + 0.02) % 100;
-      if (orbitRef1.current) orbitRef1.current.setAttribute('startOffset', `${offset}%`);
-      if (orbitRef2.current) orbitRef2.current.setAttribute('startOffset', `${offset - 100}%`);
+      offset = (offset + 0.012) % 100;
+      if (orbitRef1Mobile.current) orbitRef1Mobile.current.setAttribute('startOffset', `${offset}%`);
+      if (orbitRef2Mobile.current) orbitRef2Mobile.current.setAttribute('startOffset', `${offset - 100}%`);
+      if (orbitRef1Desktop.current) orbitRef1Desktop.current.setAttribute('startOffset', `${offset}%`);
+      if (orbitRef2Desktop.current) orbitRef2Desktop.current.setAttribute('startOffset', `${offset - 100}%`);
       raf = requestAnimationFrame(step);
     };
     raf = requestAnimationFrame(step);
@@ -246,6 +370,21 @@ export default function ModernSite({ onSwitchToTerminal }) {
     section.addEventListener('wheel', onWheel, { passive: false });
     return () => section.removeEventListener('wheel', onWheel);
   }, [showFooter]);
+
+  const handleFooterPointerMove = (e) => {
+    const el = footerCardRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const xPct = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+    const yPct = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100));
+    const hue = 34 + xPct * 0.14;
+    const saturation = 60 + (100 - yPct) * 0.09;
+    el.style.setProperty('--footer-stroke-y', `${yPct}%`);
+    el.style.setProperty('--footer-stroke-x', `${xPct}%`);
+    el.style.setProperty('--footer-stroke-h', `${hue.toFixed(2)}`);
+    el.style.setProperty('--footer-stroke-s', `${saturation.toFixed(2)}%`);
+  };
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -320,10 +459,20 @@ export default function ModernSite({ onSwitchToTerminal }) {
     </svg>
   );
 
+  const handleCloseService = () => {
+    const source = selectedService?.source;
+    setSelectedService(null);
+    setTimeout(() => {
+      const targetId = source === 'progetti' ? 'progetti' : 'servizi';
+      document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth' });
+    }, 50);
+  };
+
   const services = useMemo(() => [
     {
       icon: <IconCasaFamiglia />,
       title: 'Case Famiglia',
+      source: 'servizi',
       desc: 'Pacchetti completi per strutture che ospitano famiglie in difficoltà.',
       details: 'Servizio dedicato alle strutture che ospitano famiglie in difficoltà. Gestiamo tutto: sito web, social media, campagne pubblicitarie mirate e sistema di prenotazioni.',
       packages: [
@@ -331,22 +480,26 @@ export default function ModernSite({ onSwitchToTerminal }) {
         { name: '3 Mesi', desc: 'Soluzione completa per 3 mesi: sito, social, campagne e prenotazioni' },
         { name: 'Campagna Spot', desc: 'Campagna spot per 6 mesi con gestione completa' }
       ],
-      span: 'md:col-span-2'
+      span: 'md:col-span-2',
+      source: 'servizi'
     },
     {
       icon: <IconSitiLanding />,
       title: 'Siti e Landing',
+      source: 'servizi',
       desc: 'Siti web professionali e landing page ottimizzate per conversioni.',
       details: 'Siti web professionali e landing page ottimizzate per le conversioni. Dal sito aziendale completo alla landing page mirata, tutto responsive e pronto per Google.',
       packages: [
         { name: 'Sito 5-10 Pagine', desc: 'Sito web completo con 5-10 pagine, responsive e ottimizzato' },
         { name: 'Landing Page', desc: 'Landing page ottimizzata per conversioni e lead generation' }
       ],
-      span: ''
+      span: '',
+      source: 'servizi'
     },
     {
       icon: <IconMarketing />,
       title: 'Marketing & ADS',
+      source: 'servizi',
       desc: 'Analisi, Meta Ads e Google Ads. Strategie che portano risultati.',
       details: 'Strategie di marketing digitale e campagne pubblicitarie mirate. Analisi, pianificazione e gestione completa delle tue campagne su Meta e Google.',
       packages: [
@@ -354,11 +507,13 @@ export default function ModernSite({ onSwitchToTerminal }) {
         { name: 'Meta Ads', desc: 'Campagne su Meta e altri canali social' },
         { name: 'Google Ads', desc: 'Campagne pubblicitarie su Google Search e Display' }
       ],
-      span: ''
+      span: '',
+      source: 'servizi'
     },
     {
       icon: <IconFotoVideo />,
       title: 'Foto & Video',
+      source: 'servizi',
       desc: 'Servizi fotografici e video professionali per la tua azienda.',
       details: 'Servizi professionali di fotografia e video per la tua azienda. Shooting fotografici, riprese con drone, video corporate e contenuti per i social.',
       packages: [
@@ -366,22 +521,26 @@ export default function ModernSite({ onSwitchToTerminal }) {
         { name: 'Video Drone', desc: 'Riprese video aeree con drone professionale' },
         { name: 'Video Staff', desc: 'Riprese video con staff professionale' }
       ],
-      span: ''
+      span: '',
+      source: 'servizi'
     },
     {
       icon: <IconGraficaCopy />,
       title: 'Grafica & Copy',
+      source: 'servizi',
       desc: 'Design grafico e copywriting per la tua comunicazione.',
       details: 'Servizi di design grafico e copywriting per la tua comunicazione. Loghi, identità visiva, materiali grafici e testi che parlano al tuo pubblico.',
       packages: [
         { name: 'Grafica', desc: 'Servizi di design grafico, visual e brand identity' },
         { name: 'Copywriting', desc: 'Servizi di scrittura, comunicazione e testi SEO' }
       ],
-      span: ''
+      span: '',
+      source: 'servizi'
     },
     {
       icon: <IconDigitali />,
       title: 'Software su Misura',
+      source: 'servizi',
       desc: 'Gestionali, applicazioni e integrazioni API su misura.',
       details: 'Soluzioni digitali avanzate per la gestione aziendale. Software su misura, gestionali, applicazioni web/mobile e integrazioni API.',
       packages: [
@@ -389,7 +548,8 @@ export default function ModernSite({ onSwitchToTerminal }) {
         { name: 'Applicazioni', desc: 'Applicazioni web e mobile su misura' },
         { name: 'Collegamento API', desc: 'Integrazioni e collegamenti API con altri servizi' }
       ],
-      span: 'md:col-span-2'
+      span: 'md:col-span-2',
+      source: 'servizi'
     },
   ], []);
 
@@ -496,10 +656,42 @@ export default function ModernSite({ onSwitchToTerminal }) {
 
   // Group projects by category for modern view
   const modernCategories = ['Gestionale', 'Sito Web', 'Marketing', 'CRM'];
+  const allProjectCategories = ['Tutti', ...modernCategories];
   const groupedModernProjects = modernCategories.map(cat => ({
     name: cat,
     projects: projects.filter(p => p.category === cat)
   })).filter(g => g.projects.length > 0);
+
+  const handleCategoryChange = (cat) => {
+    if (cat === selectedCategory) return;
+    const prevIndex = allProjectCategories.indexOf(selectedCategory);
+    const nextIndex = allProjectCategories.indexOf(cat);
+    setCategoryDirection(nextIndex >= prevIndex ? 1 : -1);
+    setSelectedCategory(cat);
+  };
+
+  const galleryGridVariants = {
+    initial: (dir) => ({
+      opacity: 0,
+      x: dir > 0 ? 40 : -40,
+    }),
+    animate: {
+      opacity: 1,
+      x: 0,
+      transition: {
+        duration: 0.4,
+        ease: [0.16, 1, 0.3, 1],
+      },
+    },
+    exit: (dir) => ({
+      opacity: 0,
+      x: dir > 0 ? -30 : 30,
+      transition: {
+        duration: 0.2,
+        ease: [0.4, 0, 1, 1],
+      },
+    }),
+  };
 
   const footerServiceLinks = [
     { label: 'Siti Web', href: '#servizi' },
@@ -544,12 +736,12 @@ export default function ModernSite({ onSwitchToTerminal }) {
   if (selectedService) {
     return (
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        className="p-6 sm:p-10 lg:p-20 h-full flex flex-col font-sans modern-mode relative overflow-y-auto overflow-x-hidden"
+        className="pt-4 sm:pt-6 lg:pt-10 pb-6 sm:pb-10 lg:pb-20 px-6 sm:px-10 lg:px-20 h-full flex flex-col font-sans modern-mode relative overflow-y-auto overflow-x-hidden"
         style={{ background: '#f5f2ec' }}>
         <div className="absolute inset-0 crt-glitch-overlay" />
         <div className="modern-crt-flicker max-w-4xl mx-auto w-full">
-          <motion.button onClick={() => setSelectedService(null)}
-            className="clay-btn px-6 py-3 mb-8 text-sm font-bold !rounded-xl text-[#3d3828] flex items-center gap-2"
+          <motion.button onClick={handleCloseService}
+            className="clay-btn px-6 py-3 mb-6 text-sm font-bold !rounded-xl text-[#3d3828] flex items-center gap-2"
             whileHover={{ x: -5 }} whileTap={{ scale: 0.95 }}>
             ← Torna ai servizi
           </motion.button>
@@ -568,8 +760,8 @@ export default function ModernSite({ onSwitchToTerminal }) {
                   <motion.div
                     key={idx}
                     className="clay-card p-6 cursor-pointer group hover:scale-[1.02] transition-transform"
-                    onClick={() => { setSelectedService(null); setFormData(prev => ({ ...prev, servizio: `${selectedService.title} - ${pkg.name}` })); setShowContactForm(true); }}
-                    whileHover={{ y: -4 }} whileTap={{ scale: 0.98 }}>
+                    onClick={() => { handleCloseService(); setFormData(prev => ({ ...prev, servizio: `${selectedService.title} - ${pkg.name}` })); setShowContactForm(true); }}
+                    whileTap={{ scale: 0.98 }}>
                     <h4 className="text-lg font-black text-[#2d2818] mb-2 group-hover:text-[#7c6f5b] transition-colors">{pkg.name}</h4>
                     <p className="text-sm text-[#6a6050] leading-relaxed">{pkg.desc}</p>
                     <div className="mt-4 text-xs font-bold text-[#7c6f5b] opacity-0 group-hover:opacity-100 transition-opacity">
@@ -581,11 +773,11 @@ export default function ModernSite({ onSwitchToTerminal }) {
             </div>
             
             <div className="flex gap-4 px-2">
-              <button onClick={() => { setSelectedService(null); setShowContactForm(true); setFormData(prev => ({ ...prev, servizio: selectedService.title })); }}
+              <button onClick={() => { handleCloseService(); setShowContactForm(true); setFormData(prev => ({ ...prev, servizio: selectedService.title })); }}
                 className="clay-btn px-6 py-3 text-base font-bold !rounded-2xl text-[#3d3828] bg-[#fdfcf9] hover:scale-105 transition-transform">
                 Richiedi info generale →
               </button>
-              <button onClick={() => setSelectedService(null)}
+              <button onClick={handleCloseService}
                 className="clay-btn px-6 py-3 text-base font-bold !rounded-2xl text-[#6a6050]">
                 Altri servizi
               </button>
@@ -722,56 +914,128 @@ export default function ModernSite({ onSwitchToTerminal }) {
       {/* CRT Glitch Effect */}
       <div className="absolute inset-0 crt-glitch-overlay pointer-events-none" />
       
-      {/* ── DIVINE FLOATING HEADER ── */}
+      {/* ── HEADER ── */}
       <motion.nav variants={itemVariants}
-        className="fixed top-3 inset-x-3 sm:top-4 sm:inset-x-6 lg:inset-x-10 z-50"
+        className="fixed top-0 left-0 right-0 z-50"
         style={{ pointerEvents: 'none' }}
       >
+        {/* Mobile Header - Compact WITH animation */}
+        <div className="sm:hidden mx-auto mt-8 w-[calc(100%-2.5rem)] max-w-md">
+          <div 
+            ref={headerRefMobile}
+            className="flex items-center justify-between gap-2 py-1 px-2.5 rounded-[1.5rem] pointer-events-auto relative overflow-visible"
+            style={{
+              background: 'linear-gradient(145deg, rgba(248, 245, 239, 0.95) 0%, rgba(242, 237, 228, 0.92) 100%)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              boxShadow: '0 2px 12px rgba(60, 48, 34, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6)'
+            }}
+          >
+            {/* Orbiting text border - Mobile (small) */}
+            <svg
+              ref={orbitSvgRefMobile}
+              className="absolute inset-0 w-full h-full pointer-events-none overflow-visible"
+              style={{ zIndex: 0 }}
+              aria-hidden="true"
+            >
+              {headerPathMobile && (
+                <>
+                  <defs>
+                    <path id="header-orbit-path-mobile" d={headerPathMobile} fill="none" />
+                  </defs>
+                  {orbitTextMobile && (
+                    <>
+                      <text
+                        fill={orbitColor}
+                        style={{ fontSize: '6px', fontWeight: 700, letterSpacing: '0', opacity: 0.6, transition: 'fill 0.4s ease' }}
+                      >
+                        <textPath ref={orbitRef1Mobile} href="#header-orbit-path-mobile" startOffset="0%">
+                          {orbitTextMobile}
+                        </textPath>
+                      </text>
+                      <text
+                        fill={orbitColor}
+                        style={{ fontSize: '6px', fontWeight: 700, letterSpacing: '0', opacity: 0.6, transition: 'fill 0.4s ease' }}
+                      >
+                        <textPath ref={orbitRef2Mobile} href="#header-orbit-path-mobile" startOffset="-100%">
+                          {orbitTextMobile}
+                        </textPath>
+                      </text>
+                    </>
+                  )}
+                </>
+              )}
+            </svg>
+
+            {/* Logo Mobile */}
+            <div className="flex items-center min-w-0 relative z-10">
+              <h1 className="text-[13px] font-black tracking-tight text-[#2f2a1d] leading-none truncate">Back Software</h1>
+            </div>
+
+            {/* Actions Mobile */}
+            <div className="flex items-center gap-1.5 shrink-0 relative z-10">
+              <button 
+                onClick={onSwitchToTerminal}
+                className="w-7 h-7 flex items-center justify-center rounded-full text-[#746a57] bg-[#f8f4ec] border border-[#dbd3c6]/70 active:scale-95 transition-transform"
+              >
+                <span className="text-[10px]">🎮</span>
+              </button>
+              <ShinyButton
+                href="#contatti"
+                tone="espresso"
+                size="sm"
+                intensity="strong"
+                className="font-bold !text-[10px] !px-2 !py-1"
+              >
+                Scrivici
+              </ShinyButton>
+            </div>
+          </div>
+        </div>
+
+        {/* Desktop Header - With animation */}
         <div 
-          ref={headerRef}
-          className="max-w-6xl mx-auto flex items-center justify-between gap-3 py-2.5 sm:py-3 px-3 sm:px-5 rounded-2xl sm:rounded-[1.75rem] pointer-events-auto relative"
+          ref={headerRefDesktop}
+          className="hidden sm:flex max-w-6xl mx-auto mt-5 items-center justify-between gap-3 py-2.5 px-4 lg:px-5 rounded-2xl lg:rounded-[1.75rem] pointer-events-auto relative"
           style={{
-            background: 'linear-gradient(145deg, rgba(248, 245, 239, 0.84) 0%, rgba(242, 237, 228, 0.78) 100%)',
-            backdropFilter: 'blur(22px) saturate(170%)',
-            WebkitBackdropFilter: 'blur(22px) saturate(170%)',
+            background: 'linear-gradient(145deg, rgba(248, 245, 239, 0.92) 0%, rgba(242, 237, 228, 0.88) 100%)',
+            backdropFilter: 'blur(24px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(24px) saturate(180%)',
             boxShadow: `
-              0 14px 34px rgba(60, 48, 34, 0.12),
-              0 4px 10px rgba(60, 48, 34, 0.08),
-              inset 0 1px 0 rgba(255, 255, 255, 0.72)
+              0 6px 20px rgba(60, 48, 34, 0.14),
+              0 2px 6px rgba(60, 48, 34, 0.1),
+              inset 0 1px 0 rgba(255, 255, 255, 0.75)
             `
           }}
         >
-          {/* Orbiting text border */}
+          {/* Orbiting text border - Desktop */}
           <svg
-            ref={orbitSvgRef}
-            className="absolute inset-0 w-full h-full pointer-events-none"
-            style={{ zIndex: 0, overflow: 'visible' }}
-            overflow="visible"
+            ref={orbitSvgRefDesktop}
+            className="absolute inset-0 w-full h-full pointer-events-none overflow-visible"
+            style={{ zIndex: 0 }}
             aria-hidden="true"
           >
-            {headerPath && (
+            {headerPathDesktop && (
               <>
                 <defs>
-                  <path id="header-orbit-path" d={headerPath} fill="none" />
+                  <path id="header-orbit-path-desktop" d={headerPathDesktop} fill="none" />
                 </defs>
-                {orbitText && (
+                {orbitTextDesktop && (
                   <>
-                    {/* Layer 1 */}
                     <text
                       fill={orbitColor}
                       style={{ fontSize: '8px', fontWeight: 800, letterSpacing: '2px', opacity: 0.55, transition: 'fill 0.4s ease' }}
                     >
-                      <textPath ref={orbitRef1} href="#header-orbit-path" startOffset="0%" textLength={pathLen} lengthAdjust="spacing">
-                        {orbitText}
+                      <textPath ref={orbitRef1Desktop} href="#header-orbit-path-desktop" startOffset="0%" textLength={pathLenDesktop} lengthAdjust="spacing">
+                        {orbitTextDesktop}
                       </textPath>
                     </text>
-                    {/* Layer 2 — offset by -100% for seamless loop */}
                     <text
                       fill={orbitColor}
                       style={{ fontSize: '8px', fontWeight: 800, letterSpacing: '2px', opacity: 0.55, transition: 'fill 0.4s ease' }}
                     >
-                      <textPath ref={orbitRef2} href="#header-orbit-path" startOffset="-100%" textLength={pathLen} lengthAdjust="spacing">
-                        {orbitText}
+                      <textPath ref={orbitRef2Desktop} href="#header-orbit-path-desktop" startOffset="-100%" textLength={pathLenDesktop} lengthAdjust="spacing">
+                        {orbitTextDesktop}
                       </textPath>
                     </text>
                   </>
@@ -780,16 +1044,16 @@ export default function ModernSite({ onSwitchToTerminal }) {
             )}
           </svg>
 
-          {/* Logo */}
+          {/* Logo Desktop */}
           <div className="flex items-center gap-3 min-w-0 relative z-10">
             <div className="min-w-0">
-              <h1 className="text-[18px] sm:text-[20px] font-black tracking-tight text-[#2f2a1d] leading-none truncate">Back Software</h1>
-              <p className="text-[10px] sm:text-[11px] font-bold text-[#807865] opacity-75 tracking-[0.14em] uppercase truncate">Studio digitale su misura</p>
+              <h1 className="text-[16px] lg:text-[20px] font-black tracking-tight text-[#2f2a1d] leading-none truncate">Back Software</h1>
+              <p className="text-[9px] lg:text-[11px] font-bold text-[#807865] opacity-80 tracking-[0.14em] uppercase truncate">Studio digitale su misura</p>
             </div>
           </div>
 
-          {/* Navigation */}
-          <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 shrink-0 relative z-10">
+          {/* Navigation Desktop */}
+          <div className="flex items-center gap-3 shrink-0 relative z-10">
             <div className="hidden md:flex items-center gap-1 rounded-full bg-[#f8f4ec]/70 p-1 border border-[#d8d0c1]/65">
               {[
                 { label: 'Servizi', href: '#servizi' },
@@ -799,85 +1063,117 @@ export default function ModernSite({ onSwitchToTerminal }) {
                 <a 
                   key={item.label}
                   href={item.href}
-                  className="px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-bold text-[#665d4c] hover:text-[#2f2a1d] rounded-full hover:bg-[#ebe3d7] transition-all"
+                  className="px-2 lg:px-4 py-1.5 text-xs lg:text-sm font-bold text-[#665d4c] hover:text-[#2f2a1d] rounded-full hover:bg-[#ebe3d7] transition-all"
                 >
                   {item.label}
                 </a>
               ))}
             </div>
 
-            {/* Mode Toggle */}
             <button 
               onClick={onSwitchToTerminal}
-              className="px-3 sm:px-4 py-2 text-[11px] sm:text-xs font-bold rounded-full text-[#746a57] hover:text-[#3d3528] bg-[#f8f4ec]/70 border border-[#dbd3c6]/70 hover:bg-[#f1e9dc] transition-all"
+              className="px-2 py-1 text-[11px] lg:text-xs font-bold rounded-full text-[#746a57] hover:text-[#3d3528] bg-[#f8f4ec]/70 border border-[#dbd3c6]/70 hover:bg-[#f1e9dc] transition-all min-w-[40px] min-h-[32px] flex items-center justify-center active:scale-95"
             >
-              <span className="hidden sm:inline">Vista Retrò</span>
-              <span className="sm:hidden">Retro</span>
+              <span>🎮 Giochi Arcade</span>
             </button>
             
-            {/* CTA */}
-            <a 
+            <ShinyButton
               href="#contatti"
-              className="px-4 sm:px-5 py-2 text-[11px] sm:text-sm font-bold rounded-full text-[#f6f2eb] transition-all shadow-[0_8px_20px_rgba(66,50,31,0.22)] hover:shadow-[0_10px_24px_rgba(66,50,31,0.28)]"
-              style={{ background: 'linear-gradient(135deg, #3d3325 0%, #2b251a 100%)' }}
+              tone="espresso"
+              size="md"
+              intensity="strong"
+              className="font-bold !text-sm !px-5 !py-3"
             >
-              <span className="hidden sm:inline">Scrivici</span>
-              <span className="sm:hidden">Contatti</span>
-            </a>
+              Scrivici
+            </ShinyButton>
           </div>
         </div>
       </motion.nav>
 
 
       {/* ── HERO ── */}
-      <motion.section variants={itemVariants} className="modern-snap-section flex items-center relative px-6 sm:px-8 pt-24">
-        {/* Floating Accents */}
-        <div className="absolute -top-10 left-10 w-24 h-24 clay-pill opacity-10 animate-float pointer-events-none" />
-        <div className="absolute top-40 right-10 w-32 h-32 clay-pill opacity-10 animate-float-delayed pointer-events-none" />
+      <motion.section variants={itemVariants} className="modern-snap-section flex items-center justify-center relative px-6 sm:px-6 lg:px-8">
+        {/* Floating Accents - Hidden on mobile */}
+        <div className="hidden sm:block absolute -top-10 left-10 w-24 h-24 clay-pill opacity-10 animate-float pointer-events-none" />
+        <div className="hidden sm:block absolute top-40 right-10 w-32 h-32 clay-pill opacity-10 animate-float-delayed pointer-events-none" />
 
-        <div className="max-w-5xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-            className="inline-block px-5 py-2 mb-8 text-xs font-black tracking-[3px] uppercase clay-pill text-[#6a6050] border border-[#d4cfc5]/40">
-            Design & Tecnologia
-          </motion.div>
+        <div className="max-w-5xl mx-auto w-full">
           <motion.h2
             initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.35, ease: [0.22, 1, 0.36, 1] }}
-            className="text-5xl sm:text-7xl lg:text-8xl font-black leading-[1.05] mb-8 tracking-tighter text-[#2d2818]">
-            Software che funziona.<br/>
-            <span className="text-[#8a7f6a] drop-shadow-sm">Fatto da persone reali.</span>
+            className="text-[3rem] sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black leading-[1.12] sm:leading-[1.05] mb-8 sm:mb-8 tracking-tight text-[#2d2818]">
+            <span className="block mb-2">Software che</span>
+            <span className="block mb-2">funziona.</span>
+            <span className="text-[#8a7f6a] drop-shadow-sm block">Fatto da <span className="transition-all duration-500 ease-out hover:text-[#c4b494] hover:drop-shadow-[0_0_30px_rgba(196,180,148,0.8),0_0_60px_rgba(196,180,148,0.4)] cursor-default">persone reali</span>.</span>
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="text-xl sm:text-2xl lg:text-3xl leading-relaxed max-w-3xl font-medium mb-12 text-[#6a6050]">
-            Tecnologia che semplifica, non complica. Costruiamo il tuo progetto come se fosse il nostro.
+            className="text-base sm:text-base lg:text-xl xl:text-2xl leading-relaxed max-w-3xl font-medium mb-6 sm:mb-12 text-[#6a6050]">
+            Tecnologia che semplifica, non complica.<br className="hidden sm:block"/> Costruiamo il tuo progetto come se fosse il nostro.
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.65, ease: [0.22, 1, 0.36, 1] }}
-            className="flex flex-wrap gap-8 items-center">
-            <a href="#contatti" className="clay-btn px-10 py-5 text-lg font-bold !rounded-2xl text-[#3d3828] bg-[#f8f6f2] hover:scale-105 active:scale-95 transition-transform">
-              Parlaci del tuo progetto →
-            </a>
+            className="flex flex-wrap gap-3 sm:gap-6 items-center">
+            <ShinyButton
+              href="#contatti"
+              tone="espresso"
+              size="lg"
+              intensity="strong"
+              className="!rounded-xl lg:!rounded-2xl !text-sm sm:!text-base !px-4 sm:!px-6"
+            >
+              <span className="sm:hidden">Inizia ora →</span>
+              <span className="hidden sm:inline">Parlaci del tuo progetto →</span>
+            </ShinyButton>
           </motion.div>
 
           <motion.a
             href="#come-lavoriamo"
-            className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 px-4 py-2 rounded-full bg-[#f8f4ec]/80 border border-[#d9d1c2] text-[#615746]"
-            animate={{ y: [0, 5, 0] }}
-            transition={{ repeat: Infinity, duration: 1.8, ease: 'easeInOut' }}
+            className="absolute bottom-8 sm:bottom-16 left-1/2 -translate-x-1/2 group cursor-pointer"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.4, duration: 1, ease: [0.22, 1, 0.36, 1] }}
           >
-            <span className="text-[10px] font-black tracking-[0.2em] uppercase">Scorri</span>
-            <span className="text-base leading-none">↓</span>
+            <div className="relative w-14 h-14 sm:w-14 sm:h-14">
+              {/* Background circle for contrast */}
+              <div className="absolute inset-0 rounded-full bg-[#f5f2ec]/80 backdrop-blur-sm border border-[#d4cfc5]/50 shadow-[0_4px_20px_rgba(138,127,106,0.15)]" />
+              
+              {/* Rotating thin ring */}
+              <motion.svg
+                className="absolute inset-1 w-[calc(100%-8px)] h-[calc(100%-8px)]"
+                viewBox="0 0 48 48"
+                fill="none"
+                animate={{ rotate: 360 }}
+                transition={{ repeat: Infinity, duration: 12, ease: 'linear' }}
+              >
+                <circle
+                  cx="24"
+                  cy="24"
+                  r="22"
+                  stroke="currentColor"
+                  strokeWidth="1"
+                  className="text-[#b8ad98]"
+                  strokeDasharray="3 3"
+                />
+              </motion.svg>
+              {/* Arrow */}
+              <motion.div
+                className="absolute inset-0 flex items-center justify-center"
+                animate={{ y: [0, 4, 0] }}
+                transition={{ repeat: Infinity, duration: 1.8, ease: [0.4, 0, 0.6, 1] }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-[#6a6050] group-hover:text-[#4a4336] transition-colors">
+                  <path d="M12 6v12m-6-6 6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </motion.div>
+            </div>
           </motion.a>
         </div>
       </motion.section>
 
       {/* ── DARK SECTION: Why Us ── */}
-      <motion.section id="come-lavoriamo" data-dark-section variants={itemVariants} className="modern-snap-section flex flex-col justify-center relative px-4 sm:px-6 lg:px-10 pt-24 pb-16 sm:py-20 overflow-hidden" style={{
+      <motion.section id="come-lavoriamo" data-dark-section variants={itemVariants} className="modern-snap-section flex flex-col justify-center relative px-4 sm:px-6 lg:px-10 pt-20 sm:pt-24 pb-12 sm:py-20 overflow-hidden" style={{
         background: 'linear-gradient(135deg, #1a1810 0%, #1c1917 50%, #1a1810 100%)',
       }}>
         {/* Subtle dark texture overlay */}
@@ -885,35 +1181,35 @@ export default function ModernSite({ onSwitchToTerminal }) {
           backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
           backgroundSize: '256px 256px',
         }} />
-        {/* Ambient warm glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[60%] rounded-full opacity-[0.04] pointer-events-none" style={{ background: 'radial-gradient(ellipse, #b8a88a 0%, transparent 70%)' }} />
-        <div className="absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full opacity-[0.03] pointer-events-none" style={{ background: 'radial-gradient(circle, #c4a76c 0%, transparent 60%)' }} />
+        {/* Ambient warm glow - hidden on mobile */}
+        <div className="hidden sm:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[60%] rounded-full opacity-[0.04] pointer-events-none" style={{ background: 'radial-gradient(ellipse, #b8a88a 0%, transparent 70%)' }} />
+        <div className="hidden sm:block absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full opacity-[0.03] pointer-events-none" style={{ background: 'radial-gradient(circle, #c4a76c 0%, transparent 60%)' }} />
 
         <div className="relative z-10 max-w-6xl mx-auto w-full">
-          <motion.div variants={itemVariants} className="mb-10 sm:mb-12 space-y-4">
+          <motion.div variants={itemVariants} className="mb-6 sm:mb-12 space-y-3 sm:space-y-4">
             <motion.h3 {...sectionTitleReveal} className={`${sectionTitleClass} text-[#f5f2ec]`}>
               Perché Back Software.
             </motion.h3>
-            <motion.p {...sectionSubtitleReveal} className="text-base sm:text-lg leading-relaxed max-w-2xl font-medium" style={{ color: '#a09a88' }}>
+            <motion.p {...sectionSubtitleReveal} className="text-sm sm:text-lg leading-relaxed max-w-2xl font-medium" style={{ color: '#a09a88' }}>
               Non siamo solo sviluppatori. Siamo partner che capiscono il tuo business.
             </motion.p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8">
             {[
               { num: '01', title: 'Ascolto', desc: 'Prima di scrivere codice, ascoltiamo. Capire il problema è più importante della soluzione tecnica.' },
               { num: '02', title: 'Chiarezza', desc: 'Niente gergo incomprensibile. Ti spieghiamo tutto in modo semplice, senza sorprese.' },
               { num: '03', title: 'Risultati', desc: 'Non vendiamo progetti, vendiamo soluzioni che funzionano davvero nel mondo reale.' }
             ].map((item, i) => (
               <motion.div key={i} variants={itemVariants}
-                className="clay-card-dark p-6 sm:p-8 relative group transition-all duration-300 hover:scale-[1.02] overflow-hidden">
+                className="clay-card-dark p-4 sm:p-8 relative group transition-all duration-300 sm:hover:scale-[1.02] overflow-hidden">
                 {/* Top accent line — glows on hover */}
-                <div className="absolute top-0 left-8 right-8 h-px transition-all duration-500 group-hover:left-6 group-hover:right-6" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(196, 180, 148, 0.25) 50%, transparent 100%)' }} />
-                <div className="absolute top-0 left-12 right-12 h-px opacity-0 group-hover:opacity-100 blur-[2px] transition-all duration-500" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(196, 180, 148, 0.4) 50%, transparent 100%)' }} />
-                <div className="text-5xl sm:text-6xl font-black mb-4 tracking-tighter opacity-[0.08] group-hover:opacity-[0.15] transition-opacity duration-500 select-none" style={{ color: '#d4cabb', WebkitTextStroke: '1px rgba(212, 202, 187, 0.15)' }}>
+                <div className="absolute top-0 left-6 sm:left-8 right-6 sm:right-8 h-px transition-all duration-500 sm:group-hover:left-6 sm:group-hover:right-6" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(196, 180, 148, 0.25) 50%, transparent 100%)' }} />
+                <div className="hidden sm:block absolute top-0 left-12 right-12 h-px opacity-0 group-hover:opacity-100 blur-[2px] transition-all duration-500" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(196, 180, 148, 0.4) 50%, transparent 100%)' }} />
+                <div className="text-4xl sm:text-6xl font-black mb-2 sm:mb-4 tracking-tighter opacity-[0.08] group-hover:opacity-[0.15] transition-opacity duration-500 select-none" style={{ color: '#d4cabb', WebkitTextStroke: '1px rgba(212, 202, 187, 0.15)' }}>
                   {item.num}
                 </div>
-                <h4 className="text-xl sm:text-2xl font-black mb-3 tracking-tight text-[#ede8de] group-hover:text-[#f5f2ec] transition-colors duration-300">
+                <h4 className="text-lg sm:text-2xl font-black mb-2 sm:mb-3 tracking-tight text-[#ede8de] group-hover:text-[#f5f2ec] transition-colors duration-300">
                   {item.title}
                 </h4>
                 <p className="text-sm sm:text-base leading-relaxed" style={{ color: '#9a9484' }}>
@@ -926,27 +1222,27 @@ export default function ModernSite({ onSwitchToTerminal }) {
       </motion.section>
 
       {/* ── SERVIZI Section ── */}
-      <motion.section id="servizi" variants={itemVariants} className="modern-snap-section flex flex-col justify-center px-4 sm:px-6 lg:px-10 pt-24 pb-16 sm:py-20">
+      <motion.section id="servizi" variants={itemVariants} className="modern-snap-section flex flex-col justify-center px-4 sm:px-6 lg:px-10 pt-20 sm:pt-24 pb-12 sm:py-20">
         <div className="max-w-6xl mx-auto w-full">
-          <motion.div variants={itemVariants} className="mb-8 space-y-4">
+          <motion.div variants={itemVariants} className="mb-6 sm:mb-8 space-y-2 sm:space-y-4">
             <motion.h3 {...sectionTitleReveal} className={`${sectionTitleClass} text-[#2d2818]`}>Cosa facciamo.</motion.h3>
-            <motion.p {...sectionSubtitleReveal} className="text-base sm:text-lg text-[#6a6050] font-medium">
+            <motion.p {...sectionSubtitleReveal} className="text-sm sm:text-lg text-[#6a6050] font-medium">
               Soluzioni concrete per problemi reali.
             </motion.p>
           </motion.div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
             {services.map((s, i) => (
               <motion.div key={i} variants={itemVariants}
-                whileHover={{ y: -3, scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => setSelectedService(s)}
-                className={`clay-card py-4 sm:py-5 px-5 sm:px-6 flex items-center gap-4 sm:gap-5 cursor-pointer group min-h-[96px] sm:min-h-[108px] ${s.span}`}>
-                <span className="w-11 h-11 flex items-center justify-center text-xl clay-pill bg-[#f5f2ec] shadow-sm group-hover:scale-110 transition-transform shrink-0">{s.icon}</span>
+                className={`clay-card py-3 sm:py-5 px-4 sm:px-6 flex items-center gap-3 sm:gap-5 cursor-pointer group min-h-[72px] sm:min-h-[108px] ${s.span}`}>
+                <span className="w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center text-lg sm:text-xl clay-pill bg-[#f5f2ec] shadow-sm group-hover:scale-110 transition-transform shrink-0">{s.icon}</span>
                 <div className="min-w-0 flex-1">
-                  <h4 className="text-base font-black text-[#2d2818] group-hover:text-[#7c6f5b] transition-colors leading-tight">{s.title}</h4>
-                  <p className="text-xs text-[#6a6050] opacity-80 line-clamp-2">{s.desc}</p>
+                  <h4 className="text-sm sm:text-base font-black text-[#2d2818] group-hover:text-[#7c6f5b] transition-colors leading-tight">{s.title}</h4>
+                  <p className="text-[11px] sm:text-xs text-[#6a6050] opacity-80 line-clamp-2">{s.desc}</p>
                 </div>
-                <span className="w-8 h-8 flex items-center justify-center rounded-full text-sm transition-transform group-hover:rotate-45 bg-[#f5f2ec] border border-[#d4cfc5] text-[#3d3828] shrink-0" aria-hidden="true">
+                <span className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full text-xs sm:text-sm transition-transform group-hover:rotate-45 bg-[#f5f2ec] border border-[#d4cfc5] text-[#3d3828] shrink-0" aria-hidden="true">
                   ↗
                 </span>
               </motion.div>
@@ -957,7 +1253,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
 
       {/* ── PROGETTI Section (DARK) ── */}
       <motion.section id="progetti" data-dark-section variants={itemVariants}
-        className="modern-snap-section flex flex-col px-4 sm:px-6 lg:px-10 pt-24 pb-16 sm:pb-20 overflow-hidden"
+        className="modern-snap-section flex min-h-0 flex-col px-4 sm:px-6 lg:px-10 pt-24 pb-16 sm:pb-20 overflow-hidden"
         style={{
           background: 'linear-gradient(135deg, #1a1810 0%, #1c1917 50%, #1a1810 100%)',
         }}
@@ -972,26 +1268,28 @@ export default function ModernSite({ onSwitchToTerminal }) {
         <div className="absolute -bottom-32 -left-32 w-[400px] h-[400px] rounded-full opacity-[0.025] pointer-events-none" style={{ background: 'radial-gradient(circle, #c4a76c 0%, transparent 60%)' }} />
         
         {/* Fixed header — stays at same height as "Cosa facciamo" */}
-        <div className="relative z-10 max-w-6xl mx-auto w-full">
-          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5 sm:gap-6 mb-8 sm:mb-10 lg:mb-12">
-            <div className="space-y-4">
+        <div className="relative z-10 max-w-6xl mx-auto w-full shrink-0">
+          <div className="mt-3 sm:mt-4 mb-8 sm:mb-10 lg:mb-12 flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5 sm:gap-6">
+            <motion.div variants={itemVariants} className="space-y-4 lg:max-w-2xl">
               <motion.h3 className={`${sectionTitleClass} text-[#f5f2ec]`}>Galleria Progetti.</motion.h3>
-              <p className="text-base sm:text-lg font-medium" style={{ color: '#a09a88' }}>{projects.length} Successi Reali</p>
-            </div>
+              <motion.p className="text-base sm:text-lg font-medium" style={{ color: '#a09a88' }}>
+                {projects.length} Successi Reali
+              </motion.p>
+            </motion.div>
 
             {/* Category Selector - Raycast Style */}
-            <div className="self-start lg:self-auto w-full lg:w-auto">
-              <div className="w-full lg:w-auto overflow-x-auto pb-1">
-                <div className="inline-flex min-w-max p-1.5 rounded-[2rem]" style={{
+            <div className="self-start w-full lg:w-auto lg:mt-1 px-1">
+              <div className="w-full lg:w-auto lg:overflow-x-auto pb-1 -mx-1 px-1">
+                <div className="flex lg:inline-flex lg:min-w-max p-1.5 rounded-[2rem] justify-between lg:justify-start w-full lg:w-auto" style={{
                   background: 'linear-gradient(145deg, rgba(43, 39, 32, 0.9) 0%, rgba(31, 29, 24, 0.95) 100%)',
                   border: '1px solid rgba(255, 248, 230, 0.08)',
                   borderTopColor: 'rgba(255, 248, 230, 0.12)',
                 }}>
-                  {['Tutti', ...modernCategories].map((cat) => (
+                  {allProjectCategories.map((cat) => (
                     <button
                       key={cat}
-                      onClick={() => setSelectedCategory(cat)}
-                      className={`relative px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base font-bold transition-all duration-200 rounded-[1.5rem] ${
+                      onClick={() => handleCategoryChange(cat)}
+                      className={`relative flex-1 lg:flex-none px-2 sm:px-6 py-2 sm:py-3 text-[11px] sm:text-base font-bold transition-all duration-200 rounded-[1.25rem] sm:rounded-[1.5rem] whitespace-nowrap ${
                         selectedCategory === cat
                           ? 'text-[#f5f2ec]'
                           : 'text-[#8a7f6a] hover:text-[#c4bba8]'
@@ -1020,89 +1318,32 @@ export default function ModernSite({ onSwitchToTerminal }) {
         </div>
 
         {/* Scrollable cards area */}
-        <div className="relative z-10 max-w-6xl mx-auto w-full flex-1 overflow-y-auto">
-          <AnimatePresence mode="wait">
-            {selectedCategory === 'Tutti' ? (
-              /* Compact cards for "Tutti" */
-              <motion.div
-                key="tutti"
-                className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-4"
-              >
-                {groupedModernProjects.flatMap(g => g.projects).map((p, i) => (
-                  <motion.div
-                    key={p.n}
-                    initial={{ opacity: 0, y: 32, scale: 0.85 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.85, y: -12 }}
-                    transition={{
-                      opacity: { duration: 0.25 },
-                      scale: { type: 'spring', stiffness: 350, damping: 20, mass: 1.0 },
-                      y: { type: 'spring', stiffness: 350, damping: 20, mass: 1.0 },
-                      delay: i * 0.035
-                    }}
-                    whileHover={{ y: -4, scale: 1.02 }}
-                    onClick={() => setSelectedService({ title: p.n, icon: '', details: p.desc })}
-                    className="p-3 sm:p-4 cursor-pointer group overflow-hidden relative hover:scale-[1.02] transition-transform clay-card-dark flex flex-col justify-between min-h-[104px]"
-                  >
-                    {/* Top accent line */}
-                    <div className="absolute top-0 left-6 right-6 h-px transition-all duration-500 group-hover:left-4 group-hover:right-4" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(196, 180, 148, 0.2) 50%, transparent 100%)' }} />
-                    <div className="absolute top-0 right-0 p-2 opacity-[0.06] text-2xl sm:text-3xl font-black tracking-tighter transition-opacity duration-500 group-hover:opacity-[0.14] text-[#d4cabb] select-none">{p.year}</div>
-                    <h4 className="text-sm font-black leading-tight transition-colors duration-300 text-[#ede8de] group-hover:text-[#f5f2ec] pr-8">{p.n}</h4>
-                    <div className="mt-auto pt-2 flex justify-between items-end">
-                      <span className="text-xs text-[#7a7568] font-bold">{p.year}</span>
-                      <div className="w-6 h-6 flex items-center justify-center rounded-full text-xs transition-all duration-300 group-hover:rotate-45 clay-pill-dark text-[#b8ad98] group-hover:text-[#ede8de]">↗</div>
-                    </div>
-                  </motion.div>
-                ))}
-              </motion.div>
-            ) : (
-              /* Full cards for specific categories — EXPAND animation */
-              <motion.div
-                key={selectedCategory}
-                className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-6 lg:gap-7"
-              >
-                {groupedModernProjects.find(g => g.name === selectedCategory)?.projects.map((p, i) => (
-                  <motion.div
-                    key={p.n}
-                    initial={{ opacity: 0, y: 65, scale: 0.7 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.85, y: -12 }}
-                    transition={{
-                      opacity: { duration: 0.3 },
-                      scale: { type: 'spring', stiffness: 200, damping: 12, mass: 1.6 },
-                      y: { type: 'spring', stiffness: 200, damping: 12, mass: 1.6 },
-                      delay: i * 0.09
-                    }}
-                    whileHover={{ y: -4, scale: 1.02 }}
-                    onClick={() => setSelectedService({ title: p.n, icon: '', details: p.desc })}
-                    className="p-5 sm:p-6 cursor-pointer group overflow-hidden relative hover:scale-[1.02] transition-transform clay-card-dark min-h-[196px]"
-                  >
-                    {/* Top accent line */}
-                    <div className="absolute top-0 left-8 right-8 h-px transition-all duration-500 group-hover:left-6 group-hover:right-6" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(196, 180, 148, 0.25) 50%, transparent 100%)' }} />
-                    <div className="absolute top-0 left-12 right-12 h-px opacity-0 group-hover:opacity-100 blur-[2px] transition-all duration-500" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(196, 180, 148, 0.4) 50%, transparent 100%)' }} />
-                    <div className="absolute top-0 right-0 p-3 sm:p-4 opacity-[0.04] text-4xl sm:text-5xl font-black tracking-tighter transition-opacity duration-500 group-hover:opacity-[0.1] text-[#d4cabb] select-none">{p.year}</div>
-                    <div className="flex justify-between items-start mb-3">
-                      <h4 className="text-base sm:text-lg font-black leading-tight max-w-[80%] transition-colors duration-300 text-[#ede8de] group-hover:text-[#f5f2ec]">{p.n}</h4>
-                      <div className="w-8 h-8 flex items-center justify-center rounded-full text-sm transition-all duration-300 group-hover:rotate-45 clay-pill-dark text-[#b8ad98] group-hover:text-[#ede8de]">↗</div>
-                    </div>
-                    <p className="text-xs leading-relaxed mb-2 line-clamp-2" style={{ color: '#9a9484' }}>{p.desc}</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {p.tags.slice(0, 3).map((t, ti) => (
-                        <motion.span
-                          key={t}
-                          initial={{ opacity: 0, scale: 0.5 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: i * 0.09 + 0.25 + ti * 0.07, type: 'spring', stiffness: 300, damping: 15 }}
-                          className="px-2 py-1 text-[10px] font-black uppercase tracking-wider clay-pill-dark text-[#8a7f6a]"
-                        >
-                          {t}
-                        </motion.span>
-                      ))}
-                    </div>
-                  </motion.div>
-                ))}
-              </motion.div>
-            )}
+        <div className="relative z-10 max-w-6xl mx-auto w-full flex-1 min-h-0 overflow-y-auto pt-1 sm:pt-2">
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={selectedCategory}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className={`grid gap-3 sm:gap-4 ${selectedCategory === 'Tutti'
+                ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5'
+                : 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3'
+              }`}
+            >
+              {(selectedCategory === 'Tutti'
+                ? groupedModernProjects.flatMap(g => g.projects)
+                : groupedModernProjects.find(g => g.name === selectedCategory)?.projects || []
+              ).map((p, i) => (
+                <ProjectCard
+                  key={p.n}
+                  project={p}
+                  index={i}
+                  isCompact={selectedCategory === 'Tutti'}
+                  onClick={() => setSelectedService({ title: p.n, icon: '', details: p.desc, source: 'progetti' })}
+                />
+              ))}
+            </motion.div>
           </AnimatePresence>
         </div>
       </motion.section>
@@ -1124,9 +1365,14 @@ export default function ModernSite({ onSwitchToTerminal }) {
           <div className="clay-card p-6 sm:p-12 lg:p-20 text-center relative overflow-hidden bg-gradient-to-br from-[#f8f6f2] to-[#eeeae0] border-2 border-[#d4cfc5]/40">
             <div className="absolute -bottom-20 -right-20 w-64 h-64 clay-pill opacity-10 blur-3xl" />
           <div className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-6">
-            <button onClick={() => setShowContactForm(true)} className="clay-btn px-8 sm:px-12 py-4 sm:py-5 text-lg sm:text-xl font-black !rounded-2xl text-[#3d3828] bg-[#fdfcf9] hover:scale-105 transition-transform flex items-center justify-center gap-2 sm:gap-3">
+            <ShinyButton
+              onClick={() => setShowContactForm(true)}
+              tone="clay"
+              size="lg"
+              className="font-black"
+            >
               Compila il form
-            </button>
+            </ShinyButton>
             <a href="mailto:info@backsoftware.it" className="clay-btn px-6 sm:px-8 py-4 sm:py-5 text-base sm:text-lg font-bold !rounded-2xl text-[#6a6050] hover:text-[#3d3828] transition-colors flex items-center gap-2 sm:gap-3">
               <span className="text-xl sm:text-2xl">✉</span> E-mail
             </a>
@@ -1141,17 +1387,74 @@ export default function ModernSite({ onSwitchToTerminal }) {
         {/* ── FOOTER (slides up from below, overlaying contact) ── */}
         <motion.div
           id="footer"
-          className="absolute inset-x-4 sm:inset-x-6 lg:inset-x-10 bottom-0 z-20 pb-6 sm:pb-10"
+          className="absolute inset-x-4 sm:inset-x-6 lg:inset-x-10 bottom-0 z-20 pb-6 sm:pb-10 h-[66vh] sm:h-auto max-h-[66vh] sm:max-h-none"
           initial={false}
           animate={showFooter ? { y: 0, opacity: 1 } : { y: '100%', opacity: 0 }}
           transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
           style={{ pointerEvents: showFooter ? 'auto' : 'none' }}
         >
           <div className="max-w-6xl mx-auto w-full">
-          <footer className="clay-card p-7 sm:p-10 lg:p-12 border border-[#d4cfc5]/50 bg-gradient-to-br from-[#f7f4ee] via-[#f3efe7] to-[#ece5d8]">
-            <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-8 sm:gap-10 lg:gap-14">
-              <div className="flex flex-col items-start gap-4">
-                <div className="relative w-36 h-36 sm:w-40 sm:h-40">
+          <footer
+            ref={footerCardRef}
+            onMouseEnter={() => setFooterStrokeActive(true)}
+            onMouseLeave={() => setFooterStrokeActive(false)}
+            onMouseMove={handleFooterPointerMove}
+            className="clay-card relative overflow-hidden sm:overflow-hidden overflow-y-auto p-5 sm:p-10 lg:p-12 border border-[#d4cfc5]/50 bg-gradient-to-br from-[#f7f4ee] via-[#f3efe7] to-[#ece5d8] h-full sm:h-auto"
+            style={{ '--footer-stroke-x': '50%', '--footer-stroke-y': '50%', '--footer-stroke-h': '40', '--footer-stroke-s': '66%' }}
+          >
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-[1px] rounded-[30px] border border-[#cdbfa8]/55"
+            />
+            <div
+              aria-hidden="true"
+              className={`pointer-events-none absolute inset-y-4 left-0 w-[2.5px] rounded-full transition-opacity duration-500 ${footerStrokeActive ? 'opacity-100' : 'opacity-62'}`}
+              style={{
+                background: 'linear-gradient(180deg, transparent 0%, hsl(var(--footer-stroke-h) var(--footer-stroke-s) 66% / 0.14) calc(var(--footer-stroke-y) - 28%), hsl(var(--footer-stroke-h) var(--footer-stroke-s) 74% / 0.98) var(--footer-stroke-y), hsl(var(--footer-stroke-h) var(--footer-stroke-s) 66% / 0.14) calc(var(--footer-stroke-y) + 28%), transparent 100%)',
+                boxShadow: '0 0 28px hsl(var(--footer-stroke-h) var(--footer-stroke-s) 72% / 0.5)',
+              }}
+            />
+            <div
+              aria-hidden="true"
+              className={`pointer-events-none absolute inset-y-4 right-0 w-[2.5px] rounded-full transition-opacity duration-500 ${footerStrokeActive ? 'opacity-100' : 'opacity-62'}`}
+              style={{
+                background: 'linear-gradient(180deg, transparent 0%, hsl(calc(var(--footer-stroke-h) + 5) var(--footer-stroke-s) 66% / 0.14) calc(var(--footer-stroke-y) - 28%), hsl(calc(var(--footer-stroke-h) + 5) var(--footer-stroke-s) 74% / 0.98) var(--footer-stroke-y), hsl(calc(var(--footer-stroke-h) + 5) var(--footer-stroke-s) 66% / 0.14) calc(var(--footer-stroke-y) + 28%), transparent 100%)',
+                boxShadow: '0 0 28px hsl(calc(var(--footer-stroke-h) + 5) var(--footer-stroke-s) 72% / 0.5)',
+              }}
+            />
+            <div
+              aria-hidden="true"
+              className={`pointer-events-none absolute inset-x-5 top-0 h-[2.5px] rounded-full transition-opacity duration-500 ${footerStrokeActive ? 'opacity-100' : 'opacity-58'}`}
+              style={{
+                background: 'linear-gradient(90deg, transparent 0%, hsl(var(--footer-stroke-h) var(--footer-stroke-s) 74% / 0.14) calc(var(--footer-stroke-x) - 26%), hsl(var(--footer-stroke-h) var(--footer-stroke-s) 80% / 0.99) var(--footer-stroke-x), hsl(var(--footer-stroke-h) var(--footer-stroke-s) 74% / 0.14) calc(var(--footer-stroke-x) + 26%), transparent 100%)',
+                boxShadow: '0 0 22px hsl(var(--footer-stroke-h) var(--footer-stroke-s) 74% / 0.42)',
+              }}
+            />
+            <div
+              aria-hidden="true"
+              className={`pointer-events-none absolute inset-x-5 bottom-0 h-[2.5px] rounded-full transition-opacity duration-500 ${footerStrokeActive ? 'opacity-100' : 'opacity-58'}`}
+              style={{
+                background: 'linear-gradient(90deg, transparent 0%, hsl(calc(var(--footer-stroke-h) + 4) var(--footer-stroke-s) 72% / 0.14) calc(var(--footer-stroke-x) - 26%), hsl(calc(var(--footer-stroke-h) + 4) var(--footer-stroke-s) 77% / 0.97) var(--footer-stroke-x), hsl(calc(var(--footer-stroke-h) + 4) var(--footer-stroke-s) 72% / 0.14) calc(var(--footer-stroke-x) + 26%), transparent 100%)',
+                boxShadow: '0 0 22px hsl(calc(var(--footer-stroke-h) + 4) var(--footer-stroke-s) 72% / 0.4)',
+              }}
+            />
+            <div
+              aria-hidden="true"
+              className={`pointer-events-none absolute inset-y-8 -left-3 w-5 blur-md transition-opacity duration-500 ${footerStrokeActive ? 'opacity-82' : 'opacity-22'}`}
+              style={{
+                background: 'linear-gradient(180deg, transparent 0%, hsl(var(--footer-stroke-h) var(--footer-stroke-s) 74% / 0.5) var(--footer-stroke-y), transparent 100%)',
+              }}
+            />
+            <div
+              aria-hidden="true"
+              className={`pointer-events-none absolute inset-y-8 -right-3 w-5 blur-md transition-opacity duration-500 ${footerStrokeActive ? 'opacity-82' : 'opacity-22'}`}
+              style={{
+                background: 'linear-gradient(180deg, transparent 0%, hsl(calc(var(--footer-stroke-h) + 5) var(--footer-stroke-s) 74% / 0.5) var(--footer-stroke-y), transparent 100%)',
+              }}
+            />
+            <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-5 sm:gap-8 lg:gap-14">
+              <div className="flex flex-col sm:flex-row lg:flex-col items-start gap-3 sm:gap-4">
+                <div className="relative w-24 h-24 sm:w-32 sm:h-32 lg:w-40 lg:h-40 shrink-0">
                   <motion.svg
                     viewBox="0 0 200 200"
                     className="w-full h-full"
@@ -1173,22 +1476,22 @@ export default function ModernSite({ onSwitchToTerminal }) {
                     </span>
                   </div>
                 </div>
-                <div>
-                  <p className="text-sm text-[#6a6050] leading-relaxed">
+                <div className="sm:flex-1 lg:flex-none">
+                  <p className="text-xs sm:text-sm text-[#6a6050] leading-relaxed">
                     Progettiamo e sviluppiamo soluzioni digitali con obiettivi chiari, tempi definiti e supporto continuo.
                   </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-5 sm:gap-6 lg:gap-8">
                 <div>
-                  <h5 className="text-xs font-black uppercase tracking-[0.2em] text-[#8a7f6a] mb-3">Servizi</h5>
-                  <div className="space-y-2">
+                  <h5 className="text-[11px] sm:text-xs font-black uppercase tracking-[0.18em] sm:tracking-[0.2em] text-[#8a7f6a] mb-2 sm:mb-3">Servizi</h5>
+                  <div className="space-y-1 sm:space-y-2">
                     {footerServiceLinks.map((link) => (
                       <a
                         key={link.label}
                         href={link.href}
-                        className="block text-sm font-semibold text-[#4b4336] hover:text-[#2d2818] transition-colors"
+                        className="block text-xs sm:text-sm font-semibold text-[#4b4336] hover:text-[#2d2818] transition-colors"
                       >
                         {link.label}
                       </a>
@@ -1197,13 +1500,13 @@ export default function ModernSite({ onSwitchToTerminal }) {
                 </div>
 
                 <div>
-                  <h5 className="text-xs font-black uppercase tracking-[0.2em] text-[#8a7f6a] mb-3">Azienda</h5>
-                  <div className="space-y-2">
+                  <h5 className="text-[11px] sm:text-xs font-black uppercase tracking-[0.18em] sm:tracking-[0.2em] text-[#8a7f6a] mb-2 sm:mb-3">Azienda</h5>
+                  <div className="space-y-1 sm:space-y-2">
                     {footerCompanyLinks.map((link) => (
                       <a
                         key={link.label}
                         href={link.href}
-                        className="block text-sm font-semibold text-[#4b4336] hover:text-[#2d2818] transition-colors"
+                        className="block text-xs sm:text-sm font-semibold text-[#4b4336] hover:text-[#2d2818] transition-colors"
                       >
                         {link.label}
                       </a>
@@ -1211,14 +1514,14 @@ export default function ModernSite({ onSwitchToTerminal }) {
                   </div>
                 </div>
 
-                <div>
-                  <h5 className="text-xs font-black uppercase tracking-[0.2em] text-[#8a7f6a] mb-3">Contatti</h5>
-                  <div className="space-y-2 text-sm text-[#4b4336]">
+                <div className="col-span-2 sm:col-span-1">
+                  <h5 className="text-[11px] sm:text-xs font-black uppercase tracking-[0.18em] sm:tracking-[0.2em] text-[#8a7f6a] mb-2 sm:mb-3">Contatti</h5>
+                  <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm text-[#4b4336]">
                     <a href="mailto:info@backsoftware.it" className="block font-semibold hover:text-[#2d2818] transition-colors">
                       info@backsoftware.it
                     </a>
-                    <a href="mailto:julian.rovera@pec.it" className="block font-semibold hover:text-[#2d2818] transition-colors">
-                      julian.rovera@pec.it (PEC)
+                    <a href="mailto:julian.rovera@pec.it" className="block font-semibold hover:text-[#2d2818] transition-colors truncate">
+                      PEC: julian.rovera@pec.it
                     </a>
                     <a href="tel:+393513052627" className="block font-semibold hover:text-[#2d2818] transition-colors">
                       +39 351 305 2627
@@ -1229,15 +1532,15 @@ export default function ModernSite({ onSwitchToTerminal }) {
               </div>
             </div>
 
-            <div className="mt-8 pt-5 border-t border-[#b8ad98]/30 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between text-xs text-[#7a705d]">
-              <p>© {new Date().getFullYear()} Back Software. Tutti i diritti riservati.</p>
-              <div className="flex flex-wrap gap-x-3 gap-y-1">
+            <div className="mt-5 sm:mt-6 lg:mt-8 pt-4 sm:pt-5 border-t border-[#b8ad98]/30 flex flex-col sm:flex-row gap-2 sm:gap-3 sm:items-center sm:justify-between text-[10px] sm:text-xs text-[#7a705d]">
+              <p>© {new Date().getFullYear()} Back Software</p>
+              <div className="flex flex-wrap gap-x-2 sm:gap-x-3 gap-y-1">
                 <span>P.IVA: IT13227980011</span>
+                <span aria-hidden="true" className="hidden sm:inline">|</span>
+                <span className="hidden sm:inline">C.F.: RVRJLN05E26B455T</span>
                 <span aria-hidden="true">|</span>
-                <span>C.F.: RVRJLN05E26B455T</span>
-                <span aria-hidden="true">|</span>
-                <span>Privacy Policy</span>
-                <span aria-hidden="true">|</span>
+                <span className="hidden sm:inline">Privacy Policy</span>
+                <span aria-hidden="true" className="hidden sm:inline">|</span>
                 <a href="https://www.backsoftware.it/cookies" target="_blank" rel="noreferrer" className="hover:text-[#5e5444] transition-colors">
                   Cookie Policy
                 </a>
