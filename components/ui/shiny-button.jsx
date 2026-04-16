@@ -14,8 +14,8 @@ const toneMap = {
     bg: "#fdfcf9",
     subtle: "#e8decd",
     fg: "#3d3828",
-    highlight: "#8f6c3f",
-    highlightSubtle: "#b49062",
+    highlight: "#7c5c2f",
+    highlightSubtle: "#9d7a4a",
   },
 };
 
@@ -94,7 +94,9 @@ export function ShinyButton({
             ) border-box;
           box-shadow:
             inset 0 0 0 1px var(--shiny-cta-bg-subtle),
-            0 8px 20px rgba(60, 48, 34, 0.18);
+            0 8px 20px rgba(60, 48, 34, 0.12);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
           transition: var(--transition);
           transition-property: --gradient-angle-offset, --gradient-percent, --gradient-shine, transform;
           display: inline-flex;
@@ -179,11 +181,12 @@ export function ShinyButton({
           border-radius: 999px;
           background: radial-gradient(
             ellipse at center,
-            color-mix(in hsl, var(--shiny-cta-highlight), white 18%) 0%,
-            color-mix(in hsl, var(--shiny-cta-highlight), transparent 55%) 45%,
-            transparent 78%
+            color-mix(in hsl, var(--shiny-cta-highlight), white 22%) 0%,
+            color-mix(in hsl, var(--shiny-cta-highlight), transparent 60%) 35%,
+            color-mix(in hsl, var(--shiny-cta-highlight), transparent 85%) 65%,
+            transparent 92%
           );
-          filter: blur(8px);
+          filter: blur(16px);
           opacity: 0;
           transition: opacity var(--transition);
           animation: calc(var(--duration) * 1.5) breathe linear infinite;
@@ -210,8 +213,9 @@ export function ShinyButton({
           transform: translateY(-1px) scale(1.035);
           box-shadow:
             inset 0 0 0 1px color-mix(in hsl, var(--shiny-cta-bg-subtle), white 20%),
-            0 16px 36px rgba(40, 28, 18, 0.38),
-            0 0 30px color-mix(in hsl, var(--shiny-cta-highlight), transparent 45%);
+            0 16px 36px rgba(40, 28, 18, 0.32),
+            inset 0 0 12px color-mix(in hsl, var(--shiny-cta-highlight), transparent 85%),
+            0 0 30px color-mix(in hsl, var(--shiny-cta-highlight), transparent 50%);
         }
 
         .shiny-cta:is(:hover, :focus-visible),
