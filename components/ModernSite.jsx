@@ -930,7 +930,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
   if (selectedService) {
     return (
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        className="pt-4 sm:pt-6 lg:pt-10 pb-6 sm:pb-10 lg:pb-20 px-6 sm:px-10 lg:px-20 h-full flex flex-col font-sans modern-mode relative overflow-y-auto overflow-x-hidden"
+        className="w-full pt-4 sm:pt-6 lg:pt-10 pb-6 sm:pb-10 lg:pb-20 px-4 sm:px-10 lg:px-20 h-[100dvh] flex flex-col font-sans modern-mode relative overflow-y-auto overflow-x-hidden overscroll-y-contain"
         style={{ background: '#f5f2ec' }}>
         <div className="absolute inset-0 crt-glitch-overlay" />
         <div className="modern-crt-flicker max-w-4xl mx-auto w-full">
@@ -966,13 +966,13 @@ export default function ModernSite({ onSwitchToTerminal }) {
               </div>
             </div>
             
-            <div className="flex gap-4 px-2">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 px-1 sm:px-2 mt-4">
               <button onClick={() => { handleCloseService(); setShowContactForm(true); setFormData(prev => ({ ...prev, servizio: selectedService.title })); }}
-                className="clay-btn px-6 py-3 text-base font-bold !rounded-2xl text-[#3d3828] bg-[#fdfcf9] hover:scale-105 transition-transform">
-                Richiedi info generale →
+                className="clay-btn w-full sm:w-auto px-6 py-3.5 text-[15px] sm:text-base font-bold !rounded-2xl text-[#3d3828] bg-[#fdfcf9] hover:scale-105 transition-transform flex items-center justify-center gap-2">
+                Richiedi info generale <span>→</span>
               </button>
               <button onClick={handleCloseService}
-                className="clay-btn px-6 py-3 text-base font-bold !rounded-2xl text-[#6a6050]">
+                className="clay-btn w-full sm:w-auto px-6 py-3.5 text-[15px] sm:text-base font-bold !rounded-2xl text-[#6a6050] flex items-center justify-center">
                 Altri servizi
               </button>
             </div>
@@ -986,7 +986,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
   if (showContactForm) {
     return (
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-        className="p-6 sm:p-10 lg:p-20 h-full flex flex-col font-sans modern-mode relative overflow-y-auto overflow-x-hidden"
+        className="w-full p-4 sm:p-10 lg:p-20 h-[100dvh] flex flex-col font-sans modern-mode relative overflow-y-auto overflow-x-hidden overscroll-y-contain"
         style={{ background: '#f5f2ec' }}>
         <div className="absolute inset-0 crt-glitch-overlay" />
         <div className="modern-crt-flicker max-w-3xl mx-auto w-full">
@@ -1045,7 +1045,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
                 rotateZ: formDirection > 0 ? 0.12 : -0.12,
               }}
               transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-              className="relative z-20 clay-card p-10 sm:p-14 overflow-hidden"
+              className="relative z-20 clay-card p-6 sm:p-10 lg:p-14 overflow-hidden"
             >
               <motion.div
                 aria-hidden="true"
@@ -1218,14 +1218,14 @@ export default function ModernSite({ onSwitchToTerminal }) {
 
             {/* Navigation */}
             {formStep >= 1 && formStep <= 3 && (
-              <div className="flex gap-4 mt-8 pt-6 border-t border-[#e4dfd4]">
+              <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-4 mt-8 pt-6 border-t border-[#e4dfd4]">
                 <button onClick={goToPrevStep}
-                  className="clay-btn px-6 py-4 font-bold text-[#6a6050]">
+                  className="clay-btn w-full sm:w-auto px-6 py-3 sm:py-4 font-bold text-[#6a6050]">
                   ← Indietro
                 </button>
                 <button onClick={goToNextStep}
                   disabled={(formStep === 1 && !isStep1Valid) || (formStep === 2 && !isStep2Valid) || (formStep === 3 && !isStep3Valid)}
-                  className="flex-1 clay-btn px-6 py-4 font-bold !rounded-2xl text-[#3d3828] bg-[#fdfcf9] disabled:opacity-30 disabled:cursor-not-allowed hover:scale-105 transition-transform">
+                  className="flex-1 w-full clay-btn px-6 py-3 sm:py-4 font-bold !rounded-2xl text-[#3d3828] bg-[#fdfcf9] disabled:opacity-30 disabled:cursor-not-allowed hover:scale-[1.02] transition-transform">
                   {formStep === 3 ? 'Conferma invio →' : 'Avanti →'}
                 </button>
               </div>
@@ -1239,7 +1239,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
 
   return (
     <motion.div initial="hidden" animate="visible" variants={containerVariants}
-      className="h-[100dvh] w-full overflow-x-hidden overflow-y-auto font-sans modern-mode modern-snap-container selection:bg-[#7c6f5b]/20 relative"
+      className="h-[100dvh] w-full overflow-x-hidden overflow-y-auto font-sans modern-mode modern-snap-container selection:bg-[#7c6f5b]/20 relative overscroll-y-contain"
       style={{ background: 'linear-gradient(180deg, #f5f2ec 0%, #f2eee7 100%)' }}>
       {/* CRT Glitch Effect */}
       <div className="absolute inset-0 crt-glitch-overlay pointer-events-none" />
