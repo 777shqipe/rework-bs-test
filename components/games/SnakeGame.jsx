@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
+import { useRetroAudio } from './useRetroAudio';
 
 const INITIAL_SPEED = 140;
 const MIN_SPEED = 55;
@@ -32,9 +33,13 @@ export default function SnakeGame({ color }) {
     nextDirection: { x: 0, y: 0 },
     speed: INITIAL_SPEED,
     lastMoveTime: 0,
+    lastMoveTime: 0,
     particles: [],
+    floatingTexts: [],
     glowIntensity: 0,
   });
+
+  const { playEat, playPowerup, playGameOver } = useRetroAudio();
 
   const resetGame = useCallback(() => {
     gameState.current = {
@@ -45,7 +50,9 @@ export default function SnakeGame({ color }) {
       nextDirection: { x: 1, y: 0 },
       speed: INITIAL_SPEED,
       lastMoveTime: 0,
+      lastMoveTime: 0,
       particles: [],
+      floatingTexts: [],
       glowIntensity: 0,
     };
     setScore(0);
@@ -88,6 +95,16 @@ export default function SnakeGame({ color }) {
         size: Math.random() * 3 + 1,
       });
     }
+  }
+
+  function addFloatingText(x, y, text, color) {
+    gameState.current.floatingTexts.push({
+      x: x * cellSize + cellSize / 2,
+      y: y * cellSize,
+      text,
+      color,
+      life: 1,
+    });
   }
 
   // Handle resize
@@ -177,15 +194,15 @@ export default function SnakeGame({ color }) {
           y: head.y + state.direction.y,
         };
 
-        // Check wall collision
-        if (newHead.x < 0 || newHead.x >= GRID_SIZE || newHead.y < 0 || newHead.y >= GRID_SIZE) {
-          setGameOver(true);
-          setHighScore(prev => Math.max(prev, score));
-          return;
-        }
+        // Check wall collision - WRAP AROUND (Teleport) instead of death
+        if (newHead.x < 0) newHead.x = GRID_SIZE - 1;
+        if (newHead.x >= GRID_SIZE) newHead.x = 0;
+        if (newHead.y < 0) newHead.y = GRID_SIZE - 1;
+        if (newHead.y >= GRID_SIZE) newHead.y = 0;
 
-        // Check self collision
-        if (state.snake.some(segment => segment.x === newHead.x && segment.y === newHead.y)) {
+        // Check self collision (unless Ghost mode active)
+        if (powerUp !== 'ghost' && state.snake.some(segment => segment.x === newHead.x && segment.y === newHead.y)) {
+          playGameOver();
           setGameOver(true);
           setHighScore(prev => Math.max(prev, score));
           return;
@@ -201,22 +218,30 @@ export default function SnakeGame({ color }) {
           
           if (state.foodType === 'bonus') {
             points = 50;
-            addParticles(state.food.x, state.food.y, '#ffd700', 12);
+            playPowerup();
+            addParticles(state.food.x, state.food.y, '#ffd700', 15);
+            addFloatingText(state.food.x, state.food.y, "+50", "#ffd700");
             state.glowIntensity = 20;
           } else if (state.foodType === 'speed') {
             points = 15;
+            playPowerup();
             setPowerUp('speed');
             setPowerUpTimer(POWERUP_DURATION);
-            state.speed = Math.max(MIN_SPEED - 30, state.speed - 30);
+            state.speed = Math.max(MIN_SPEED - 40, state.speed - 40);
             addParticles(state.food.x, state.food.y, '#00bfff', 10);
+            addFloatingText(state.food.x, state.food.y, "SPEED", "#00bfff");
           } else if (state.foodType === 'ghost') {
             points = 20;
+            playPowerup();
             setPowerUp('ghost');
             setPowerUpTimer(POWERUP_DURATION);
             addParticles(state.food.x, state.food.y, '#ff00ff', 10);
+            addFloatingText(state.food.x, state.food.y, "GHOST", "#ff00ff");
           } else {
+            playEat();
             points = 10 + Math.floor(newCombo / 3) * 5; // Combo bonus
             addParticles(state.food.x, state.food.y, color, 6);
+            if (newCombo > 2) addFloatingText(state.food.x, state.food.y, `+${points}`, color);
           }
           
           setCombo(newCombo);
@@ -304,16 +329,29 @@ export default function SnakeGame({ color }) {
           ctx.globalAlpha = alpha;
         }
         
-        ctx.shadowBlur = isHead ? (10 + state.glowIntensity * 0.5) : 4;
+        ctx.shadowBlur = isHead ? (15 + state.glowIntensity * 0.5) : (powerUp ? 8 : 4);
         
-        // Draw rounded snake body
-        const padding = isHead ? 0 : 1;
-        ctx.fillRect(
-          segment.x * cellSize + padding,
-          segment.y * cellSize + padding,
-          cellSize - padding * 2,
-          cellSize - padding * 2
-        );
+        // Use smooth rounded blocks (by using rects with small padding)
+        const padding = isHead ? 0 : 2;
+        
+        ctx.beginPath();
+        if (ctx.roundRect) {
+          ctx.roundRect(
+            segment.x * cellSize + padding,
+            segment.y * cellSize + padding,
+            cellSize - padding * 2,
+            cellSize - padding * 2,
+            isHead ? cellSize * 0.2 : cellSize * 0.4 // roundness
+          );
+          ctx.fill();
+        } else {
+          ctx.fillRect(
+            segment.x * cellSize + padding,
+            segment.y * cellSize + padding,
+            cellSize - padding * 2,
+            cellSize - padding * 2
+          );
+        }
         
         // Draw eyes on head
         if (isHead) {
@@ -340,7 +378,25 @@ export default function SnakeGame({ color }) {
         if (p.life > 0) {
           ctx.fillStyle = p.color;
           ctx.globalAlpha = p.life;
-          ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+          return true;
+        }
+        return false;
+      });
+
+      // Draw floating texts
+      state.floatingTexts = state.floatingTexts.filter(ft => {
+        ft.y -= 0.5; // float up
+        ft.life -= 0.02; // fade out
+        if (ft.life > 0) {
+          ctx.fillStyle = ft.color;
+          ctx.globalAlpha = ft.life;
+          ctx.font = `bold ${cellSize * 0.6}px monospace`;
+          ctx.textAlign = 'center';
+          ctx.fillText(ft.text, ft.x, ft.y);
           ctx.globalAlpha = 1;
           return true;
         }

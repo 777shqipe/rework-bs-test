@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
+import { useRetroAudio } from './useRetroAudio';
 
 const BIRD_SIZE = 16;
 const PIPE_WIDTH = 44;
@@ -30,9 +31,12 @@ export default function FlappyGame({ color }) {
     pipeTimer: 0,
     lastPipeX: 0,
     particles: [],
+    floatingTexts: [],
     frameCount: 0,
     screenShake: 0,
   });
+
+  const { playJump, playHit, playPowerup, playEat } = useRetroAudio();
 
   const getMedal = (score) => {
     if (score >= 50) return 'platinum';
@@ -63,6 +67,7 @@ export default function FlappyGame({ color }) {
       pipeTimer: 0,
       lastPipeX: 0,
       particles: [],
+      floatingTexts: [],
       frameCount: 0,
       screenShake: 0,
     };
@@ -80,8 +85,21 @@ export default function FlappyGame({ color }) {
     if (!isStarted) {
       setIsStarted(true);
     }
+    playJump();
     gameState.current.bird.velocity = JUMP_STRENGTH;
-  }, [gameOver, isStarted, resetGame]);
+    
+    // Add jump exhaust particles
+    for (let i = 0; i < 5; i++) {
+      gameState.current.particles.push({
+        x: gameState.current.bird.x,
+        y: gameState.current.bird.y + BIRD_SIZE,
+        life: 1,
+        vx: (Math.random() - 0.5) * 2,
+        vy: (Math.random() + 0.5) * 2,
+        size: Math.random() * 3 + 1,
+      });
+    }
+  }, [gameOver, isStarted, resetGame, playJump]);
 
   // Handle resize
   useEffect(() => {
@@ -134,6 +152,8 @@ export default function FlappyGame({ color }) {
 
         // Bird collision with ground/ceiling
         if (state.bird.y < 0 || state.bird.y + BIRD_SIZE > GAME_HEIGHT) {
+          playHit();
+          state.screenShake = 10;
           setGameOver(true);
           setHighScore(prev => Math.max(prev, score));
         }
@@ -152,6 +172,8 @@ export default function FlappyGame({ color }) {
             birdRight > pipe.x &&
             (state.bird.y < pipe.gapY || birdBottom > pipe.gapY + PIPE_GAP)
           ) {
+            playHit();
+            state.screenShake = 15;
             setGameOver(true);
             setHighScore(prev => Math.max(prev, score));
           }
@@ -159,8 +181,18 @@ export default function FlappyGame({ color }) {
           // Score
           if (!pipe.passed && pipe.x + PIPE_WIDTH < state.bird.x) {
             pipe.passed = true;
+            playEat();
+            
+            state.floatingTexts.push({
+              x: state.bird.x + BIRD_SIZE / 2,
+              y: state.bird.y - 10,
+              text: "+1",
+              life: 1,
+            });
+
             setScore(prev => {
               const newScore = prev + 1;
+              if (getMedal(newScore) !== medal && getMedal(newScore)) playPowerup();
               setMedal(getMedal(newScore));
               return newScore;
             });
@@ -308,16 +340,36 @@ export default function FlappyGame({ color }) {
             x: state.bird.x,
             y: state.bird.y + BIRD_SIZE / 2,
             life: 1,
+            vx: -1,
+            vy: 0,
             size: Math.random() * 3 + 1,
           });
         }
       }
       
       state.particles = state.particles.filter(p => {
+        p.x += p.vx || 0;
+        p.y += p.vy || 0;
         p.life -= 0.05;
         if (p.life > 0) {
           ctx.fillStyle = `${color}${Math.floor(p.life * 255).toString(16).padStart(2, '0')}`;
           ctx.fillRect(p.x, p.y, p.size, p.size);
+          return true;
+        }
+        return false;
+      });
+      
+      // Draw floating texts
+      state.floatingTexts = state.floatingTexts.filter(ft => {
+        ft.y -= 1; // float up faster
+        ft.life -= 0.03; // fade out faster
+        if (ft.life > 0) {
+          ctx.fillStyle = color;
+          ctx.globalAlpha = ft.life;
+          ctx.font = `bold 16px monospace`;
+          ctx.textAlign = 'center';
+          ctx.fillText(ft.text, ft.x, ft.y);
+          ctx.globalAlpha = 1;
           return true;
         }
         return false;

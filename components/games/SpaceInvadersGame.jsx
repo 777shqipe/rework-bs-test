@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
+import { useRetroAudio } from './useRetroAudio';
 
 const PLAYER_WIDTH = 32;
 const PLAYER_HEIGHT = 16;
@@ -53,7 +54,10 @@ export default function SpaceInvadersGame({ color }) {
     frameCount: 0,
     playerLives: 3,
     screenShake: 0,
+    floatingTexts: [],
   });
+
+  const { playShoot, playLaser, playExplosion, playGameOver, playHit } = useRetroAudio();
 
   const resetGame = useCallback(() => {
     const { width, height } = dimensions;
@@ -116,6 +120,7 @@ export default function SpaceInvadersGame({ color }) {
       frameCount: 0,
       playerLives: 3,
       screenShake: 0,
+      floatingTexts: [],
     };
     setScore(0);
     setGameOver(false);
@@ -138,6 +143,7 @@ export default function SpaceInvadersGame({ color }) {
     const now = Date.now();
     if (now - state.lastPlayerShot > 350) {
       state.lastPlayerShot = now;
+      playShoot();
       state.bullets.push({
         x: state.player.x + PLAYER_WIDTH / 2 - BULLET_WIDTH / 2,
         y: state.player.y - BULLET_HEIGHT,
@@ -266,21 +272,31 @@ export default function SpaceInvadersGame({ color }) {
               bullet.y < state.ufo.y + UFO_HEIGHT &&
               bullet.y + BULLET_HEIGHT > state.ufo.y) {
             hit = true;
-            state.screenShake = 10;
-            setScore(prev => prev + state.ufo.points);
+            playExplosion();
+            state.screenShake = 20;
+            const pointsToAward = state.ufo.points;
+            setScore(prev => prev + pointsToAward);
             
             // UFO explosion particles
-            for (let i = 0; i < 20; i++) {
+            for (let i = 0; i < 30; i++) {
               state.particles.push({
                 x: state.ufo.x + UFO_WIDTH / 2,
                 y: state.ufo.y + UFO_HEIGHT / 2,
-                vx: (Math.random() - 0.5) * 8,
-                vy: (Math.random() - 0.5) * 8,
-                life: 40,
+                vx: (Math.random() - 0.5) * 12,
+                vy: (Math.random() - 0.5) * 12,
+                life: 50,
                 color: '#ff0000',
-                size: Math.random() * 4 + 2,
+                size: Math.random() * 5 + 2,
               });
             }
+            
+            state.floatingTexts.push({
+              x: state.ufo.x + UFO_WIDTH / 2,
+              y: state.ufo.y,
+              text: `+${state.ufo.points}`,
+              color: '#ff0000',
+              life: 1,
+            });
             
             state.ufo = null;
             setUfoActive(false);
@@ -295,19 +311,20 @@ export default function SpaceInvadersGame({ color }) {
                 bullet.y + BULLET_HEIGHT > invader.y) {
               invader.alive = false;
               hit = true;
-              state.screenShake = 3;
+              playHit();
+              state.screenShake = 5;
               setScore(prev => prev + invader.points);
               
               // Create explosion particles
-              for (let i = 0; i < 10; i++) {
+              for (let i = 0; i < 15; i++) {
                 state.particles.push({
                   x: invader.x + INVADER_WIDTH / 2,
                   y: invader.y + INVADER_HEIGHT / 2,
-                  vx: (Math.random() - 0.5) * 5,
-                  vy: (Math.random() - 0.5) * 5,
-                  life: 25,
+                  vx: (Math.random() - 0.5) * 6,
+                  vy: (Math.random() - 0.5) * 6,
+                  life: 30,
                   color,
-                  size: Math.random() * 3 + 1,
+                  size: Math.random() * 3 + 1.5,
                 });
               }
             }
@@ -338,7 +355,23 @@ export default function SpaceInvadersGame({ color }) {
               bullet.y < state.player.y + PLAYER_HEIGHT &&
               bullet.y + BULLET_HEIGHT > state.player.y) {
             state.playerLives--;
+            state.screenShake = 15;
+            playExplosion();
+            
+            for (let i = 0; i < 20; i++) {
+              state.particles.push({
+                x: state.player.x + PLAYER_WIDTH / 2,
+                y: state.player.y + PLAYER_HEIGHT / 2,
+                vx: (Math.random() - 0.5) * 8,
+                vy: (Math.random() - 0.5) * 8,
+                life: 40,
+                color: '#fff',
+                size: Math.random() * 4 + 2,
+              });
+            }
+
             if (state.playerLives <= 0) {
+              playGameOver();
               setGameOver(true);
               setHighScore(prev => Math.max(prev, score));
             }
@@ -415,6 +448,7 @@ export default function SpaceInvadersGame({ color }) {
           state.lastInvaderShot = now;
           const shooters = state.invaders.filter(i => i.alive && i.y > 50);
           if (shooters.length > 0) {
+            playLaser();
             const shooter = shooters[Math.floor(Math.random() * shooters.length)];
             state.invaderBullets.push({
               x: shooter.x + INVADER_WIDTH / 2,
@@ -429,6 +463,13 @@ export default function SpaceInvadersGame({ color }) {
           p.y += p.vy;
           p.life--;
           return p.life > 0;
+        });
+
+        // Update floating texts
+        state.floatingTexts = state.floatingTexts.filter(ft => {
+          ft.y -= 0.5;
+          ft.life -= 0.02;
+          return ft.life > 0;
         });
       }
 
@@ -593,7 +634,19 @@ export default function SpaceInvadersGame({ color }) {
         ctx.fillStyle = p.color || color;
         ctx.globalAlpha = Math.max(0, p.life / 30);
         const size = p.size || 3;
-        ctx.fillRect(p.x - size / 2, p.y - size / 2, size, size);
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, size/2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      });
+
+      // Draw floating texts
+      state.floatingTexts.forEach(ft => {
+        ctx.fillStyle = ft.color;
+        ctx.globalAlpha = ft.life;
+        ctx.font = `bold 12px monospace`;
+        ctx.textAlign = 'center';
+        ctx.fillText(ft.text, ft.x, ft.y);
         ctx.globalAlpha = 1;
       });
       

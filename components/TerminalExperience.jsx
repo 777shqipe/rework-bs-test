@@ -14,6 +14,20 @@ const GAMES = {
   SPACE: 'SPACE',
 };
 
+const APPS = {
+  ORACLE: 'ORACLE',
+  SLOT: 'SLOT',
+  EXCUSE: 'EXCUSE',
+  ARCADE: 'ARCADE',
+};
+
+const APP_TITLES = {
+  [APPS.ORACLE]: 'SFERA MAGICA',
+  [APPS.SLOT]: 'SLOT PREMI',
+  [APPS.EXCUSE]: 'SCUSE',
+  [APPS.ARCADE]: 'SALA GIOCHI',
+};
+
 const GAME_TITLES = {
   [GAMES.SNAKE]: 'SNAKE',
   [GAMES.FLAPPY]: 'FLAPPY',
@@ -22,13 +36,217 @@ const GAME_TITLES = {
 };
 
 /* ===========================================================
-   RETRO ARCADE — CRT Monitor + 4 Mini Games
-   Snake, Flappy Bird, Dino Run, Space Invaders
+   MINI-APPS COMPONENTS
+=========================================================== */
+
+function OracleApp({ color }) {
+  const [val, setVal] = useState('');
+  const [status, setStatus] = useState('idle'); // idle, loading1, loading2, result
+  const [result, setResult] = useState('');
+
+  const answers = [
+    "I dati confermano: procedi. (Se ti serve una mano tecnica, sai dove trovarci).",
+    "Pessima idea. Ha le stesse probabilità di successo di un sito su Floppy Disk.",
+    "Decisamente sì. Qualsiasi cosa è meglio del Comic Sans nel 2026.",
+    "Non posso sbilanciarmi senza caffeina. Offri un caffè a Back Software.",
+    "Il CSS del tuo destino è corrotto. Richiedi una review UX urgente.",
+    "Le stelle dicono di sì, e Google Analytics pure."
+  ];
+
+  const onSubmit = (e) => {
+    e.preventDefault();
+    if (!val.trim()) return;
+    setStatus('loading1');
+    setTimeout(() => setStatus('loading2'), 800);
+    setTimeout(() => {
+      setResult(answers[Math.floor(Math.random() * answers.length)]);
+      setStatus('result');
+    }, 1800);
+  };
+
+  return (
+    <div className="w-full h-full flex flex-col p-4 sm:p-6 justify-center">
+      <div className="text-center mb-6">
+        <h2 className="text-xl sm:text-2xl font-bold mb-2">LA SFERA MAGICA DEL BUSINESS</h2>
+        <p className="text-xs sm:text-sm opacity-80">Digita un dubbio sul tuo lavoro e consulta l'Oracolo di Ivrea.</p>
+      </div>
+
+      {status === 'idle' && (
+        <form onSubmit={onSubmit} className="flex flex-col gap-4 max-w-sm mx-auto w-full">
+          <input 
+            type="text" 
+            value={val}
+            onChange={e => setVal(e.target.value)}
+            placeholder="es: dovrei lanciare un e-commerce?"
+            className="bg-transparent border-b-2 outline-none px-2 py-1 text-sm sm:text-base text-center placeholder:opacity-40 uppercase"
+            style={{ borderColor: color, color: color }}
+            autoFocus
+          />
+          <button type="submit" className="border-2 px-4 py-2 font-bold hover:bg-white/10 transition-colors" style={{ borderColor: color, color: color }}>
+            CHIEDI ALL'ORACOLO
+          </button>
+        </form>
+      )}
+
+      {status.startsWith('loading') && (
+        <div className="text-center font-mono opacity-80 animate-pulse text-sm sm:text-base">
+          {status === 'loading1' ? '[Connessione agli astri digitali in corso...]' : '[Analisi dell\'algoritmo di Google...]'}
+        </div>
+      )}
+
+      {status === 'result' && (
+        <div className="text-center animate-bounce-in">
+          <div className="text-lg sm:text-xl font-bold mb-6 border p-4" style={{ borderColor: color }}>
+            {result}
+          </div>
+          <button onClick={() => { setVal(''); setStatus('idle'); }} className="text-sm opacity-70 hover:opacity-100 underline underline-offset-4">
+            ← FAI UN'ALTRA DOMANDA
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SlotApp({ color }) {
+  const [status, setStatus] = useState('idle'); // idle, spinning, result
+  const [slots, setSlots] = useState(['?', '?', '?']);
+  const [prize, setPrize] = useState('');
+
+  const spin = () => {
+    setStatus('spinning');
+    let ticks = 0;
+    const interval = setInterval(() => {
+      ticks++;
+      const chars = ['🍒', '🐛', '💩', '☕', '🍕', '🤡', '💻', '💀'];
+      setSlots([
+        chars[Math.floor(Math.random() * chars.length)],
+        chars[Math.floor(Math.random() * chars.length)],
+        chars[Math.floor(Math.random() * chars.length)]
+      ]);
+      if (ticks > 15) {
+        clearInterval(interval);
+        determinePrize();
+      }
+    }, 100);
+  };
+
+  const determinePrize = () => {
+    const roll = Math.random();
+    if (roll > 0.85) {
+      setSlots(['☕', '☕', '☕']);
+      setPrize("Hai vinto: Un Espresso Sospeso! ☕ Passa in agenzia a Ivrea per riscuoterlo.");
+    } else if (roll > 0.70) {
+      setSlots(['🐛', '🐛', '🐛']);
+      setPrize("Hai vinto: 3 Bug in produzione! 🎉 (Tranquillo, li risolviamo noi).");
+    } else if (roll > 0.55) {
+      setSlots(['🍕', '🍕', '🍕']);
+      setPrize("Hai vinto: Essere il primo a sdebitarti offrendo la pizza al nostro team!");
+    } else if (roll > 0.40) {
+      setSlots(['🤡', '🤡', '🤡']);
+      setPrize("Hai vinto: Un cliente che ti dice 'Sì ma mio cugino lo fa a meno'. Condoglianze.");
+    } else if (roll > 0.25) {
+      setSlots(['💻', '💻', '💻']);
+      setPrize("Hai vinto: L'immensa stima dei nerd di Back Software! (Fa curriculum).");
+    } else {
+      setSlots(['💩', '💀', '💣']);
+      setPrize("Hai vinto... assolutamente nulla! Ma ritenta, l'algoritmo oggi è clemente.");
+    }
+    setStatus('result');
+  };
+
+  return (
+    <div className="w-full h-full flex flex-col items-center justify-center p-4">
+      <h2 className="text-xl sm:text-2xl font-bold mb-2 text-center">GANCIO DELLA FORTUNA</h2>
+      <p className="text-xs sm:text-sm opacity-80 mb-8 text-center max-w-xs">Estrai un premio dalla macchinetta virtuale di Back Software.</p>
+
+      <div className="flex gap-4 text-4xl sm:text-6xl mb-8 font-mono border-4 p-4 rounded-lg bg-black/50 tracking-widest" style={{ borderColor: color }}>
+        <span>{slots[0]}</span>
+        <span>{slots[1]}</span>
+        <span>{slots[2]}</span>
+      </div>
+
+      {status === 'idle' && (
+        <button onClick={spin} className="border-2 px-8 py-3 text-lg font-bold hover:bg-white/10 transition-colors animate-pulse" style={{ borderColor: color }}>
+          TIRA LA LEVA
+        </button>
+      )}
+
+      {status === 'result' && (
+        <div className="text-center animate-bounce-in max-w-sm">
+          <p className="font-bold text-sm sm:text-base mb-6 border border-dashed p-3">{prize}</p>
+          <button onClick={() => setStatus('idle')} className="text-sm opacity-70 hover:opacity-100 underline underline-offset-4">
+            ← RIPROVA
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ExcuseApp({ color }) {
+  const [excuse, setExcuse] = useState('');
+  const [status, setStatus] = useState('idle'); // idle, generating, done
+
+  const excuses = [
+    "I DNS non si sono allineati con i meridiani terrestri, ci vorranno 24 ore.",
+    "Un brillamento solare ha resettato la cache del microservizio in Nord Europa.",
+    "Il server ha aderito allo sciopero dei mezzi, stiamo negoziando con la RAM.",
+    "C'è un memory leak causato da un gatto sulla tastiera del datacenter in Germania.",
+    "Si è rotto il tubo del flusso canalizzatore nel backend. Attendo il tecnico.",
+    "Deploy on Friday? La macchina del caffè ha preso il controllo dell'infrastruttura.",
+    "Il framework JavaScript ha deciso di riscriversi da solo per crisi d'identità.",
+    "C'è troppa latenza quantistica nel cavo router in corridoio."
+  ];
+
+  const generate = () => {
+    setStatus('generating');
+    setTimeout(() => {
+      let rand;
+      do { rand = excuses[Math.floor(Math.random() * excuses.length)]; } while (rand === excuse);
+      setExcuse(rand);
+      setStatus('done');
+    }, 1500); // 1.5 seconds typing delay
+  };
+
+  return (
+    <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center">
+      <h2 className="text-xl sm:text-2xl font-bold mb-2">GENERATORE DI ALIBI</h2>
+      <p className="text-xs sm:text-sm opacity-80 mb-8 max-w-sm">
+        Devi giustificare un ritardo con il capo o un cliente? Ci pensiamo noi.
+      </p>
+
+      {status === 'generating' ? (
+        <div className="text-center font-mono opacity-80 animate-pulse text-sm sm:text-base">
+          [Calcolo supercazzola tecnologicamente ineccepibile in corso...]
+        </div>
+      ) : excuse ? (
+        <div className="max-w-md animate-bounce-in">
+          <div className="text-lg sm:text-xl font-mono border-l-4 p-4 text-left italic bg-black/30 mb-8" style={{ borderColor: color }}>
+            "{excuse}"
+          </div>
+          <button onClick={generate} className="border-2 px-6 py-2 font-bold hover:bg-white/10 transition-colors" style={{ borderColor: color }}>
+            GENERA UN'ALTRA SCUSA
+          </button>
+        </div>
+      ) : (
+        <button onClick={generate} className="border-2 px-8 py-3 text-lg font-bold hover:bg-white/10 transition-colors" style={{ borderColor: color }}>
+          GENERA SCUSA
+        </button>
+      )}
+    </div>
+  );
+}
+
+/* ===========================================================
+   RETRO ARCADE — CRT Monitor Hub
+   Contains Apps & Arcades
 =========================================================== */
 export default function TerminalExperience({ onSwitchToModern }) {
   const [bootPhase, setBootPhase] = useState('boot');
   const [screenAnim, setScreenAnim] = useState('');
   const [terminalColor, setTerminalColor] = useState('amber');
+  const [currentApp, setCurrentApp] = useState(APPS.ORACLE);
   const [currentGame, setCurrentGame] = useState(GAMES.SNAKE);
 
   const COLOR_PROFILES = useMemo(() => ({
@@ -50,6 +268,10 @@ export default function TerminalExperience({ onSwitchToModern }) {
     onSwitchToModern();
   }, [onSwitchToModern]);
 
+  const handleAppChange = (app) => {
+    setCurrentApp(app);
+  };
+
   const handleGameChange = (game) => {
     setCurrentGame(game);
   };
@@ -63,7 +285,54 @@ export default function TerminalExperience({ onSwitchToModern }) {
       case GAMES.SPACE: return <SpaceInvadersGame color={color} />;
       default: return <SnakeGame color={color} />;
     }
-  }, [currentGame, terminalColor]);
+  }, [currentGame, terminalColor, COLOR_PROFILES]);
+
+  const renderApp = useCallback(() => {
+    const color = COLOR_PROFILES[terminalColor].main;
+    switch (currentApp) {
+      case APPS.ORACLE: return <OracleApp color={color} />;
+      case APPS.SLOT: return <SlotApp color={color} />;
+      case APPS.EXCUSE: return <ExcuseApp color={color} />;
+      case APPS.ARCADE: return (
+        <div className="w-full h-full flex flex-col">
+          {/* GAME SELECTOR TABS - Sub menu */}
+          <div className="flex items-center justify-center gap-1 sm:gap-2 p-1 sm:p-2 border-b border-[var(--t-color)] border-opacity-30 shrink-0">
+            {Object.values(GAMES).map((game) => (
+              <motion.button
+                key={game}
+                onClick={() => handleGameChange(game)}
+                className={`px-2 py-1 text-[8px] sm:text-[9px] font-black uppercase tracking-wider transition-all border ${
+                  currentGame === game 
+                    ? 'bg-[var(--t-color)] text-[#070b07] border-[var(--t-color)]' 
+                    : 'text-[var(--t-color)] border-[var(--t-color)] border-opacity-30 hover:border-opacity-100'
+                }`}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {GAME_TITLES[game]}
+              </motion.button>
+            ))}
+          </div>
+          {/* Game Area */}
+          <div className="flex-1 flex items-center justify-center overflow-hidden p-1 sm:p-2 relative">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentGame}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+                className="absolute inset-0 w-full h-full flex items-center justify-center p-2"
+              >
+                {renderGame()}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
+      );
+      default: return <OracleApp color={color} />;
+    }
+  }, [currentApp, currentGame, terminalColor, COLOR_PROFILES, renderGame]);
 
   const profile = COLOR_PROFILES[terminalColor];
 
@@ -182,22 +451,25 @@ export default function TerminalExperience({ onSwitchToModern }) {
                 {/* Screen content wrapper */}
                 <div className={`absolute inset-0 ${screenAnim} flex flex-col`}>
 
-                  {/* GAME SELECTOR TABS - Top */}
+                  {/* APP SELECTOR TABS - Top */}
                   {bootPhase === 'ready' && (
-                    <div className="flex items-center justify-center gap-2 p-2 border-b border-[var(--t-color)] border-opacity-30 z-20">
-                      {Object.values(GAMES).map((game) => (
+                    <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 p-4 sm:p-5 border-b-2 border-[var(--t-color)] border-opacity-30 z-20 bg-[#070b07]/90 backdrop-blur-md shadow-[0_10px_30px_rgba(0,0,0,0.8)] relative">
+                      {/* Subtle gradient under the menu */}
+                      <div className="absolute bottom-0 left-0 right-0 h-10 translate-y-full bg-gradient-to-b from-[#070b07]/80 to-transparent pointer-events-none" />
+                      
+                      {Object.values(APPS).map((app) => (
                         <motion.button
-                          key={game}
-                          onClick={() => handleGameChange(game)}
-                          className={`px-3 py-1.5 text-[9px] sm:text-[10px] font-black uppercase tracking-wider transition-all border ${
-                            currentGame === game 
-                              ? 'bg-[var(--t-color)] text-[#070b07] border-[var(--t-color)]' 
-                              : 'text-[var(--t-color)] border-[var(--t-color)] border-opacity-50 hover:border-opacity-100'
+                          key={app}
+                          onClick={() => handleAppChange(app)}
+                          className={`px-4 py-2 sm:px-8 sm:py-3 text-[10px] sm:text-xs md:text-sm font-black uppercase tracking-[0.2em] transition-all border-2 ${
+                            currentApp === app 
+                              ? 'bg-[var(--t-color)] text-[#070b07] border-[var(--t-color)] shadow-[0_0_20px_var(--t-color-glow-strong)] scale-105' 
+                              : 'text-[var(--t-color)] border-[var(--t-color)] border-opacity-40 hover:border-opacity-100 hover:shadow-[0_0_15px_var(--t-color-glow)] hover:bg-[var(--t-color)]/10'
                           }`}
-                          whileHover={{ scale: 1.05 }}
+                          whileHover={{ scale: 1.08 }}
                           whileTap={{ scale: 0.95 }}
                         >
-                          {GAME_TITLES[game]}
+                          {APP_TITLES[app]}
                         </motion.button>
                       ))}
                     </div>
@@ -209,9 +481,9 @@ export default function TerminalExperience({ onSwitchToModern }) {
                       <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="text-lg sm:text-xl font-black tracking-widest animate-pulse"
+                        className="text-lg sm:text-xl font-black tracking-widest animate-pulse text-center"
                       >
-                        ARCADE SYSTEM
+                        BACK OS v2.0<br/>TERMINAL EDITION
                       </motion.div>
                       <motion.div
                         initial={{ opacity: 0 }}
@@ -219,24 +491,24 @@ export default function TerminalExperience({ onSwitchToModern }) {
                         transition={{ delay: 0.2 }}
                         className="text-[10px] sm:text-xs mt-2 opacity-70"
                       >
-                        LOADING GAMES...
+                        BOOTING SYSTEM...
                       </motion.div>
                     </div>
                   )}
 
-                  {/* GAME AREA */}
+                  {/* APP CONTENT AREA */}
                   {bootPhase === 'ready' && (
-                    <div className="flex-1 flex items-center justify-center overflow-hidden p-2">
+                    <div className="flex-1 flex items-center justify-center overflow-hidden">
                       <AnimatePresence mode="wait">
                         <motion.div
-                          key={currentGame}
-                          initial={{ opacity: 0, scale: 0.95 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.95 }}
+                          key={currentApp}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
                           transition={{ duration: 0.2 }}
-                          className="w-full h-full flex items-center justify-center"
+                          className="w-full h-full flex flex-col font-mono"
                         >
-                          {renderGame()}
+                          {renderApp()}
                         </motion.div>
                       </AnimatePresence>
                     </div>

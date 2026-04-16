@@ -2,13 +2,14 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
+import { useRetroAudio } from './useRetroAudio';
 
 const DINO_SIZE = 28;
 const DINO_WIDTH = 26;
-const GRAVITY = 0.65;
-const JUMP_STRENGTH = -11.5;
+const GRAVITY = 0.8;
+const JUMP_STRENGTH = -12.5;
 const BASE_SPEED = 5;
-const MAX_SPEED = 12;
+const MAX_SPEED = 14;
 const DAY_NIGHT_CYCLE = 2000; // frames
 
 export default function DinoGame({ color }) {
@@ -33,7 +34,11 @@ export default function DinoGame({ color }) {
     distance: 0,
     frameCount: 0,
     moonPhase: 0,
+    floatingTexts: [],
+    screenShake: 0,
   });
+
+  const { playJump, playHit, playPowerup } = useRetroAudio();
 
   const resetGame = useCallback(() => {
     const { width, height } = dimensions;
@@ -59,6 +64,8 @@ export default function DinoGame({ color }) {
       distance: 0,
       frameCount: 0,
       moonPhase: Math.floor(Math.random() * 8),
+      floatingTexts: [],
+      screenShake: 0,
     };
     setScore(0);
     setTimeOfDay(0);
@@ -74,10 +81,11 @@ export default function DinoGame({ color }) {
     const dino = gameState.current.dino;
     if (!dino.isJumping) {
       if (!isStarted) setIsStarted(true);
+      playJump();
       dino.velocity = JUMP_STRENGTH;
       dino.isJumping = true;
     }
-  }, [gameOver, isStarted, resetGame]);
+  }, [gameOver, isStarted, resetGame, playJump]);
 
   const duck = useCallback((isDucking) => {
     const dino = gameState.current.dino;
@@ -155,7 +163,17 @@ export default function DinoGame({ color }) {
         
         // Score based on distance
         if (state.frameCount % 10 === 0) {
-          setScore(Math.floor(state.distance / 10));
+          const newScore = Math.floor(state.distance / 10);
+          if (newScore > 0 && newScore % 100 === 0 && newScore !== score) {
+            playPowerup();
+            state.floatingTexts.push({
+              x: GAME_WIDTH / 2,
+              y: GAME_HEIGHT / 2,
+              text: `${newScore}!🏆`,
+              life: 1,
+            });
+          }
+          setScore(newScore);
         }
 
         // Increase speed gradually
@@ -227,6 +245,8 @@ export default function DinoGame({ color }) {
             dinoHitbox.y < obsHitbox.y + obsHitbox.height &&
             dinoHitbox.y + dinoHitbox.height > obsHitbox.y
           ) {
+            playHit();
+            state.screenShake = 15;
             setGameOver(true);
             setHighScore(prev => Math.max(prev, Math.floor(state.distance / 10)));
           }
@@ -297,6 +317,16 @@ export default function DinoGame({ color }) {
       }
       ctx.fillStyle = skyGradient;
       ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+      
+      // Screen shake effect
+      ctx.save();
+      if (state.screenShake > 0) {
+        const shakeX = (Math.random() - 0.5) * state.screenShake;
+        const shakeY = (Math.random() - 0.5) * state.screenShake;
+        ctx.translate(shakeX, shakeY);
+        state.screenShake *= 0.9;
+        if (state.screenShake < 0.5) state.screenShake = 0;
+      }
       
       // Draw stars at night
       if (nightIntensity > 0.1) {
@@ -452,6 +482,24 @@ export default function DinoGame({ color }) {
         }
         return false;
       });
+
+      // Draw floating texts
+      state.floatingTexts = state.floatingTexts.filter(ft => {
+        ft.y -= 0.5;
+        ft.life -= 0.015;
+        if (ft.life > 0) {
+          ctx.fillStyle = color;
+          ctx.globalAlpha = ft.life;
+          ctx.font = `bold 24px monospace`;
+          ctx.textAlign = 'center';
+          ctx.fillText(ft.text, ft.x, ft.y);
+          ctx.globalAlpha = 1;
+          return true;
+        }
+        return false;
+      });
+
+      ctx.restore(); // Restore from screenshake
 
       animationId = requestAnimationFrame(gameLoop);
     };
