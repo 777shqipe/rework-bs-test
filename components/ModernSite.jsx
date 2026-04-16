@@ -64,7 +64,7 @@ function ModernTypewriter({ servizio }) {
       const timer = setTimeout(() => {
         setText(currentText.slice(0, idx + 1));
         setIdx(prev => prev + 1);
-      }, 30);
+      }, 55);
       return () => clearTimeout(timer);
     }
 
@@ -72,7 +72,7 @@ function ModernTypewriter({ servizio }) {
       setIsTyping(false);
       const timer = setTimeout(() => {
         setIdx(prev => prev - 1);
-      }, 2500);
+      }, 3200);
       return () => clearTimeout(timer);
     }
 
@@ -80,7 +80,7 @@ function ModernTypewriter({ servizio }) {
       const timer = setTimeout(() => {
         setText(currentText.slice(0, idx - 1));
         setIdx(prev => prev - 1);
-      }, 18);
+      }, 32);
       return () => clearTimeout(timer);
     }
 
@@ -107,27 +107,34 @@ function ModernTypewriter({ servizio }) {
 /* ===========================================================
    PROJECT CARD — Animated card with FLIP layout transitions
 =========================================================== */
-function ProjectCard({ project, index, isCompact, onClick }) {
+function ProjectCard({ project, index, isCompact, onClick, direction, enableMorph }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -10, scale: 0.98 }}
+      layout={enableMorph}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -6, x: direction > 0 ? -14 : 14 }}
       transition={{
-        duration: 0.35,
-        delay: index * 0.03,
-        ease: [0.16, 1, 0.3, 1],
+        duration: enableMorph ? 0.22 : 0.2,
+        delay: Math.min(index * (enableMorph ? 0.008 : 0.004), enableMorph ? 0.06 : 0.04),
+        ease: [0.22, 1, 0.36, 1],
+        layout: enableMorph ? {
+          type: 'spring',
+          stiffness: 520,
+          damping: 44,
+          mass: 0.6,
+        } : undefined,
       }}
       onClick={onClick}
       className={`cursor-pointer group overflow-hidden relative clay-card-dark ${
         isCompact
           ? 'p-3 sm:p-4 flex flex-col justify-between min-h-[104px]'
           : 'p-5 sm:p-6 min-h-[196px]'
-      }`}
+      } transform-gpu will-change-transform`}
       whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
     >
       <div className="absolute top-0 left-6 right-6 h-px" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(196, 180, 148, 0.2) 50%, transparent 100%)' }} />
-      <div className="absolute top-0 right-0 p-2 sm:p-3 opacity-[0.05] text-2xl sm:text-4xl font-black tracking-tighter text-[#d4cabb] select-none">{project.year}</div>
+      <div className={`absolute opacity-[0.05] font-black tracking-tighter text-[#d4cabb] select-none ${isCompact ? 'top-0 right-0 p-2 sm:p-3 text-2xl sm:text-4xl' : 'top-1 right-1 sm:top-0 sm:right-0 p-2 sm:p-3 text-4xl sm:text-4xl'}`}>{project.year}</div>
 
       <div className={isCompact ? '' : 'flex justify-between items-start mb-3'}>
         <h4 className={`font-black leading-tight text-[#ede8de] group-hover:text-[#f5f2ec] ${isCompact ? 'text-sm pr-8' : 'text-base sm:text-lg max-w-[80%]'}`}>
@@ -136,23 +143,36 @@ function ProjectCard({ project, index, isCompact, onClick }) {
         {!isCompact && <div className="w-8 h-8 flex items-center justify-center rounded-full text-sm clay-pill-dark text-[#b8ad98] group-hover:rotate-45 transition-transform">↗</div>}
       </div>
 
-      {!isCompact && (
-        <>
-          <p className="text-xs leading-relaxed mb-2 line-clamp-2" style={{ color: '#9a9484' }}>{project.desc}</p>
-          <div className="flex flex-wrap gap-1.5">
-            {project.tags.slice(0, 3).map(t => (
-              <span key={t} className="px-2 py-1 text-[10px] font-black uppercase tracking-wider clay-pill-dark text-[#8a7f6a]">{t}</span>
-            ))}
-          </div>
-        </>
-      )}
-
-      {isCompact && (
-        <div className="mt-auto pt-2 flex justify-between items-end">
-          <span className="text-xs text-[#7a7568] font-bold">{project.year}</span>
-          <div className="w-6 h-6 flex items-center justify-center rounded-full text-xs clay-pill-dark text-[#b8ad98] group-hover:rotate-45 transition-transform">↗</div>
-        </div>
-      )}
+      <AnimatePresence mode="wait" initial={false}>
+        {!isCompact ? (
+          <motion.div
+            key="expanded"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <p className="text-xs leading-relaxed mb-2 line-clamp-2" style={{ color: '#9a9484' }}>{project.desc}</p>
+            <div className="flex flex-wrap gap-1.5">
+              {project.tags.slice(0, 3).map(t => (
+                <span key={t} className="px-2 py-1 text-[10px] font-black uppercase tracking-wider clay-pill-dark text-[#8a7f6a]">{t}</span>
+              ))}
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="compact"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            className="mt-auto pt-2 flex justify-between items-end"
+          >
+            <span className="text-xs text-[#7a7568] font-bold">{project.year}</span>
+            <div className="w-6 h-6 flex items-center justify-center rounded-full text-xs clay-pill-dark text-[#b8ad98] group-hover:rotate-45 transition-transform">↗</div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
@@ -168,6 +188,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
   const [selectedService, setSelectedService] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('Tutti');
   const [categoryDirection, setCategoryDirection] = useState(1);
+  const [categoryTransitionType, setCategoryTransitionType] = useState('morph');
   const [showFooter, setShowFooter] = useState(false);
   const contactSectionRef = useRef(null);
   const footerCardRef = useRef(null);
@@ -188,7 +209,25 @@ export default function ModernSite({ onSwitchToTerminal }) {
   const [orbitTextDesktop, setOrbitTextDesktop] = useState('');
   const [pathLenMobile, setPathLenMobile] = useState(0);
   const [pathLenDesktop, setPathLenDesktop] = useState(0);
-  const UNIT = 'BACKSOFTWARE \u2022 ';
+  const [isDesktopView, setIsDesktopView] = useState(false);
+  const DESKTOP_ORBIT_TOKEN = 'BACK SOFTWARE \u2022';
+  const DESKTOP_ORBIT_FONT_SIZE = 8;
+  const DESKTOP_ORBIT_LETTER_SPACING = 1.2;
+  const DESKTOP_ORBIT_SPEED = 24;
+
+  useEffect(() => {
+    const media = window.matchMedia('(min-width: 640px)');
+    const syncViewport = () => setIsDesktopView(media.matches);
+    syncViewport();
+
+    if (media.addEventListener) {
+      media.addEventListener('change', syncViewport);
+      return () => media.removeEventListener('change', syncViewport);
+    }
+
+    media.addListener(syncViewport);
+    return () => media.removeListener(syncViewport);
+  }, []);
 
   useEffect(() => {
     const recalcMobile = () => {
@@ -220,38 +259,45 @@ export default function ModernSite({ onSwitchToTerminal }) {
       ].join(' ');
 
       setHeaderPathMobile(path);
-      
+
       // Calcolo preciso perimetro del bordo
       const straight = (w + 24 - rr * 2) * 2;
       const curved = 2 * Math.PI * rr;
       const perimeter = straight + curved;
-      
+
       // Dimensione font e larghezza unità calcolata
       const unit = 'BACK SOFTWARE ·';
       const unitWidth = 46; // px, larghezza esatta a fontSize 6px
-      
+
       // Quante ripetizioni servono per coprire il perimetro + overlap loop
       const reps = Math.ceil(perimeter / unitWidth) + 2;
       const text = Array(reps).fill(unit).join(' ');
-      
+
       setPathLenMobile(Math.round(perimeter));
       setOrbitTextMobile(text);
     };
 
     const recalcDesktop = () => {
       const el = headerRefDesktop.current;
-      const svg = orbitSvgRefDesktop.current;
-      if (!el || !svg) return;
+      if (!el) return;
 
       const w = el.clientWidth;
       const h = el.clientHeight;
-      const r = Math.min(h / 2, 24);
-      const pad = 6;
-      const left = -pad;
-      const right = w + pad;
-      const top = -pad;
-      const bottom = h + pad;
-      const rr = Math.min(r + pad, h / 2 + pad);
+      const computed = window.getComputedStyle(el);
+      const baseRadius = parseFloat(computed.borderTopLeftRadius) || Math.min(h / 2, 28);
+      const orbitInset = 6;
+      const left = -orbitInset;
+      const right = w + orbitInset;
+      const top = -orbitInset;
+      const bottom = h + orbitInset;
+      const rr = Math.max(
+        0,
+        Math.min(
+          baseRadius + orbitInset,
+          (w + orbitInset * 2) / 2,
+          (h + orbitInset * 2) / 2,
+        ),
+      );
 
       const path = [
         `M ${left + rr} ${top}`,
@@ -267,13 +313,25 @@ export default function ModernSite({ onSwitchToTerminal }) {
       ].join(' ');
 
       setHeaderPathDesktop(path);
-      const straight = (w + pad * 2 - rr * 2) * 2;
-      const curved = 2 * Math.PI * rr;
-      setPathLenDesktop(Math.round(straight + curved));
 
-      const slot = 90;
-      const reps = Math.max(2, Math.ceil((w + pad * 2 + 60) / slot));
-      setOrbitTextDesktop(Array(reps).fill('BACK SOFTWARE •').join(' '));
+      const pathWidth = w + orbitInset * 2;
+      const pathHeight = h + orbitInset * 2;
+      const straight = 2 * (pathWidth + pathHeight - rr * 4);
+      const curved = 2 * Math.PI * rr;
+      const perimeter = straight + curved;
+      setPathLenDesktop(perimeter);
+
+      const measureContext = document.createElement('canvas').getContext('2d');
+      let tokenWidth = 62;
+      if (measureContext) {
+        measureContext.font = `800 ${DESKTOP_ORBIT_FONT_SIZE}px sans-serif`;
+        const baseWidth = measureContext.measureText(`${DESKTOP_ORBIT_TOKEN} `).width;
+        const trackingWidth = DESKTOP_ORBIT_LETTER_SPACING * Math.max(0, `${DESKTOP_ORBIT_TOKEN} `.length - 1);
+        tokenWidth = baseWidth + trackingWidth;
+      }
+
+      const reps = Math.max(4, Math.ceil((perimeter * 1.03) / Math.max(1, tokenWidth)));
+      setOrbitTextDesktop(Array(reps).fill(DESKTOP_ORBIT_TOKEN).join(' '));
     };
 
     recalcMobile();
@@ -321,24 +379,54 @@ export default function ModernSite({ onSwitchToTerminal }) {
     };
   }, []);
 
-  // Animate orbiting text (both mobile and desktop)
+  // Animate orbiting text - mobile only in mobile viewport
   useEffect(() => {
-    let offset = 0;
+    if (isDesktopView) return;
+
+    let mobileOffset = 0;
     let raf;
+
     const step = () => {
-      offset = (offset + 0.012) % 100;
-      if (orbitRef1Mobile.current) orbitRef1Mobile.current.setAttribute('startOffset', `${offset}%`);
-      if (orbitRef2Mobile.current) orbitRef2Mobile.current.setAttribute('startOffset', `${offset - 100}%`);
-      if (orbitRef1Desktop.current) orbitRef1Desktop.current.setAttribute('startOffset', `${offset}%`);
-      if (orbitRef2Desktop.current) orbitRef2Desktop.current.setAttribute('startOffset', `${offset - 100}%`);
+      mobileOffset = (mobileOffset + 0.012) % 100;
+      if (orbitRef1Mobile.current) orbitRef1Mobile.current.setAttribute('startOffset', `${mobileOffset}%`);
+      if (orbitRef2Mobile.current) orbitRef2Mobile.current.setAttribute('startOffset', `${mobileOffset - 100}%`);
       raf = requestAnimationFrame(step);
     };
+
     raf = requestAnimationFrame(step);
+
     return () => cancelAnimationFrame(raf);
-  }, []);
+  }, [isDesktopView]);
+
+  // Animate orbiting text - desktop only in desktop viewport
+  useEffect(() => {
+    if (!isDesktopView || pathLenDesktop <= 0) return;
+
+    let desktopOffset = 0;
+    let raf;
+    let lastTs = performance.now();
+
+    const step = (ts) => {
+      const dt = Math.min(0.05, (ts - lastTs) / 1000);
+      lastTs = ts;
+      desktopOffset = (desktopOffset + DESKTOP_ORBIT_SPEED * dt) % pathLenDesktop;
+      if (orbitRef1Desktop.current) orbitRef1Desktop.current.setAttribute('startOffset', `${desktopOffset.toFixed(2)}`);
+      if (orbitRef2Desktop.current) orbitRef2Desktop.current.setAttribute('startOffset', `${(desktopOffset - pathLenDesktop).toFixed(2)}`);
+
+      raf = requestAnimationFrame(step);
+    };
+
+    raf = requestAnimationFrame((ts) => {
+      lastTs = ts;
+      step(ts);
+    });
+
+    return () => cancelAnimationFrame(raf);
+  }, [isDesktopView, pathLenDesktop]);
 
   // Orbit color: brownish on light, warm beige on dark
   const orbitColor = orbitOnDark ? '#d4cabb' : '#5a5244';
+  const orbitColorMobile = '#d4cabb';
 
   // Footer reveal on wheel in contact section
   useEffect(() => {
@@ -666,9 +754,19 @@ export default function ModernSite({ onSwitchToTerminal }) {
     if (cat === selectedCategory) return;
     const prevIndex = allProjectCategories.indexOf(selectedCategory);
     const nextIndex = allProjectCategories.indexOf(cat);
+    const prevIsCompact = selectedCategory === 'Tutti';
+    const nextIsCompact = cat === 'Tutti';
+
+    setCategoryTransitionType(prevIsCompact !== nextIsCompact ? 'morph' : 'swap');
     setCategoryDirection(nextIndex >= prevIndex ? 1 : -1);
     setSelectedCategory(cat);
   };
+
+  const isCompactCategory = selectedCategory === 'Tutti';
+  const visibleProjects = useMemo(() => {
+    if (isCompactCategory) return groupedModernProjects.flatMap(g => g.projects);
+    return groupedModernProjects.find(g => g.name === selectedCategory)?.projects || [];
+  }, [groupedModernProjects, isCompactCategory, selectedCategory]);
 
   const galleryGridVariants = {
     initial: (dir) => ({
@@ -707,29 +805,114 @@ export default function ModernSite({ onSwitchToTerminal }) {
   ];
 
   // Contact form state
-  const [formData, setFormData] = useState({
+  const initialFormData = {
     nome: '',
+    azienda: '',
     email: '',
+    prefissoTelefono: '+39',
     telefono: '',
     servizio: '',
     descrizione: ''
+  };
+
+  const [formData, setFormData] = useState({
+    ...initialFormData
   });
   const [formStep, setFormStep] = useState(1);
+  const [formDirection, setFormDirection] = useState(1);
+  const stackLayers = [1, 2, 3];
 
   const serviziOptions = ['Siti Web', 'Marketing', 'Foto & Video', 'Grafica & Brand', 'Software su Misura', 'Case Famiglia', 'Altro'];
 
   const handleInputChange = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
 
+  const goToNextStep = () => {
+    setFormDirection(1);
+    setFormStep(prev => Math.min(4, prev + 1));
+  };
+
+  const goToPrevStep = () => {
+    setFormDirection(-1);
+    setFormStep(prev => Math.max(1, prev - 1));
+  };
+
+  const normalizedEmail = formData.email.trim();
+  const normalizedPrefix = formData.prefissoTelefono.trim();
+  const normalizedPhone = formData.telefono.replace(/\s+/g, '');
+  const fullPhoneNumber = `${normalizedPrefix} ${normalizedPhone}`.trim();
+
+  const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(normalizedEmail);
+  const isPhonePrefixValid = /^\+\d{1,4}$/.test(normalizedPrefix);
+  const isPhoneValid = /^\d{6,14}$/.test(normalizedPhone);
+
+  const isStep1Valid = Boolean(formData.nome.trim()) && isEmailValid && isPhonePrefixValid && isPhoneValid;
+  const isStep2Valid = Boolean(formData.servizio);
+  const isStep3Valid = Boolean(formData.descrizione.trim());
+
+  const stepPanelVariants = {
+    enter: (direction) => ({
+      opacity: 0,
+      y: 14,
+      x: direction > 0 ? 32 : -32,
+      scale: 0.985,
+      filter: 'blur(3px)',
+    }),
+    center: {
+      opacity: 1,
+      y: 0,
+      x: 0,
+      scale: 1,
+      filter: 'blur(0px)',
+      transition: {
+        duration: 0.36,
+        ease: [0.22, 1, 0.36, 1],
+      },
+    },
+    exit: (direction) => ({
+      opacity: 0,
+      y: -10,
+      x: direction > 0 ? -24 : 24,
+      scale: 0.99,
+      filter: 'blur(3px)',
+      transition: {
+        duration: 0.22,
+        ease: [0.4, 0, 1, 1],
+      },
+    }),
+  };
+
+  const buildContactMessage = () => {
+    const lines = [
+      'Nuova richiesta commerciale',
+      '',
+      'DATI CONTATTO',
+      `Nome: ${formData.nome.trim()}`,
+      `Attivita/Azienda: ${formData.azienda.trim() || 'Non specificata'}`,
+      `Email: ${normalizedEmail}`,
+      `Cellulare: ${fullPhoneNumber}`,
+      '',
+      'RICHIESTA',
+      `Servizio: ${formData.servizio}`,
+      '',
+      'DESCRIZIONE',
+      formData.descrizione.trim(),
+    ];
+
+    return lines.join('\n');
+  };
+
   const generateWhatsAppMessage = () => {
-    return `*Nuova Richiesta Contatto*%0A%0A*Nome:* ${formData.nome}%0A*Email:* ${formData.email}%0A*Telefono:* ${formData.telefono}%0A%0A*Servizio:* ${formData.servizio}%0A%0A*Descrizione:*%0A${formData.descrizione}`;
+    return encodeURIComponent(buildContactMessage());
   };
 
   const sendViaWhatsApp = () => {
-    window.open(`https://wa.me/393513052627?text=${generateWhatsAppMessage()}`, '_blank');
+    window.open(`https://wa.me/393513052627?text=${generateWhatsAppMessage()}`, '_blank', 'noopener,noreferrer');
   };
 
   const sendViaEmail = () => {
-    window.open(`mailto:info@backsoftware.it?subject=Richiesta preventivo - ${formData.servizio} - ${formData.nome}&body=Nome: ${formData.nome}%0AEmail: ${formData.email}%0ATelefono: ${formData.telefono}%0A%0AServizio: ${formData.servizio}%0A%0ADescrizione:%0A${formData.descrizione}`, '_blank');
+    const subject = encodeURIComponent(`Richiesta preventivo - ${formData.servizio} - ${formData.nome.trim()}`);
+    const body = encodeURIComponent(buildContactMessage());
+    window.open(`mailto:info@backsoftware.it?subject=${subject}&body=${body}`, '_blank', 'noopener,noreferrer');
   };
 
   // Service detail modal
@@ -796,40 +979,152 @@ export default function ModernSite({ onSwitchToTerminal }) {
         style={{ background: '#f5f2ec' }}>
         <div className="absolute inset-0 crt-glitch-overlay" />
         <div className="modern-crt-flicker max-w-3xl mx-auto w-full">
-          <motion.button onClick={() => { setShowContactForm(false); setFormStep(1); setFormData({ nome: '', email: '', telefono: '', servizio: '', descrizione: '' }); }}
+          <motion.button onClick={() => { setShowContactForm(false); setFormStep(1); setFormDirection(1); setFormData({ ...initialFormData }); }}
             className="clay-btn px-6 py-3 mb-8 text-sm font-bold !rounded-xl text-[#3d3828] flex items-center gap-2"
             whileHover={{ x: -5 }} whileTap={{ scale: 0.95 }}>
             ← Torna alla home
           </motion.button>
 
-          <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 200 }}
-            className="clay-card p-10 sm:p-14">
+          <div className="relative pb-12 sm:pb-14 [perspective:1400px]">
+            <motion.div
+              aria-hidden="true"
+              initial={false}
+              animate={{
+                opacity: 0.14 + (formStep * 0.05),
+                scale: 1 + (formStep * 0.02),
+              }}
+              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+              className="pointer-events-none absolute -top-12 left-1/2 h-24 w-[68%] -translate-x-1/2 rounded-full"
+              style={{ background: 'radial-gradient(ellipse at center, rgba(124,111,91,0.22) 0%, rgba(124,111,91,0) 72%)' }}
+            />
+
+            {stackLayers.map((layer) => {
+              const revealStrength = Math.min(1, Math.max(0, formStep - layer));
+              const directionTilt = formDirection > 0 ? 1 : -1;
+
+              return (
+                <motion.div
+                  key={`form-stack-layer-${layer}`}
+                  initial={false}
+                  animate={{
+                    opacity: 0.08 + revealStrength * (0.24 - (layer * 0.04)),
+                    y: (layer * 8) + (revealStrength * (12 + layer)),
+                    x: revealStrength * directionTilt * (layer + 1),
+                    scale: 1 - (layer * 0.018) - (revealStrength * 0.006),
+                    rotateX: revealStrength * 1.4,
+                    rotateZ: revealStrength * directionTilt * (0.55 + (layer * 0.12)),
+                    borderColor: revealStrength > 0 ? '#d8d0c2' : '#e7e0d5',
+                  }}
+                  transition={{ type: 'spring', stiffness: 250, damping: 26, mass: 0.75 }}
+                  className="pointer-events-none absolute inset-0 rounded-[2.1rem] border-2"
+                  style={{
+                    zIndex: 12 - layer,
+                    background: 'linear-gradient(148deg, rgba(253,252,249,0.97) 0%, rgba(247,242,234,0.92) 100%)',
+                    boxShadow: '0 16px 28px rgba(61, 56, 40, 0.10)',
+                  }}
+                />
+              );
+            })}
+
+            <motion.div
+              initial={{ y: 24, opacity: 0 }}
+              animate={{
+                y: 0,
+                opacity: 1,
+                rotateZ: formDirection > 0 ? 0.12 : -0.12,
+              }}
+              transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+              className="relative z-20 clay-card p-10 sm:p-14 overflow-hidden"
+            >
+              <motion.div
+                aria-hidden="true"
+                initial={false}
+                animate={{
+                  opacity: 0.44,
+                  x: formDirection > 0 ? ['-14%', '102%'] : ['102%', '-14%'],
+                }}
+                transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+                className="pointer-events-none absolute top-0 h-full w-24 blur-xl"
+                style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.30) 0%, rgba(255,255,255,0) 100%)' }}
+              />
             <h2 className="text-3xl sm:text-4xl font-black text-[#2d2818] mb-1 tracking-tight">Scrivici</h2>
             <p className="text-[#6a6050] mb-8 text-sm">Ti rispondiamo entro 24 ore.</p>
 
             {/* Progress */}
             <div className="flex gap-2 mb-8">
-              {[1, 2, 3].map(i => (
-                <div key={i} className={`h-1.5 flex-1 rounded-full transition-all ${i <= formStep ? 'bg-[#7c6f5b]' : 'bg-[#e4dfd4]'}`} />
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-1.5 flex-1 rounded-full bg-[#e4dfd4] overflow-hidden">
+                  <motion.div
+                    initial={false}
+                    animate={{ scaleX: i <= formStep ? 1 : 0 }}
+                    transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                    className="h-full w-full origin-left rounded-full bg-[#7c6f5b]"
+                  />
+                </div>
               ))}
             </div>
 
+            <AnimatePresence mode="wait" custom={formDirection}>
             {/* Step 1: Dati */}
             {formStep === 1 && (
-              <motion.div initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="space-y-4">
+              <motion.div
+                key="contact-step-1"
+                custom={formDirection}
+                variants={stepPanelVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                className="space-y-4">
                 <h3 className="text-xl font-black text-[#2d2818]">I tuoi dati</h3>
                 <input type="text" placeholder="Nome" value={formData.nome} onChange={(e) => handleInputChange('nome', e.target.value)}
                   className="w-full p-4 rounded-2xl border-2 border-[#d4cfc5] bg-[#fdfcf9] focus:border-[#7c6f5b] focus:outline-none focus:bg-[#f8f6f2] transition-colors text-[#2d2818]" />
+                <input type="text" placeholder="Nome attivita/azienda (facoltativo)" value={formData.azienda} onChange={(e) => handleInputChange('azienda', e.target.value)}
+                  className="w-full p-4 rounded-2xl border-2 border-[#d4cfc5] bg-[#fdfcf9] focus:border-[#7c6f5b] focus:outline-none focus:bg-[#f8f6f2] transition-colors text-[#2d2818]" />
                 <input type="email" placeholder="Email" value={formData.email} onChange={(e) => handleInputChange('email', e.target.value)}
                   className="w-full p-4 rounded-2xl border-2 border-[#d4cfc5] bg-[#fdfcf9] focus:border-[#7c6f5b] focus:outline-none focus:bg-[#f8f6f2] transition-colors text-[#2d2818]" />
-                <input type="tel" placeholder="Telefono (opzionale)" value={formData.telefono} onChange={(e) => handleInputChange('telefono', e.target.value)}
-                  className="w-full p-4 rounded-2xl border-2 border-[#d4cfc5] bg-[#fdfcf9] focus:border-[#7c6f5b] focus:outline-none focus:bg-[#f8f6f2] transition-colors text-[#2d2818]" />
+
+                {!isEmailValid && formData.email.length > 0 && (
+                  <p className="text-xs font-semibold text-[#b94242]">Inserisci un indirizzo email valido (es. nome@azienda.it).</p>
+                )}
+
+                <div className="grid grid-cols-3 gap-3">
+                  <input
+                    type="text"
+                    placeholder="+39"
+                    value={formData.prefissoTelefono}
+                    onChange={(e) => handleInputChange('prefissoTelefono', e.target.value)}
+                    className="p-4 rounded-2xl border-2 border-[#d4cfc5] bg-[#fdfcf9] focus:border-[#7c6f5b] focus:outline-none focus:bg-[#f8f6f2] transition-colors text-[#2d2818]"
+                  />
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    placeholder="Cellulare"
+                    value={formData.telefono}
+                    onChange={(e) => handleInputChange('telefono', e.target.value.replace(/[^\d\s]/g, ''))}
+                    className="col-span-2 p-4 rounded-2xl border-2 border-[#d4cfc5] bg-[#fdfcf9] focus:border-[#7c6f5b] focus:outline-none focus:bg-[#f8f6f2] transition-colors text-[#2d2818]"
+                  />
+                </div>
+
+                {!isPhonePrefixValid && formData.prefissoTelefono.length > 0 && (
+                  <p className="text-xs font-semibold text-[#b94242]">Prefisso non valido. Usa il formato internazionale, ad esempio +39.</p>
+                )}
+                {!isPhoneValid && formData.telefono.length > 0 && (
+                  <p className="text-xs font-semibold text-[#b94242]">Numero non valido. Inserisci da 6 a 14 cifre.</p>
+                )}
+                <p className="text-xs text-[#8a856f]">Prefisso paese e cellulare sono richiesti.</p>
               </motion.div>
             )}
 
             {/* Step 2: Servizio */}
             {formStep === 2 && (
-              <motion.div initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="space-y-4">
+              <motion.div
+                key="contact-step-2"
+                custom={formDirection}
+                variants={stepPanelVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                className="space-y-4">
                 <h3 className="text-xl font-black text-[#2d2818]">Cosa ti serve?</h3>
                 <div className="grid grid-cols-2 gap-3">
                   {serviziOptions.map(s => (
@@ -844,7 +1139,14 @@ export default function ModernSite({ onSwitchToTerminal }) {
 
             {/* Step 3: Descrizione */}
             {formStep === 3 && (
-              <motion.div initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="space-y-4">
+              <motion.div
+                key="contact-step-3"
+                custom={formDirection}
+                variants={stepPanelVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                className="space-y-4">
                 <h3 className="text-xl font-black text-[#2d2818]">Raccontaci</h3>
                 <div className="relative">
                   <textarea
@@ -860,48 +1162,65 @@ export default function ModernSite({ onSwitchToTerminal }) {
 
             {/* Review */}
             {formStep === 4 && (
-              <motion.div initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="space-y-5">
-                <h3 className="text-xl font-black text-[#2d2818]">Riepilogo</h3>
-                <div className="p-5 rounded-2xl bg-[#fdfcf9] border-2 border-[#d4cfc5] space-y-2 text-sm">
-                  <p><span className="font-bold text-[#8a856f]">Nome:</span> {formData.nome}</p>
-                  <p><span className="font-bold text-[#8a856f]">Email:</span> {formData.email}</p>
-                  {formData.telefono && <p><span className="font-bold text-[#8a856f]">Telefono:</span> {formData.telefono}</p>}
-                  <p><span className="font-bold text-[#8a856f]">Servizio:</span> {formData.servizio}</p>
-                  {formData.descrizione && (
-                    <div className="border-t border-[#e4dfd4] pt-2 mt-2">
-                      <p className="font-bold text-[#8a856f] mb-1">Descrizione:</p>
-                      <p className="text-[#6a6050]">{formData.descrizione}</p>
-                    </div>
-                  )}
+              <motion.div
+                key="contact-step-4"
+                custom={formDirection}
+                variants={stepPanelVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                className="space-y-5">
+                <h3 className="text-xl font-black text-[#2d2818]">Conferma e invia richiesta</h3>
+                <p className="text-sm text-[#6a6050]">Ultimo passaggio: scegli il canale di invio. Precompiliamo il messaggio in modo ordinato e professionale.</p>
+
+                <div className="p-5 sm:p-6 rounded-3xl bg-[linear-gradient(145deg,#fffdf9_0%,#f8f4ec_100%)] border-2 border-[#d4cfc5] space-y-3 text-sm">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-bold text-[#2d2818]">Scheda contatto</p>
+                    <span className="text-[11px] font-black tracking-wide px-3 py-1 rounded-full bg-[#e9e3d7] text-[#5a5041]">PRONTA ALL'INVIO</span>
+                  </div>
+                  <div className="grid sm:grid-cols-2 gap-2.5">
+                    <p className="rounded-xl bg-[#fdfcf9] px-3 py-2 border border-[#e8e2d6]"><span className="font-bold text-[#8a856f]">Nome:</span> {formData.nome}</p>
+                    <p className="rounded-xl bg-[#fdfcf9] px-3 py-2 border border-[#e8e2d6]"><span className="font-bold text-[#8a856f]">Azienda:</span> {formData.azienda || 'Non specificata'}</p>
+                    <p className="rounded-xl bg-[#fdfcf9] px-3 py-2 border border-[#e8e2d6]"><span className="font-bold text-[#8a856f]">Email:</span> {normalizedEmail}</p>
+                    <p className="rounded-xl bg-[#fdfcf9] px-3 py-2 border border-[#e8e2d6]"><span className="font-bold text-[#8a856f]">Cellulare:</span> {fullPhoneNumber}</p>
+                  </div>
+                  <p className="rounded-xl bg-[#fdfcf9] px-3 py-2 border border-[#e8e2d6]"><span className="font-bold text-[#8a856f]">Servizio:</span> {formData.servizio}</p>
+                  <div className="rounded-xl bg-[#fdfcf9] px-3 py-3 border border-[#e8e2d6]">
+                    <p className="font-bold text-[#8a856f] mb-1">Descrizione:</p>
+                    <p className="text-[#6a6050] whitespace-pre-wrap">{formData.descrizione}</p>
+                  </div>
                 </div>
-                <div className="space-y-3">
+
+                <div className="grid sm:grid-cols-2 gap-3">
                   <button onClick={sendViaWhatsApp}
-                    className="w-full p-4 rounded-2xl bg-[#25D366] text-white font-bold hover:bg-[#128C7E] transition-colors">
-                    WhatsApp
+                    className="w-full p-4 rounded-2xl text-white font-bold bg-[linear-gradient(135deg,#1fbf62_0%,#128c7e_100%)] shadow-[0_10px_24px_rgba(18,140,126,0.25)] hover:translate-y-[-1px] hover:shadow-[0_14px_28px_rgba(18,140,126,0.35)] transition-all">
+                    Invia su WhatsApp
                   </button>
                   <button onClick={sendViaEmail}
-                    className="w-full p-4 rounded-2xl bg-white border-2 border-[#7c6f5b] text-[#3d3828] font-bold hover:bg-[#7c6f5b] hover:text-white transition-all">
-                    Email
+                    className="w-full p-4 rounded-2xl text-white font-bold bg-[linear-gradient(135deg,#4a4234_0%,#2f2a1d_100%)] shadow-[0_10px_24px_rgba(47,42,29,0.25)] hover:translate-y-[-1px] hover:shadow-[0_14px_28px_rgba(47,42,29,0.35)] transition-all">
+                    Invia via Email
                   </button>
                 </div>
               </motion.div>
             )}
+            </AnimatePresence>
 
             {/* Navigation */}
             {formStep >= 1 && formStep <= 3 && (
               <div className="flex gap-4 mt-8 pt-6 border-t border-[#e4dfd4]">
-                <button onClick={() => setFormStep(p => p - 1)}
+                <button onClick={goToPrevStep}
                   className="clay-btn px-6 py-4 font-bold text-[#6a6050]">
                   ← Indietro
                 </button>
-                <button onClick={() => setFormStep(p => p + 1)}
-                  disabled={(formStep === 1 && (!formData.nome || !formData.email)) || (formStep === 2 && !formData.servizio) || (formStep === 3 && !formData.descrizione)}
+                <button onClick={goToNextStep}
+                  disabled={(formStep === 1 && !isStep1Valid) || (formStep === 2 && !isStep2Valid) || (formStep === 3 && !isStep3Valid)}
                   className="flex-1 clay-btn px-6 py-4 font-bold !rounded-2xl text-[#3d3828] bg-[#fdfcf9] disabled:opacity-30 disabled:cursor-not-allowed hover:scale-105 transition-transform">
-                  {formStep === 3 ? 'Riepilogo →' : 'Avanti →'}
+                  {formStep === 3 ? 'Conferma invio →' : 'Avanti →'}
                 </button>
               </div>
             )}
           </motion.div>
+        </div>
         </div>
       </motion.div>
     );
@@ -946,18 +1265,10 @@ export default function ModernSite({ onSwitchToTerminal }) {
                   {orbitTextMobile && (
                     <>
                       <text
-                        fill={orbitColor}
-                        style={{ fontSize: '6px', fontWeight: 700, letterSpacing: '0', opacity: 0.6, transition: 'fill 0.4s ease' }}
+                        fill={orbitColorMobile}
+                        style={{ fontSize: '6px', fontWeight: 700, letterSpacing: '0', opacity: 0.58, transition: 'fill 0.4s ease' }}
                       >
                         <textPath ref={orbitRef1Mobile} href="#header-orbit-path-mobile" startOffset="0%">
-                          {orbitTextMobile}
-                        </textPath>
-                      </text>
-                      <text
-                        fill={orbitColor}
-                        style={{ fontSize: '6px', fontWeight: 700, letterSpacing: '0', opacity: 0.6, transition: 'fill 0.4s ease' }}
-                      >
-                        <textPath ref={orbitRef2Mobile} href="#header-orbit-path-mobile" startOffset="-100%">
                           {orbitTextMobile}
                         </textPath>
                       </text>
@@ -998,13 +1309,14 @@ export default function ModernSite({ onSwitchToTerminal }) {
           ref={headerRefDesktop}
           className="hidden sm:flex max-w-6xl mx-auto mt-5 items-center justify-between gap-3 py-2.5 px-4 lg:px-5 rounded-2xl lg:rounded-[1.75rem] pointer-events-auto relative"
           style={{
-            background: 'linear-gradient(145deg, rgba(248, 245, 239, 0.92) 0%, rgba(242, 237, 228, 0.88) 100%)',
-            backdropFilter: 'blur(24px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+            background: 'linear-gradient(145deg, rgba(248, 245, 239, 0.58) 0%, rgba(242, 237, 228, 0.46) 100%)',
+            backdropFilter: 'blur(24px) saturate(150%)',
+            WebkitBackdropFilter: 'blur(24px) saturate(150%)',
+            border: '1px solid rgba(255, 255, 255, 0.28)',
             boxShadow: `
-              0 6px 20px rgba(60, 48, 34, 0.14),
-              0 2px 6px rgba(60, 48, 34, 0.1),
-              inset 0 1px 0 rgba(255, 255, 255, 0.75)
+              0 4px 16px rgba(60, 48, 34, 0.1),
+              0 1px 4px rgba(60, 48, 34, 0.08),
+              inset 0 1px 0 rgba(255, 255, 255, 0.58)
             `
           }}
         >
@@ -1024,17 +1336,17 @@ export default function ModernSite({ onSwitchToTerminal }) {
                   <>
                     <text
                       fill={orbitColor}
-                      style={{ fontSize: '8px', fontWeight: 800, letterSpacing: '2px', opacity: 0.55, transition: 'fill 0.4s ease' }}
+                      style={{ fontSize: '8px', fontWeight: 800, letterSpacing: '1.2px', opacity: 0.62, transition: 'fill 0.4s ease', textRendering: 'geometricPrecision' }}
                     >
-                      <textPath ref={orbitRef1Desktop} href="#header-orbit-path-desktop" startOffset="0%" textLength={pathLenDesktop} lengthAdjust="spacing">
+                      <textPath ref={orbitRef1Desktop} href="#header-orbit-path-desktop" startOffset="0">
                         {orbitTextDesktop}
                       </textPath>
                     </text>
                     <text
                       fill={orbitColor}
-                      style={{ fontSize: '8px', fontWeight: 800, letterSpacing: '2px', opacity: 0.55, transition: 'fill 0.4s ease' }}
+                      style={{ fontSize: '8px', fontWeight: 800, letterSpacing: '1.2px', opacity: 0.62, transition: 'fill 0.4s ease', textRendering: 'geometricPrecision' }}
                     >
-                      <textPath ref={orbitRef2Desktop} href="#header-orbit-path-desktop" startOffset="-100%" textLength={pathLenDesktop} lengthAdjust="spacing">
+                      <textPath ref={orbitRef2Desktop} href="#header-orbit-path-desktop" startOffset="0">
                         {orbitTextDesktop}
                       </textPath>
                     </text>
@@ -1054,7 +1366,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
 
           {/* Navigation Desktop */}
           <div className="flex items-center gap-3 shrink-0 relative z-10">
-            <div className="hidden md:flex items-center gap-1 rounded-full bg-[#f8f4ec]/70 p-1 border border-[#d8d0c1]/65">
+            <div className="hidden md:flex items-center gap-1 rounded-full bg-[#f8f4ec] p-1 border border-[#d8d0c1]">
               {[
                 { label: 'Servizi', href: '#servizi' },
                 { label: 'Progetti', href: '#progetti' },
@@ -1072,7 +1384,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
 
             <button 
               onClick={onSwitchToTerminal}
-              className="px-2 py-1 text-[11px] lg:text-xs font-bold rounded-full text-[#746a57] hover:text-[#3d3528] bg-[#f8f4ec]/70 border border-[#dbd3c6]/70 hover:bg-[#f1e9dc] transition-all min-w-[40px] min-h-[32px] flex items-center justify-center active:scale-95"
+              className="px-2 py-1 text-[11px] lg:text-xs font-bold rounded-full text-[#746a57] hover:text-[#3d3528] bg-[#f8f4ec] border border-[#dbd3c6] hover:bg-[#f1e9dc] transition-all min-w-[40px] min-h-[32px] flex items-center justify-center active:scale-95"
             >
               <span>🎮 Giochi Arcade</span>
             </button>
@@ -1121,9 +1433,9 @@ export default function ModernSite({ onSwitchToTerminal }) {
               tone="espresso"
               size="lg"
               intensity="strong"
-              className="!rounded-xl lg:!rounded-2xl !text-sm sm:!text-base !px-4 sm:!px-6"
+              className="!w-[92vw] max-w-[420px] sm:!w-auto !rounded-2xl lg:!rounded-2xl !text-lg sm:!text-base !px-8 sm:!px-6 !py-4 sm:!py-5"
             >
-              <span className="sm:hidden">Inizia ora →</span>
+              <span className="sm:hidden">Parliamone →</span>
               <span className="hidden sm:inline">Parlaci del tuo progetto →</span>
             </ShinyButton>
           </motion.div>
@@ -1319,32 +1631,54 @@ export default function ModernSite({ onSwitchToTerminal }) {
 
         {/* Scrollable cards area */}
         <div className="relative z-10 max-w-6xl mx-auto w-full flex-1 min-h-0 overflow-y-auto pt-1 sm:pt-2">
-          <AnimatePresence mode="wait" initial={false}>
+          {categoryTransitionType === 'morph' ? (
             <motion.div
-              key={selectedCategory}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className={`grid gap-3 sm:gap-4 ${selectedCategory === 'Tutti'
+              layout
+              transition={{ layout: { type: 'spring', stiffness: 380, damping: 42, mass: 0.7 } }}
+              className={`grid gap-3 sm:gap-4 ${isCompactCategory
                 ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5'
                 : 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3'
               }`}
             >
-              {(selectedCategory === 'Tutti'
-                ? groupedModernProjects.flatMap(g => g.projects)
-                : groupedModernProjects.find(g => g.name === selectedCategory)?.projects || []
-              ).map((p, i) => (
-                <ProjectCard
-                  key={p.n}
-                  project={p}
-                  index={i}
-                  isCompact={selectedCategory === 'Tutti'}
-                  onClick={() => setSelectedService({ title: p.n, icon: '', details: p.desc, source: 'progetti' })}
-                />
-              ))}
+              <AnimatePresence initial={false} custom={categoryDirection}>
+                {visibleProjects.map((p, i) => (
+                  <ProjectCard
+                    key={`slot-${i}`}
+                    project={p}
+                    index={i}
+                    direction={categoryDirection}
+                    enableMorph={true}
+                    isCompact={isCompactCategory}
+                    onClick={() => setSelectedService({ title: p.n, icon: '', details: p.desc, source: 'progetti' })}
+                  />
+                ))}
+              </AnimatePresence>
             </motion.div>
-          </AnimatePresence>
+          ) : (
+            <AnimatePresence mode="wait" initial={false} custom={categoryDirection}>
+              <motion.div
+                key={selectedCategory}
+                variants={galleryGridVariants}
+                custom={categoryDirection}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
+              >
+                {visibleProjects.map((p, i) => (
+                  <ProjectCard
+                    key={`${selectedCategory}-${p.n}`}
+                    project={p}
+                    index={i}
+                    direction={categoryDirection}
+                    enableMorph={false}
+                    isCompact={false}
+                    onClick={() => setSelectedService({ title: p.n, icon: '', details: p.desc, source: 'progetti' })}
+                  />
+                ))}
+              </motion.div>
+            </AnimatePresence>
+          )}
         </div>
       </motion.section>
 
