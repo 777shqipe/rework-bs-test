@@ -210,10 +210,10 @@ export default function ModernSite({ onSwitchToTerminal }) {
   const [pathLenMobile, setPathLenMobile] = useState(0);
   const [pathLenDesktop, setPathLenDesktop] = useState(0);
   const [isDesktopView, setIsDesktopView] = useState(false);
-  const DESKTOP_ORBIT_TOKEN = 'BACK SOFTWARE \u2022';
+  const ORBIT_TOKEN = 'BACK SOFTWARE \u2022 ';
   const DESKTOP_ORBIT_FONT_SIZE = 8;
   const DESKTOP_ORBIT_LETTER_SPACING = 1.2;
-  const DESKTOP_ORBIT_SPEED = 24;
+  const DESKTOP_ORBIT_SPEED = 16.8;
 
   useEffect(() => {
     const media = window.matchMedia('(min-width: 640px)');
@@ -245,8 +245,9 @@ export default function ModernSite({ onSwitchToTerminal }) {
       const bottom = h + pad;
       const rr = Math.min(r + pad, h / 2 + pad);
 
+      const startX = (left + right) / 2;
       const path = [
-        `M ${left + rr} ${top}`,
+        `M ${startX} ${top}`,
         `H ${right - rr}`,
         `A ${rr} ${rr} 0 0 1 ${right} ${top + rr}`,
         `V ${bottom - rr}`,
@@ -255,26 +256,28 @@ export default function ModernSite({ onSwitchToTerminal }) {
         `A ${rr} ${rr} 0 0 1 ${left} ${bottom - rr}`,
         `V ${top + rr}`,
         `A ${rr} ${rr} 0 0 1 ${left + rr} ${top}`,
+        `H ${startX}`,
         'Z',
       ].join(' ');
 
       setHeaderPathMobile(path);
 
-      // Calcolo preciso perimetro del bordo
-      const straight = (w + 24 - rr * 2) * 2;
+      const pathWidth = right - left;
+      const pathHeight = bottom - top;
+      const straight = 2 * (pathWidth + pathHeight - rr * 4);
       const curved = 2 * Math.PI * rr;
       const perimeter = straight + curved;
+      setPathLenMobile(perimeter);
 
-      // Dimensione font e larghezza unità calcolata
-      const unit = 'BACK SOFTWARE ·';
-      const unitWidth = 46; // px, larghezza esatta a fontSize 6px
+      const measureContext = document.createElement('canvas').getContext('2d');
+      let tokenWidth = 54;
+      if (measureContext) {
+        measureContext.font = `700 6px sans-serif`;
+        tokenWidth = measureContext.measureText(ORBIT_TOKEN).width;
+      }
 
-      // Quante ripetizioni servono per coprire il perimetro + overlap loop
-      const reps = Math.ceil(perimeter / unitWidth) + 2;
-      const text = Array(reps).fill(unit).join(' ');
-
-      setPathLenMobile(Math.round(perimeter));
-      setOrbitTextMobile(text);
+      const reps = Math.max(2, Math.round(perimeter / tokenWidth));
+      setOrbitTextMobile(Array(reps).fill(ORBIT_TOKEN).join(''));
     };
 
     const recalcDesktop = () => {
@@ -299,8 +302,9 @@ export default function ModernSite({ onSwitchToTerminal }) {
         ),
       );
 
+      const startX = (left + right) / 2;
       const path = [
-        `M ${left + rr} ${top}`,
+        `M ${startX} ${top}`,
         `H ${right - rr}`,
         `A ${rr} ${rr} 0 0 1 ${right} ${top + rr}`,
         `V ${bottom - rr}`,
@@ -309,6 +313,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
         `A ${rr} ${rr} 0 0 1 ${left} ${bottom - rr}`,
         `V ${top + rr}`,
         `A ${rr} ${rr} 0 0 1 ${left + rr} ${top}`,
+        `H ${startX}`,
         'Z',
       ].join(' ');
 
@@ -322,16 +327,16 @@ export default function ModernSite({ onSwitchToTerminal }) {
       setPathLenDesktop(perimeter);
 
       const measureContext = document.createElement('canvas').getContext('2d');
-      let tokenWidth = 62;
+      let tokenWidth = 80;
       if (measureContext) {
         measureContext.font = `800 ${DESKTOP_ORBIT_FONT_SIZE}px sans-serif`;
-        const baseWidth = measureContext.measureText(`${DESKTOP_ORBIT_TOKEN} `).width;
-        const trackingWidth = DESKTOP_ORBIT_LETTER_SPACING * Math.max(0, `${DESKTOP_ORBIT_TOKEN} `.length - 1);
+        const baseWidth = measureContext.measureText(ORBIT_TOKEN).width;
+        const trackingWidth = DESKTOP_ORBIT_LETTER_SPACING * Math.max(0, ORBIT_TOKEN.length - 1);
         tokenWidth = baseWidth + trackingWidth;
       }
 
-      const reps = Math.max(4, Math.ceil((perimeter * 1.03) / Math.max(1, tokenWidth)));
-      setOrbitTextDesktop(Array(reps).fill(DESKTOP_ORBIT_TOKEN).join(' '));
+      const reps = Math.max(2, Math.round(perimeter / tokenWidth));
+      setOrbitTextDesktop(Array(reps).fill(ORBIT_TOKEN).join(''));
     };
 
     recalcMobile();
@@ -381,22 +386,29 @@ export default function ModernSite({ onSwitchToTerminal }) {
 
   // Animate orbiting text - mobile only in mobile viewport
   useEffect(() => {
-    if (isDesktopView) return;
+    if (isDesktopView || pathLenMobile <= 0) return;
 
     let mobileOffset = 0;
     let raf;
+    let lastTs = performance.now();
+    const MOBILE_SPEED = 14;
 
-    const step = () => {
-      mobileOffset = (mobileOffset + 0.012) % 100;
-      if (orbitRef1Mobile.current) orbitRef1Mobile.current.setAttribute('startOffset', `${mobileOffset}%`);
-      if (orbitRef2Mobile.current) orbitRef2Mobile.current.setAttribute('startOffset', `${mobileOffset - 100}%`);
+    const step = (ts) => {
+      const dt = Math.min(0.05, (ts - lastTs) / 1000);
+      lastTs = ts;
+      mobileOffset = (mobileOffset + MOBILE_SPEED * dt) % pathLenMobile;
+      if (orbitRef1Mobile.current) orbitRef1Mobile.current.setAttribute('startOffset', mobileOffset);
+      if (orbitRef2Mobile.current) orbitRef2Mobile.current.setAttribute('startOffset', mobileOffset - pathLenMobile);
       raf = requestAnimationFrame(step);
     };
 
-    raf = requestAnimationFrame(step);
+    raf = requestAnimationFrame((ts) => {
+      lastTs = ts;
+      step(ts);
+    });
 
     return () => cancelAnimationFrame(raf);
-  }, [isDesktopView]);
+  }, [isDesktopView, pathLenMobile]);
 
   // Animate orbiting text - desktop only in desktop viewport
   useEffect(() => {
@@ -410,8 +422,8 @@ export default function ModernSite({ onSwitchToTerminal }) {
       const dt = Math.min(0.05, (ts - lastTs) / 1000);
       lastTs = ts;
       desktopOffset = (desktopOffset + DESKTOP_ORBIT_SPEED * dt) % pathLenDesktop;
-      if (orbitRef1Desktop.current) orbitRef1Desktop.current.setAttribute('startOffset', `${desktopOffset.toFixed(2)}`);
-      if (orbitRef2Desktop.current) orbitRef2Desktop.current.setAttribute('startOffset', `${(desktopOffset - pathLenDesktop).toFixed(2)}`);
+      if (orbitRef1Desktop.current) orbitRef1Desktop.current.setAttribute('startOffset', desktopOffset);
+      if (orbitRef2Desktop.current) orbitRef2Desktop.current.setAttribute('startOffset', desktopOffset - pathLenDesktop);
 
       raf = requestAnimationFrame(step);
     };
@@ -426,7 +438,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
 
   // Orbit color: brownish on light, warm beige on dark
   const orbitColor = orbitOnDark ? '#d4cabb' : '#5a5244';
-  const orbitColorMobile = '#d4cabb';
+  const orbitColorMobile = orbitColor;
 
   // Footer reveal on wheel in contact section
   useEffect(() => {
@@ -1266,9 +1278,12 @@ export default function ModernSite({ onSwitchToTerminal }) {
                     <>
                       <text
                         fill={orbitColorMobile}
-                        style={{ fontSize: '6px', fontWeight: 700, letterSpacing: '0', opacity: 0.58, transition: 'fill 0.4s ease' }}
+                        style={{ fontSize: '6px', fontWeight: 700, letterSpacing: '0', opacity: 0.58, transition: 'fill 0.4s ease', textRendering: 'geometricPrecision' }}
                       >
-                        <textPath ref={orbitRef1Mobile} href="#header-orbit-path-mobile" startOffset="0%">
+                        <textPath ref={orbitRef1Mobile} href="#header-orbit-path-mobile" startOffset="0" textLength={pathLenMobile} lengthAdjust="spacing">
+                          {orbitTextMobile}
+                        </textPath>
+                        <textPath ref={orbitRef2Mobile} href="#header-orbit-path-mobile" startOffset="0" textLength={pathLenMobile} lengthAdjust="spacing">
                           {orbitTextMobile}
                         </textPath>
                       </text>
@@ -1338,7 +1353,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
                       fill={orbitColor}
                       style={{ fontSize: '8px', fontWeight: 800, letterSpacing: '1.2px', opacity: 0.62, transition: 'fill 0.4s ease', textRendering: 'geometricPrecision' }}
                     >
-                      <textPath ref={orbitRef1Desktop} href="#header-orbit-path-desktop" startOffset="0">
+                      <textPath ref={orbitRef1Desktop} href="#header-orbit-path-desktop" startOffset="0" textLength={pathLenDesktop} lengthAdjust="spacing">
                         {orbitTextDesktop}
                       </textPath>
                     </text>
@@ -1346,7 +1361,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
                       fill={orbitColor}
                       style={{ fontSize: '8px', fontWeight: 800, letterSpacing: '1.2px', opacity: 0.62, transition: 'fill 0.4s ease', textRendering: 'geometricPrecision' }}
                     >
-                      <textPath ref={orbitRef2Desktop} href="#header-orbit-path-desktop" startOffset="0">
+                      <textPath ref={orbitRef2Desktop} href="#header-orbit-path-desktop" startOffset="0" textLength={pathLenDesktop} lengthAdjust="spacing">
                         {orbitTextDesktop}
                       </textPath>
                     </text>
