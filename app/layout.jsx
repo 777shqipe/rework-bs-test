@@ -52,9 +52,6 @@ export const metadata = {
       'max-snippet': -1,
     },
   },
-  verification: {
-    google: 'GOOGLE_SEARCH_CONSOLE_CODE_HERE',
-  },
   category: 'business',
   classification: 'Web Agency, Digital Marketing, Software Development',
 };
@@ -161,14 +158,6 @@ export default function RootLayout({ children }) {
                   name: 'Back Software',
                   publisher: {
                     '@id': 'https://backsoftware.it/#business',
-                  },
-                  potentialAction: {
-                    '@type': 'SearchAction',
-                    target: {
-                      '@type': 'EntryPoint',
-                      urlTemplate: 'https://backsoftware.it/search?q={search_term_string}',
-                    },
-                    'query-input': 'required name=search_term_string',
                   },
                 },
                 {

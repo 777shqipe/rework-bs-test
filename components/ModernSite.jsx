@@ -572,7 +572,6 @@ export default function ModernSite({ onSwitchToTerminal }) {
     {
       icon: <IconCasaFamiglia />,
       title: 'Case Famiglia',
-      source: 'servizi',
       desc: 'Pacchetti completi per strutture che ospitano famiglie in difficoltà.',
       details: 'Servizio dedicato alle strutture che ospitano famiglie in difficoltà. Gestiamo tutto: sito web, social media, campagne pubblicitarie mirate e sistema di prenotazioni.',
       packages: [
@@ -1295,7 +1294,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
 
             {/* Logo Mobile */}
             <div className="flex items-center min-w-0 relative z-10">
-              <h1 className="text-[13px] font-black tracking-tight text-[#2f2a1d] leading-none truncate">Back Software</h1>
+              <span className="text-[13px] font-black tracking-tight text-[#2f2a1d] leading-none truncate">Back Software</span>
             </div>
 
             {/* Actions Mobile */}
@@ -1374,7 +1373,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
           {/* Logo Desktop */}
           <div className="flex items-center gap-3 min-w-0 relative z-10">
             <div className="min-w-0">
-              <h1 className="text-[16px] lg:text-[20px] font-black tracking-tight text-[#2f2a1d] leading-none truncate">Back Software</h1>
+              <span className="text-[16px] lg:text-[20px] font-black tracking-tight text-[#2f2a1d] leading-none truncate">Back Software</span>
               <p className="text-[9px] lg:text-[11px] font-bold text-[#807865] opacity-80 tracking-[0.14em] uppercase truncate">Studio digitale su misura</p>
             </div>
           </div>
@@ -1425,14 +1424,14 @@ export default function ModernSite({ onSwitchToTerminal }) {
         <div className="hidden sm:block absolute top-40 right-10 w-32 h-32 clay-pill opacity-10 animate-float-delayed pointer-events-none" />
 
         <div className="max-w-5xl mx-auto w-full">
-          <motion.h2
+          <motion.h1
             initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.35, ease: [0.22, 1, 0.36, 1] }}
             className="text-[3rem] sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black leading-[1.12] sm:leading-[1.05] mb-8 sm:mb-8 tracking-tight text-[#2d2818]">
             <span className="block mb-2">Software che</span>
             <span className="block mb-2">funziona.</span>
             <span className="text-[#8a7f6a] drop-shadow-sm block">Fatto da <span className="transition-all duration-500 ease-out hover:text-[#c4b494] hover:drop-shadow-[0_0_30px_rgba(196,180,148,0.8),0_0_60px_rgba(196,180,148,0.4)] cursor-default">persone reali</span>.</span>
-          </motion.h2>
+          </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
@@ -1514,9 +1513,9 @@ export default function ModernSite({ onSwitchToTerminal }) {
 
         <div className="relative z-10 max-w-6xl mx-auto w-full">
           <motion.div variants={itemVariants} className="mb-6 sm:mb-12 space-y-3 sm:space-y-4">
-            <motion.h3 {...sectionTitleReveal} className={`${sectionTitleClass} text-[#f5f2ec]`}>
+            <motion.h2 {...sectionTitleReveal} className={`${sectionTitleClass} text-[#f5f2ec]`}>
               Perché Back Software.
-            </motion.h3>
+            </motion.h2>
             <motion.p {...sectionSubtitleReveal} className="text-sm sm:text-lg leading-relaxed max-w-2xl font-medium" style={{ color: '#a09a88' }}>
               Non siamo solo sviluppatori. Siamo partner che capiscono il tuo business.
             </motion.p>
@@ -1552,7 +1551,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
       <motion.section id="servizi" variants={itemVariants} className="modern-snap-section flex flex-col justify-center px-4 sm:px-6 lg:px-10 pt-20 sm:pt-24 pb-12 sm:py-20">
         <div className="max-w-6xl mx-auto w-full">
           <motion.div variants={itemVariants} className="mb-6 sm:mb-8 space-y-2 sm:space-y-4">
-            <motion.h3 {...sectionTitleReveal} className={`${sectionTitleClass} text-[#2d2818]`}>Cosa facciamo.</motion.h3>
+            <motion.h2 {...sectionTitleReveal} className={`${sectionTitleClass} text-[#2d2818]`}>Cosa facciamo.</motion.h2>
             <motion.p {...sectionSubtitleReveal} className="text-sm sm:text-lg text-[#6a6050] font-medium">
               Soluzioni concrete per problemi reali.
             </motion.p>
@@ -1598,7 +1597,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
         <div className="relative z-10 max-w-6xl mx-auto w-full shrink-0">
           <div className="mt-3 sm:mt-4 mb-8 sm:mb-10 lg:mb-12 flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5 sm:gap-6">
             <motion.div variants={itemVariants} className="space-y-4 lg:max-w-2xl">
-              <motion.h3 className={`${sectionTitleClass} text-[#f5f2ec]`}>Galleria Progetti.</motion.h3>
+              <motion.h2 className={`${sectionTitleClass} text-[#f5f2ec]`}>Galleria Progetti.</motion.h2>
               <motion.p className="text-base sm:text-lg font-medium" style={{ color: '#a09a88' }}>
                 {projects.length} Successi Reali
               </motion.p>
@@ -1706,7 +1705,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
           transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
         >
           <motion.div variants={itemVariants} className="mb-8 text-center space-y-4">
-            <motion.h3 {...sectionTitleReveal} className={`${sectionTitleClass} text-[#2d2818]`}>Parliamo del tuo futuro.</motion.h3>
+            <motion.h2 {...sectionTitleReveal} className={`${sectionTitleClass} text-[#2d2818]`}>Parliamo del tuo futuro.</motion.h2>
             <motion.p {...sectionSubtitleReveal} className="text-base sm:text-lg text-[#6a6050] font-medium max-w-2xl mx-auto">
               Parlaci del tuo progetto. Prima analizziamo, poi ti diciamo cosa serve davvero.
             </motion.p>
