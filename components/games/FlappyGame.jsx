@@ -101,6 +101,20 @@ export default function FlappyGame({ color }) {
     }
   }, [gameOver, isStarted, resetGame, playJump]);
 
+  // Handle high score persistence
+  useEffect(() => {
+    const savedHighScore = localStorage.getItem('flappy_high_score');
+    if (savedHighScore) {
+      setHighScore(parseInt(savedHighScore, 10));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (highScore > 0) {
+      localStorage.setItem('flappy_high_score', highScore.toString());
+    }
+  }, [highScore]);
+
   // Handle resize
   useEffect(() => {
     const updateDimensions = () => {
@@ -385,6 +399,16 @@ export default function FlappyGame({ color }) {
       }
       
       ctx.restore(); // End screen shake
+      
+      // Chromatic Aberration / Glitch Effect
+      if (state.screenShake > 5) {
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        ctx.globalAlpha = 0.7;
+        ctx.drawImage(canvas, 3, 0);
+        ctx.drawImage(canvas, -3, 0);
+        ctx.restore();
+      }
 
       animationId = requestAnimationFrame(gameLoop);
     };

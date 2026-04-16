@@ -55,9 +55,11 @@ export default function SpaceInvadersGame({ color }) {
     playerLives: 3,
     screenShake: 0,
     floatingTexts: [],
+    powerUps: [],
+    powerUpActive: null, // { type, timer }
   });
 
-  const { playShoot, playLaser, playExplosion, playGameOver, playHit } = useRetroAudio();
+  const { playShoot, playLaser, playExplosion, playGameOver, playHit, playPowerup } = useRetroAudio();
 
   const resetGame = useCallback(() => {
     const { width, height } = dimensions;
@@ -121,6 +123,8 @@ export default function SpaceInvadersGame({ color }) {
       playerLives: 3,
       screenShake: 0,
       floatingTexts: [],
+      powerUps: [],
+      powerUpActive: null,
     };
     setScore(0);
     setGameOver(false);
@@ -141,7 +145,9 @@ export default function SpaceInvadersGame({ color }) {
     
     const state = gameState.current;
     const now = Date.now();
-    if (now - state.lastPlayerShot > 350) {
+    const shootDelay = state.powerUpActive?.type === 'rapid' ? 150 : 350;
+    
+    if (now - state.lastPlayerShot > shootDelay) {
       state.lastPlayerShot = now;
       playShoot();
       state.bullets.push({
@@ -150,6 +156,20 @@ export default function SpaceInvadersGame({ color }) {
       });
     }
   }, [gameOver, isStarted, resetGame]);
+
+  // Handle high score persistence
+  useEffect(() => {
+    const savedHighScore = localStorage.getItem('invaders_high_score');
+    if (savedHighScore) {
+      setHighScore(parseInt(savedHighScore, 10));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (highScore > 0) {
+      localStorage.setItem('invaders_high_score', highScore.toString());
+    }
+  }, [highScore]);
 
   // Handle resize
   useEffect(() => {
@@ -293,10 +313,19 @@ export default function SpaceInvadersGame({ color }) {
             state.floatingTexts.push({
               x: state.ufo.x + UFO_WIDTH / 2,
               y: state.ufo.y,
-              text: `+${state.ufo.points}`,
+              text: `+${pointsToAward}`,
               color: '#ff0000',
               life: 1,
             });
+            
+            // Random power-up drop
+            if (Math.random() > 0.4) {
+              state.powerUps.push({
+                x: state.ufo.x + UFO_WIDTH / 2,
+                y: state.ufo.y,
+                type: Math.random() > 0.5 ? 'rapid' : 'life',
+              });
+            }
             
             state.ufo = null;
             setUfoActive(false);
@@ -471,6 +500,30 @@ export default function SpaceInvadersGame({ color }) {
           ft.life -= 0.02;
           return ft.life > 0;
         });
+
+        // Update power-ups
+        state.powerUps = state.powerUps.filter(p => {
+          p.y += 2;
+          // Check collision with player
+          if (p.x < state.player.x + PLAYER_WIDTH && 
+              p.x + 15 > state.player.x && 
+              p.y < state.player.y + PLAYER_HEIGHT && 
+              p.y + 15 > state.player.y) {
+            playPowerup();
+            if (p.type === 'life') {
+              state.playerLives = Math.min(5, state.playerLives + 1);
+            } else {
+              state.powerUpActive = { type: p.type, timer: 600 };
+            }
+            return false;
+          }
+          return p.y < GAME_HEIGHT;
+        });
+
+        if (state.powerUpActive) {
+          state.powerUpActive.timer--;
+          if (state.powerUpActive.timer <= 0) state.powerUpActive = null;
+        }
       }
 
       // Screen shake
@@ -649,9 +702,32 @@ export default function SpaceInvadersGame({ color }) {
         ctx.fillText(ft.text, ft.x, ft.y);
         ctx.globalAlpha = 1;
       });
+
+      // Draw Powerups
+      state.powerUps.forEach(p => {
+        ctx.fillStyle = p.type === 'rapid' ? '#ffff00' : '#00ff00';
+        ctx.shadowColor = ctx.fillStyle;
+        ctx.shadowBlur = 10;
+        ctx.fillRect(p.x, p.y, 14, 14);
+        ctx.fillStyle = '#000';
+        ctx.font = 'bold 10px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(p.type === 'rapid' ? '⚡' : '♥', p.x + 7, p.y + 11);
+        ctx.shadowBlur = 0;
+      });
       
       // Restore context from screen shake
       ctx.restore();
+
+      // Chromatic Aberration / Glitch Effect
+      if (state.screenShake > 8) {
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        ctx.globalAlpha = 0.7;
+        ctx.drawImage(canvas, 4, 0);
+        ctx.drawImage(canvas, -4, 0);
+        ctx.restore();
+      }
 
       animationId = requestAnimationFrame(gameLoop);
     };

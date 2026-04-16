@@ -37,6 +37,8 @@ export default function SnakeGame({ color }) {
     particles: [],
     floatingTexts: [],
     glowIntensity: 0,
+    screenShake: 0,
+    walls: [],
   });
 
   const { playEat, playPowerup, playGameOver } = useRetroAudio();
@@ -54,6 +56,8 @@ export default function SnakeGame({ color }) {
       particles: [],
       floatingTexts: [],
       glowIntensity: 0,
+      screenShake: 0,
+      walls: [],
     };
     setScore(0);
     setCombo(0);
@@ -106,6 +110,20 @@ export default function SnakeGame({ color }) {
       life: 1,
     });
   }
+
+  // Handle high score persistence
+  useEffect(() => {
+    const savedHighScore = localStorage.getItem('snake_high_score');
+    if (savedHighScore) {
+      setHighScore(parseInt(savedHighScore, 10));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (highScore > 0) {
+      localStorage.setItem('snake_high_score', highScore.toString());
+    }
+  }, [highScore]);
 
   // Handle resize
   useEffect(() => {
@@ -208,8 +226,22 @@ export default function SnakeGame({ color }) {
           return;
         }
 
+        // Check wall obstacles collision
+        if (powerUp !== 'ghost' && state.walls.some(w => w.x === newHead.x && w.y === newHead.y)) {
+          playGameOver();
+          setGameOver(true);
+          setHighScore(prev => Math.max(prev, score));
+          return;
+        }
+
         // Move snake
         state.snake.unshift(newHead);
+
+        // Score bonus screen shake
+        if (state.screenShake > 0) {
+          state.screenShake *= 0.9;
+          if (state.screenShake < 0.5) state.screenShake = 0;
+        }
 
         // Check food collision
         if (newHead.x === state.food.x && newHead.y === state.food.y) {
@@ -219,6 +251,7 @@ export default function SnakeGame({ color }) {
           if (state.foodType === 'bonus') {
             points = 50;
             playPowerup();
+            state.screenShake = 10;
             addParticles(state.food.x, state.food.y, '#ffd700', 15);
             addFloatingText(state.food.x, state.food.y, "+50", "#ffd700");
             state.glowIntensity = 20;
@@ -245,7 +278,23 @@ export default function SnakeGame({ color }) {
           }
           
           setCombo(newCombo);
-          setScore(prev => prev + points);
+          setScore(prev => {
+            const newScore = prev + points;
+            // Spawn a new wall every 50 points
+            if (Math.floor(newScore / 50) > Math.floor(prev / 50)) {
+              let wall;
+              do {
+                wall = {
+                  x: Math.floor(Math.random() * GRID_SIZE),
+                  y: Math.floor(Math.random() * GRID_SIZE),
+                };
+              } while (state.snake.some(s => s.x === wall.x && s.y === wall.y) || (state.food.x === wall.x && state.food.y === wall.y));
+              state.walls.push(wall);
+              playPowerup(); // Sound feedback for stage change
+              addFloatingText(wall.x, wall.y, "GLITCH!", "#ff4444");
+            }
+            return newScore;
+          });
           state.food = generateFood(state.snake);
           state.foodType = generateFoodType();
           if (!powerUp) {
@@ -301,6 +350,21 @@ export default function SnakeGame({ color }) {
         size,
         size
       );
+      ctx.shadowBlur = 0;
+      
+      // Draw wall obstacles (Static Glitches)
+      state.walls.forEach(w => {
+        ctx.fillStyle = '#ff4444';
+        ctx.shadowColor = '#ff4444';
+        ctx.shadowBlur = 10;
+        ctx.fillRect(w.x * cellSize + 2, w.y * cellSize + 2, cellSize - 4, cellSize - 4);
+        
+        // Glitch lines on walls
+        if (state.frameCount % 20 < 10) {
+          ctx.fillStyle = '#fff';
+          ctx.fillRect(w.x * cellSize + 4, w.y * cellSize + cellSize / 2, cellSize - 8, 2);
+        }
+      });
       ctx.shadowBlur = 0;
       
       // Draw food type indicator
@@ -405,6 +469,16 @@ export default function SnakeGame({ color }) {
       
       // Decay glow intensity
       if (state.glowIntensity > 0) state.glowIntensity -= 0.5;
+
+      // Chromatic Aberration / Glitch Effect
+      if (state.screenShake > 5) {
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        ctx.globalAlpha = 0.7;
+        ctx.drawImage(canvas, 3, 0);
+        ctx.drawImage(canvas, -3, 0);
+        ctx.restore();
+      }
 
       animationId = requestAnimationFrame(gameLoop);
     };
