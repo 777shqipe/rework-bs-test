@@ -1026,7 +1026,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
             
             {/* Content */}
             <div className={`${isProject ? 'order-1 lg:order-1' : ''}`}>
-              <div className="clay-card p-8 sm:p-12 mb-8">
+              <div className="clay-card p-10 sm:p-16 lg:p-20 mb-8">
                 {!isProject && <div className="text-5xl mb-4">{selectedService.icon}</div>}
                 <h2 className="text-3xl sm:text-4xl font-black text-[#2d2818] mb-4 tracking-tight">{selectedService.title}</h2>
                 <p className="text-lg leading-relaxed text-[#6a6050] font-medium">{selectedService.details}</p>
