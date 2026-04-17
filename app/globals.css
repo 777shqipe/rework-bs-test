@@ -285,6 +285,59 @@
   overflow-y: auto;
 }
 
+/* ===== MOCKUP/IFRAME PREVIEW MODE ===== */
+/* Styles applied when site is viewed inside the phone mockup iframe */
+.mockup-mode {
+  /* Optimize for small viewport */
+  font-size: 14px;
+}
+
+.mockup-mode .modern-snap-container {
+  /* Disable scroll snap in mockup for smoother experience */
+  scroll-snap-type: none;
+  scroll-behavior: auto;
+}
+
+.mockup-mode .modern-snap-section {
+  /* Allow natural height in mockup mode */
+  height: auto;
+  min-height: auto;
+  max-height: none;
+  overflow: visible;
+}
+
+.mockup-mode nav,
+.mockup-mode .modern-header,
+.mockup-mode header {
+  /* Hide complex headers in mockup */
+  display: none !important;
+}
+
+.mockup-mode #hero,
+.mockup-mode .hero-section {
+  /* Hero optimized for mockup - show only essential content */
+  padding-top: 20px !important;
+  padding-bottom: 40px !important;
+}
+
+.mockup-mode h1 {
+  /* Smaller headings for mockup */
+  font-size: 1.75rem !important;
+  line-height: 1.2 !important;
+}
+
+.mockup-mode h2 {
+  font-size: 1.5rem !important;
+  line-height: 1.25 !important;
+}
+
+.mockup-mode p,
+.mockup-mode span {
+  /* Better text for small screens */
+  font-size: 0.875rem !important;
+  line-height: 1.5 !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .modern-snap-container {
     scroll-behavior: auto;

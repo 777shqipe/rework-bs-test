@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShinyButton } from './ui/shiny-button';
+import PhoneGallery from './PhoneGallery';
 
 /* ===========================================================
    MODERN TYPEWRITER — animated placeholder for modern form
@@ -190,6 +191,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
   const [categoryDirection, setCategoryDirection] = useState(1);
   const [categoryTransitionType, setCategoryTransitionType] = useState('morph');
   const [showFooter, setShowFooter] = useState(false);
+  const [isMockupMode, setIsMockupMode] = useState(false);
   const contactSectionRef = useRef(null);
   const footerCardRef = useRef(null);
   const [footerStrokeActive, setFooterStrokeActive] = useState(false);
@@ -227,6 +229,15 @@ export default function ModernSite({ onSwitchToTerminal }) {
 
     media.addListener(syncViewport);
     return () => media.removeListener(syncViewport);
+  }, []);
+
+  // Detect if viewed inside iframe mockup preview
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const isMockup = urlParams.has('mockup') || urlParams.has('preview');
+      setIsMockupMode(isMockup);
+    }
   }, []);
 
   useEffect(() => {
@@ -658,98 +669,112 @@ export default function ModernSite({ onSwitchToTerminal }) {
       category: 'Gestionale',
       tags: ['Gestionale', 'PWA', 'E-commerce'],
       year: '2025',
-      desc: 'Sistema di gestione vitivinicolo completo per cantina con vendita online di esperienze, gestione coupon regali e spedizioni internazionali.'
+      desc: 'Sistema di gestione vitivinicolo completo per cantina con vendita online di esperienze, gestione coupon regali e spedizioni internazionali.',
+      images: []
     },
     {
       n: 'CRM Magazzino',
       category: 'Gestionale',
       tags: ['Gestionale', 'Logistica'],
       year: '2024',
-      desc: 'Sistema gestionale su misura per gestione magazzino, stoccaggio e spedizioni con ottimizzazione logistica avanzata.'
+      desc: 'Sistema gestionale su misura per gestione magazzino, stoccaggio e spedizioni con ottimizzazione logistica avanzata.',
+      images: []
     },
     {
       n: 'BPres Presenze',
       category: 'Gestionale',
       tags: ['Gestionale', 'HR'],
       year: '2024',
-      desc: 'Sistema presenze completo per gestire ingressi, uscite, pause. Calcolo permessi automatici e richiesta ferie/malattia con approvazione via email.'
+      desc: 'Sistema presenze completo per gestire ingressi, uscite, pause. Calcolo permessi automatici e richiesta ferie/malattia con approvazione via email.',
+      images: []
     },
     {
       n: 'Sistema Autodemolizioni',
       category: 'CRM',
       tags: ['CRM', 'API', 'Compliance'],
       year: '2024',
-      desc: 'CRM completo per pratiche bonifica, registrazione portali statali, API Rentri, vendita componenti, gestione serbatoi e controllo codici CER.'
+      desc: 'CRM completo per pratiche bonifica, registrazione portali statali, API Rentri, vendita componenti, gestione serbatoi e controllo codici CER.',
+      images: []
     },
     {
       n: '7Lakes Aparthotel',
       category: 'Sito Web',
       tags: ['Sito Web', 'Booking', 'Drone'],
       year: '2024',
-      desc: 'Sito web con shooting drone per tour virtuale, collegamento Octorate per booking engine centralizzato con Booking.com e Airbnb.'
+      desc: 'Sito web con shooting drone per tour virtuale, collegamento Octorate per booking engine centralizzato con Booking.com e Airbnb.',
+      images: []
     },
     {
       n: 'Salute a Domicilio',
       category: 'Sito Web',
       tags: ['Sito Web', 'Marketing', 'ADS'],
       year: '2024',
-      desc: 'Sito web, analisi marketing intelligence, landing page pubblicitarie e campagne Google Search + retargeting social.'
+      desc: 'Sito web, analisi marketing intelligence, landing page pubblicitarie e campagne Google Search + retargeting social.',
+      images: []
     },
     {
       n: 'CRM Task e Progetti',
       category: 'Gestionale',
       tags: ['Gestionale', 'AI', 'Project'],
       year: '2024',
-      desc: 'Sistema gestionale per progetti, task e andamento lavorazioni. Gestione clienti e collaboratori con integrazione AI tramite API.'
+      desc: 'Sistema gestionale per progetti, task e andamento lavorazioni. Gestione clienti e collaboratori con integrazione AI tramite API.',
+      images: []
     },
     {
       n: 'My Place Malpensa',
       category: 'Sito Web',
       tags: ['Sito Web', 'Booking', 'Multilingua'],
       year: '2024',
-      desc: 'Sito web multilingua con collegamento a Octorate per booking engine centralizzato e gestione prenotazioni automatizzata.'
+      desc: 'Sito web multilingua con collegamento a Octorate per booking engine centralizzato e gestione prenotazioni automatizzata.',
+      images: []
     },
     {
       n: 'Marazzato Moto',
       category: 'Sito Web',
       tags: ['Sito Web', 'Vetrina', 'E-commerce'],
       year: '2024',
-      desc: 'Sito web vetrina con caricamento dinamico prodotti da pannello dedicato e vetrina online per vendita moto e accessori.'
+      desc: 'Sito web vetrina con caricamento dinamico prodotti da pannello dedicato e vetrina online per vendita moto e accessori.',
+      images: []
     },
     {
       n: 'Casa Famiglia Villa Katia',
       category: 'Marketing',
       tags: ['Marketing', 'Meta Ads', 'Landing'],
       year: '2024',
-      desc: 'Soluzione completa: sito web, landing page e sponsorizzazioni Meta Ads con focus su Facebook e target di riferimento specifico.'
+      desc: 'Soluzione completa: sito web, landing page e sponsorizzazioni Meta Ads con focus su Facebook e target di riferimento specifico.',
+      images: []
     },
     {
       n: 'Casa Famiglia Quercia',
       category: 'Marketing',
       tags: ['Marketing', 'Meta Ads', 'Social'],
       year: '2024',
-      desc: 'Sito web, landing page e campagne sponsorizzate Meta Ads per casa famiglia con strategia marketing mirata.'
+      desc: 'Sito web, landing page e campagne sponsorizzate Meta Ads per casa famiglia con strategia marketing mirata.',
+      images: []
     },
     {
       n: 'Casa Famiglia Gramsci',
       category: 'Marketing',
       tags: ['Marketing', 'Social', 'Landing'],
       year: '2024',
-      desc: 'Progetto completo con sito web istituzionale, landing page dedicate e campagne pubblicitarie social mirate.'
+      desc: 'Progetto completo con sito web istituzionale, landing page dedicate e campagne pubblicitarie social mirate.',
+      images: []
     },
     {
       n: 'Casa Famiglia Benissimo',
       category: 'Marketing',
       tags: ['Marketing', 'Facebook Ads', 'Web'],
       year: '2024',
-      desc: 'Sviluppo sito web, landing page ottimizzate e strategia marketing digitale con campagne Facebook Ads mirate.'
+      desc: 'Sviluppo sito web, landing page ottimizzate e strategia marketing digitale con campagne Facebook Ads mirate.',
+      images: []
     },
     {
       n: 'Casa Alloggio Sociale Anziani',
       category: 'Marketing',
       tags: ['Marketing', 'Web', 'Social'],
       year: '2024',
-      desc: 'Casa alloggio sociale per anziani ad Abbiategrasso: sito web istituzionale, landing page e campagne marketing dedicate.'
+      desc: 'Casa alloggio sociale per anziani ad Abbiategrasso: sito web istituzionale, landing page e campagne marketing dedicate.',
+      images: []
     },
   ];
 
@@ -926,55 +951,126 @@ export default function ModernSite({ onSwitchToTerminal }) {
     window.open(`mailto:info@backsoftware.it?subject=${subject}&body=${body}`, '_blank', 'noopener,noreferrer');
   };
 
-  // Service detail modal
+  // Service/Project detail modal
   if (selectedService) {
+    const isProject = selectedService.source === 'progetti';
+    
     return (
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         className="w-full pt-4 sm:pt-6 lg:pt-10 pb-6 sm:pb-10 lg:pb-20 px-4 sm:px-10 lg:px-20 h-[100dvh] flex flex-col font-sans modern-mode relative overflow-y-auto overflow-x-hidden overscroll-y-contain"
         style={{ background: '#f5f2ec' }}>
         <div className="absolute inset-0 crt-glitch-overlay" />
-        <div className="modern-crt-flicker max-w-4xl mx-auto w-full">
+        <div className="modern-crt-flicker max-w-6xl mx-auto w-full">
           <motion.button onClick={handleCloseService}
             className="clay-btn px-6 py-3 mb-6 text-sm font-bold !rounded-xl text-[#3d3828] flex items-center gap-2"
             whileHover={{ x: -5 }} whileTap={{ scale: 0.95 }}>
-            ← Torna ai servizi
+            ← Torna {isProject ? 'ai progetti' : 'ai servizi'}
           </motion.button>
-          <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 200 }}>
-            <div className="clay-card p-8 sm:p-12 mb-8">
-              <div className="text-5xl mb-4">{selectedService.icon}</div>
-              <h2 className="text-3xl sm:text-4xl font-black text-[#2d2818] mb-4 tracking-tight">{selectedService.title}</h2>
-              <p className="text-lg leading-relaxed text-[#6a6050] font-medium">{selectedService.details}</p>
-            </div>
+          
+          <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 200 }}
+            className={`${isProject ? 'grid lg:grid-cols-2 gap-8 lg:gap-12 items-center justify-items-center' : ''}`}>
             
-            {/* Pacchetti disponibili */}
-            <div className="mb-6">
-              <h3 className="text-xl font-bold text-[#2d2818] mb-4 px-2">Scegli il pacchetto:</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {selectedService.packages?.map((pkg, idx) => (
-                  <motion.div
-                    key={idx}
-                    className="clay-card p-6 cursor-pointer group hover:scale-[1.02] transition-transform"
-                    onClick={() => { handleCloseService(); setFormData(prev => ({ ...prev, servizio: `${selectedService.title} - ${pkg.name}` })); setShowContactForm(true); }}
-                    whileTap={{ scale: 0.98 }}>
-                    <h4 className="text-lg font-black text-[#2d2818] mb-2 group-hover:text-[#7c6f5b] transition-colors">{pkg.name}</h4>
-                    <p className="text-sm text-[#6a6050] leading-relaxed">{pkg.desc}</p>
-                    <div className="mt-4 text-xs font-bold text-[#7c6f5b] opacity-0 group-hover:opacity-100 transition-opacity">
-                      Richiedi preventivo →
+            {/* Phone Mockup with Gallery - Only for projects */}
+            {isProject && (
+              <div className="order-2 lg:order-2 flex justify-center lg:justify-start lg:-ml-4">
+                <div 
+                  className="relative w-[280px] sm:w-[300px]"
+                  style={{ height: '580px' }}
+                >
+                  {/* Phone Body Shadow */}
+                  <div 
+                    className="absolute -inset-4 blur-2xl opacity-20 rounded-[3rem]"
+                    style={{ background: 'radial-gradient(circle at center, rgba(124, 111, 91, 0.5) 0%, transparent 70%)' }}
+                  />
+                  
+                  {/* Phone Body */}
+                  <div 
+                    className="relative h-full bg-[#1a1a1a] rounded-[2.5rem] p-3 shadow-2xl"
+                    style={{
+                      boxShadow: `
+                        0 25px 50px -12px rgba(0, 0, 0, 0.5),
+                        0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+                        0 2px 4px rgba(255, 255, 255, 0.1) inset
+                      `
+                    }}
+                  >
+                    {/* Side Buttons */}
+                    <div className="absolute -left-1 top-[18%] w-1.5 h-8 bg-[#2a2a2a] rounded-l" />
+                    <div className="absolute -left-1 top-[28%] w-1.5 h-16 bg-[#2a2a2a] rounded-l" />
+                    <div className="absolute -right-1 top-[22%] w-1.5 h-12 bg-[#2a2a2a] rounded-r" />
+                    
+                    {/* Screen with Gallery */}
+                    <div className="h-full rounded-[2rem] overflow-hidden bg-black relative">
+                      {/* Notch */}
+                      <div className="absolute top-2 left-1/2 -translate-x-1/2 w-[40%] h-6 bg-black rounded-full z-30" />
+                      
+                      <PhoneGallery 
+                        images={selectedService.images || []}
+                        className="w-full h-full"
+                        autoPlay={true}
+                        interval={4000}
+                      />
                     </div>
-                  </motion.div>
-                ))}
+                  </div>
+                  
+                  {/* Reflection/Gloss */}
+                  <div 
+                    className="absolute inset-0 rounded-[2.5rem] pointer-events-none"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 30%, transparent 70%, rgba(255,255,255,0.05) 100%)',
+                    }}
+                  />
+                </div>
               </div>
-            </div>
+            )}
             
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 px-1 sm:px-2 mt-4">
-              <button onClick={() => { handleCloseService(); setShowContactForm(true); setFormData(prev => ({ ...prev, servizio: selectedService.title })); }}
-                className="clay-btn w-full sm:w-auto px-6 py-3.5 text-[15px] sm:text-base font-bold !rounded-2xl text-[#3d3828] bg-[#fdfcf9] hover:scale-105 transition-transform flex items-center justify-center gap-2">
-                Richiedi info generale <span>→</span>
-              </button>
-              <button onClick={handleCloseService}
-                className="clay-btn w-full sm:w-auto px-6 py-3.5 text-[15px] sm:text-base font-bold !rounded-2xl text-[#6a6050] flex items-center justify-center">
-                Altri servizi
-              </button>
+            {/* Content */}
+            <div className={`${isProject ? 'order-1 lg:order-1' : ''}`}>
+              <div className="clay-card p-8 sm:p-12 mb-8">
+                {!isProject && <div className="text-5xl mb-4">{selectedService.icon}</div>}
+                <h2 className="text-3xl sm:text-4xl font-black text-[#2d2818] mb-4 tracking-tight">{selectedService.title}</h2>
+                <p className="text-lg leading-relaxed text-[#6a6050] font-medium">{selectedService.details}</p>
+                
+                {/* Project-specific extra info */}
+                {isProject && selectedService.category && (
+                  <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#7c6f5b]/10 text-[#7c6f5b] text-sm font-medium">
+                    <span>{selectedService.category}</span>
+                  </div>
+                )}
+              </div>
+              
+              {/* Packages - Only for services */}
+              {!isProject && selectedService.packages && (
+                <div className="mb-6">
+                  <h3 className="text-xl font-bold text-[#2d2818] mb-4 px-2">Scegli il pacchetto:</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {selectedService.packages.map((pkg, idx) => (
+                      <motion.div
+                        key={idx}
+                        className="clay-card p-6 cursor-pointer group hover:scale-[1.02] transition-transform"
+                        onClick={() => { handleCloseService(); setFormData(prev => ({ ...prev, servizio: `${selectedService.title} - ${pkg.name}` })); setShowContactForm(true); }}
+                        whileTap={{ scale: 0.98 }}>
+                        <h4 className="text-lg font-black text-[#2d2818] mb-2 group-hover:text-[#7c6f5b] transition-colors">{pkg.name}</h4>
+                        <p className="text-sm text-[#6a6050] leading-relaxed">{pkg.desc}</p>
+                        <div className="mt-4 text-xs font-bold text-[#7c6f5b] opacity-0 group-hover:opacity-100 transition-opacity">
+                          Richiedi preventivo →
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 px-1 sm:px-2 mt-4">
+                <button onClick={() => { handleCloseService(); setShowContactForm(true); setFormData(prev => ({ ...prev, servizio: selectedService.title })); }}
+                  className="clay-btn w-full sm:w-auto px-6 py-3.5 text-[15px] sm:text-base font-bold !rounded-2xl text-[#3d3828] bg-[#fdfcf9] hover:scale-105 transition-transform flex items-center justify-center gap-2">
+                  {isProject ? 'Richiedi progetto simile' : 'Richiedi info'} <span>→</span>
+                </button>
+                <button onClick={handleCloseService}
+                  className="clay-btn w-full sm:w-auto px-6 py-3.5 text-[15px] sm:text-base font-bold !rounded-2xl text-[#6a6050] flex items-center justify-center">
+                  {isProject ? 'Altri progetti' : 'Altri servizi'}
+                </button>
+              </div>
             </div>
           </motion.div>
         </div>
@@ -1239,7 +1335,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
 
   return (
     <motion.div initial="hidden" animate="visible" variants={containerVariants}
-      className="h-[100dvh] w-full overflow-x-hidden overflow-y-auto font-sans modern-mode modern-snap-container selection:bg-[#7c6f5b]/20 relative overscroll-y-contain"
+      className={`h-[100dvh] w-full overflow-x-hidden overflow-y-auto font-sans modern-mode modern-snap-container selection:bg-[#7c6f5b]/20 relative overscroll-y-contain ${isMockupMode ? 'mockup-mode' : ''}`}
       style={{ background: 'linear-gradient(180deg, #f5f2ec 0%, #f2eee7 100%)' }}>
       {/* CRT Glitch Effect */}
       <div className="absolute inset-0 crt-glitch-overlay pointer-events-none" />
@@ -1418,41 +1514,47 @@ export default function ModernSite({ onSwitchToTerminal }) {
 
 
       {/* ── HERO ── */}
-      <motion.section variants={itemVariants} className="modern-snap-section flex items-center justify-center relative px-6 sm:px-6 lg:px-8">
+      <motion.section variants={itemVariants} className="modern-snap-section flex items-center justify-center relative px-6 sm:px-6 lg:px-8 overflow-hidden">
         {/* Floating Accents - Hidden on mobile */}
         <div className="hidden sm:block absolute -top-10 left-10 w-24 h-24 clay-pill opacity-10 animate-float pointer-events-none" />
         <div className="hidden sm:block absolute top-40 right-10 w-32 h-32 clay-pill opacity-10 animate-float-delayed pointer-events-none" />
 
-        <div className="max-w-5xl mx-auto w-full">
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.35, ease: [0.22, 1, 0.36, 1] }}
-            className="text-[3rem] sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black leading-[1.12] sm:leading-[1.05] mb-8 sm:mb-8 tracking-tight text-[#2d2818]">
-            <span className="block mb-2">Software che</span>
-            <span className="block mb-2">funziona.</span>
-            <span className="text-[#8a7f6a] drop-shadow-sm block">Fatto da <span className="transition-all duration-500 ease-out hover:text-[#c4b494] hover:drop-shadow-[0_0_30px_rgba(196,180,148,0.8),0_0_60px_rgba(196,180,148,0.4)] cursor-default">persone reali</span>.</span>
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="text-base sm:text-base lg:text-xl xl:text-2xl leading-relaxed max-w-3xl font-medium mb-6 sm:mb-12 text-[#6a6050]">
-            Tecnologia che semplifica, non complica.<br className="hidden sm:block"/> Costruiamo il tuo progetto come se fosse il nostro.
-          </motion.p>
-          <motion.div
-            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.65, ease: [0.22, 1, 0.36, 1] }}
-            className="flex flex-wrap gap-3 sm:gap-6 items-center">
-            <ShinyButton
-              href="#contatti"
-              tone="espresso"
-              size="lg"
-              intensity="strong"
-              className="!w-[92vw] max-w-[420px] sm:!w-auto !rounded-2xl lg:!rounded-2xl !text-lg sm:!text-base !px-8 sm:!px-6 !py-4 sm:!py-5"
-            >
-              <span className="sm:hidden">Parliamone →</span>
-              <span className="hidden sm:inline">Parlaci del tuo progetto →</span>
-            </ShinyButton>
-          </motion.div>
+        <div className="max-w-6xl mx-auto w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+            {/* Left: Text Content */}
+            <div className="order-2 lg:order-1">
+              <motion.h1
+                initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                className="text-[3rem] sm:text-5xl md:text-6xl lg:text-6xl xl:text-7xl font-black leading-[1.12] sm:leading-[1.05] mb-6 sm:mb-8 tracking-tight text-[#2d2818]">
+                <span className="block mb-2">Software che</span>
+                <span className="block mb-2">funziona.</span>
+                <span className="text-[#8a7f6a] drop-shadow-sm block">Fatto da <span className="transition-all duration-500 ease-out hover:text-[#c4b494] hover:drop-shadow-[0_0_30px_rgba(196,180,148,0.8),0_0_60px_rgba(196,180,148,0.4)] cursor-default">persone reali</span>.</span>
+              </motion.h1>
+              <motion.p
+                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                className="text-base sm:text-base lg:text-xl xl:text-2xl leading-relaxed max-w-xl font-medium mb-6 sm:mb-10 text-[#6a6050]">
+                Tecnologia che semplifica, non complica.<br className="hidden sm:block"/> Costruiamo il tuo progetto come se fosse il nostro.
+              </motion.p>
+              <motion.div
+                initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.65, ease: [0.22, 1, 0.36, 1] }}
+                className="flex flex-wrap gap-3 sm:gap-6 items-center">
+                <ShinyButton
+                  href="#contatti"
+                  tone="espresso"
+                  size="lg"
+                  intensity="strong"
+                  className="!w-[92vw] max-w-[420px] sm:!w-auto !rounded-2xl lg:!rounded-2xl !text-lg sm:!text-base !px-8 sm:!px-6 !py-4 sm:!py-5"
+                >
+                  <span className="sm:hidden">Parliamone →</span>
+                  <span className="hidden sm:inline">Parlaci del tuo progetto →</span>
+                </ShinyButton>
+              </motion.div>
+            </div>
+
+          </div>
 
           <motion.a
             href="#come-lavoriamo"
@@ -1663,7 +1765,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
                     direction={categoryDirection}
                     enableMorph={true}
                     isCompact={isCompactCategory}
-                    onClick={() => setSelectedService({ title: p.n, icon: '', details: p.desc, source: 'progetti' })}
+                    onClick={() => setSelectedService({ title: p.n, icon: '', details: p.desc, source: 'progetti', images: p.images || [], category: p.category })}
                   />
                 ))}
               </AnimatePresence>
@@ -1687,7 +1789,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
                     direction={categoryDirection}
                     enableMorph={false}
                     isCompact={false}
-                    onClick={() => setSelectedService({ title: p.n, icon: '', details: p.desc, source: 'progetti' })}
+                    onClick={() => setSelectedService({ title: p.n, icon: '', details: p.desc, source: 'progetti', images: p.images || [], category: p.category })}
                   />
                 ))}
               </motion.div>
