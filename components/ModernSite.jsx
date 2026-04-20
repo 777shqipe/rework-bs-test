@@ -2,59 +2,46 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useI18n } from '../lib/i18n-context';
 import { ShinyButton } from './ui/shiny-button';
 import PhoneGallery from './PhoneGallery';
+import LanguageSwitcher from './LanguageSwitcher';
 
 /* ===========================================================
    MODERN TYPEWRITER — animated placeholder for modern form
 =========================================================== */
-function ModernTypewriter({ servizio }) {
+function ModernTypewriter({ servizio, t }) {
   const [text, setText] = useState('');
   const [idx, setIdx] = useState(0);
   const [showCursor, setShowCursor] = useState(true);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [isTyping, setIsTyping] = useState(true);
 
-  const suggestions = {
-    'Siti Web': [
-      'Ho un\'attività e mi serve un sito vetrina...',
-      'Vorrei un e-commerce per vendere online...',
-      'Mi serve una landing page per un servizio...',
-    ],
-    'Marketing': [
-      'Vorrei più clienti con la pubblicità online...',
-      'Ho bisogno di una strategia social efficace...',
-      'Voglio promuovere un\'offerta specifica...',
-    ],
-    'Foto & Video': [
-      'Mi servono foto professionali per il sito...',
-      'Vorrei un video per presentare l\'azienda...',
-      'Devo fotografare prodotti per il catalogo...',
-    ],
-    'Grafica & Brand': [
-      'Non ho un logo e vorrei partire da zero...',
-      'Il mio marchio è vecchio, vorrei rinnovarlo...',
-      'Mi serve un\'identità visiva completa...',
-    ],
-    'Software su Misura': [
-      'Gestisco tutto con fogli di calcolo...',
-      'Mi serve un gestionale su misura...',
-      'Ho bisogno di un\'app web per prenotazioni...',
-    ],
-    'Case Famiglia': [
-      'Gestisco una struttura e mi serve booking...',
-      'Vorrei un sito con prenotazioni online...',
-      'Mi serve digitalizzare la gestione...',
-    ],
-    'Altro': [
-      'Ho bisogno di più servizi insieme...',
-      'Non so cosa mi serva, vorrei un confronto...',
-      'Vorrei un pacchetto completo...',
-    ],
-  };
-
   const getPlaceholders = () => {
-    return suggestions[servizio] || ['Dicci brevemente cosa ti serve...'];
+    // Build a locale-aware lookup from translated service display name -> key.
+    const serviceKeyMap = {
+      [t('contact.form.step2.services.siti')]: 'siti',
+      [t('contact.form.step2.services.marketing')]: 'marketing',
+      [t('contact.form.step2.services.foto')]: 'foto',
+      [t('contact.form.step2.services.grafica')]: 'grafica',
+      [t('contact.form.step2.services.software')]: 'software',
+      [t('contact.form.step2.services.casa')]: 'casa',
+      [t('contact.form.step2.services.altro')]: 'altro',
+    };
+
+    // `servizio` may also be a service title or title + package (e.g. "Siti Web - Landing"),
+    // so we match via startsWith against the known display names.
+    const match = Object.keys(serviceKeyMap).find(name => name && servizio && servizio.startsWith(name));
+    const key = match ? serviceKeyMap[match] : null;
+    if (key) {
+      const placeholders = [
+        t(`contact.form.step3.placeholders.${key}.0`),
+        t(`contact.form.step3.placeholders.${key}.1`),
+        t(`contact.form.step3.placeholders.${key}.2`),
+      ];
+      return placeholders;
+    }
+    return [t('contact.form.step3.placeholderDefault')];
   };
 
   React.useEffect(() => {
@@ -185,9 +172,10 @@ function ProjectCard({ project, index, isCompact, onClick, direction, enableMorp
 =========================================================== */
 
 export default function ModernSite({ onSwitchToTerminal }) {
+  const { t } = useI18n();
   const [showContactForm, setShowContactForm] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState('Tutti');
+  const [selectedCategoryKey, setSelectedCategoryKey] = useState('all');
   const [categoryDirection, setCategoryDirection] = useState(1);
   const [categoryTransitionType, setCategoryTransitionType] = useState('morph');
   const [showFooter, setShowFooter] = useState(false);
@@ -581,228 +569,148 @@ export default function ModernSite({ onSwitchToTerminal }) {
 
   const services = useMemo(() => [
     {
+      key: 'caseFamiglia',
       icon: <IconCasaFamiglia />,
-      title: 'Case Famiglia',
-      desc: 'Pacchetti completi per strutture che ospitano famiglie in difficoltà.',
-      details: 'Servizio dedicato alle strutture che ospitano famiglie in difficoltà. Gestiamo tutto: sito web, social media, campagne pubblicitarie mirate e sistema di prenotazioni.',
+      title: t('services.caseFamiglia.title'),
+      desc: t('services.caseFamiglia.desc'),
+      details: t('services.caseFamiglia.details'),
       packages: [
-        { name: '6 Mesi', desc: 'Soluzione completa per 6 mesi: sito, social, campagne e prenotazioni' },
-        { name: '3 Mesi', desc: 'Soluzione completa per 3 mesi: sito, social, campagne e prenotazioni' },
-        { name: 'Campagna Spot', desc: 'Campagna spot per 6 mesi con gestione completa' }
+        { key: '6mesi', name: t('services.caseFamiglia.packages.6mesi.name'), desc: t('services.caseFamiglia.packages.6mesi.desc') },
+        { key: '3mesi', name: t('services.caseFamiglia.packages.3mesi.name'), desc: t('services.caseFamiglia.packages.3mesi.desc') },
+        { key: 'spot', name: t('services.caseFamiglia.packages.spot.name'), desc: t('services.caseFamiglia.packages.spot.desc') }
       ],
       span: 'md:col-span-2',
       source: 'servizi'
     },
     {
+      key: 'sitiLanding',
       icon: <IconSitiLanding />,
-      title: 'Siti e Landing',
+      title: t('services.sitiLanding.title'),
       source: 'servizi',
-      desc: 'Siti web professionali e landing page ottimizzate per conversioni.',
-      details: 'Siti web professionali e landing page ottimizzate per le conversioni. Dal sito aziendale completo alla landing page mirata, tutto responsive e pronto per Google.',
+      desc: t('services.sitiLanding.desc'),
+      details: t('services.sitiLanding.details'),
       packages: [
-        { name: 'Sito 5-10 Pagine', desc: 'Sito web completo con 5-10 pagine, responsive e ottimizzato' },
-        { name: 'Landing Page', desc: 'Landing page ottimizzata per conversioni e lead generation' }
+        { key: '5-10', name: t('services.sitiLanding.packages.5-10.name'), desc: t('services.sitiLanding.packages.5-10.desc') },
+        { key: 'landing', name: t('services.sitiLanding.packages.landing.name'), desc: t('services.sitiLanding.packages.landing.desc') }
       ],
       span: '',
       source: 'servizi'
     },
     {
+      key: 'marketing',
       icon: <IconMarketing />,
-      title: 'Marketing & ADS',
+      title: t('services.marketing.title'),
       source: 'servizi',
-      desc: 'Analisi, Meta Ads e Google Ads. Strategie che portano risultati.',
-      details: 'Strategie di marketing digitale e campagne pubblicitarie mirate. Analisi, pianificazione e gestione completa delle tue campagne su Meta e Google.',
+      desc: t('services.marketing.desc'),
+      details: t('services.marketing.details'),
       packages: [
-        { name: 'Analisi Marketing', desc: 'Analisi completa per campagne pubblicitarie efficaci' },
-        { name: 'Meta Ads', desc: 'Campagne su Meta e altri canali social' },
-        { name: 'Google Ads', desc: 'Campagne pubblicitarie su Google Search e Display' }
+        { key: 'analisi', name: t('services.marketing.packages.analisi.name'), desc: t('services.marketing.packages.analisi.desc') },
+        { key: 'meta', name: t('services.marketing.packages.meta.name'), desc: t('services.marketing.packages.meta.desc') },
+        { key: 'google', name: t('services.marketing.packages.google.name'), desc: t('services.marketing.packages.google.desc') }
       ],
       span: '',
       source: 'servizi'
     },
     {
+      key: 'fotoVideo',
       icon: <IconFotoVideo />,
-      title: 'Foto & Video',
+      title: t('services.fotoVideo.title'),
       source: 'servizi',
-      desc: 'Servizi fotografici e video professionali per la tua azienda.',
-      details: 'Servizi professionali di fotografia e video per la tua azienda. Shooting fotografici, riprese con drone, video corporate e contenuti per i social.',
+      desc: t('services.fotoVideo.desc'),
+      details: t('services.fotoVideo.details'),
       packages: [
-        { name: 'Servizio Fotografico', desc: 'Servizi fotografici professionali per aziende e prodotti' },
-        { name: 'Video Drone', desc: 'Riprese video aeree con drone professionale' },
-        { name: 'Video Staff', desc: 'Riprese video con staff professionale' }
+        { key: 'foto', name: t('services.fotoVideo.packages.foto.name'), desc: t('services.fotoVideo.packages.foto.desc') },
+        { key: 'drone', name: t('services.fotoVideo.packages.drone.name'), desc: t('services.fotoVideo.packages.drone.desc') },
+        { key: 'staff', name: t('services.fotoVideo.packages.staff.name'), desc: t('services.fotoVideo.packages.staff.desc') }
       ],
       span: '',
       source: 'servizi'
     },
     {
+      key: 'graficaCopy',
       icon: <IconGraficaCopy />,
-      title: 'Grafica & Copy',
+      title: t('services.graficaCopy.title'),
       source: 'servizi',
-      desc: 'Design grafico e copywriting per la tua comunicazione.',
-      details: 'Servizi di design grafico e copywriting per la tua comunicazione. Loghi, identità visiva, materiali grafici e testi che parlano al tuo pubblico.',
+      desc: t('services.graficaCopy.desc'),
+      details: t('services.graficaCopy.details'),
       packages: [
-        { name: 'Grafica', desc: 'Servizi di design grafico, visual e brand identity' },
-        { name: 'Copywriting', desc: 'Servizi di scrittura, comunicazione e testi SEO' }
+        { key: 'grafica', name: t('services.graficaCopy.packages.grafica.name'), desc: t('services.graficaCopy.packages.grafica.desc') },
+        { key: 'copy', name: t('services.graficaCopy.packages.copy.name'), desc: t('services.graficaCopy.packages.copy.desc') }
       ],
       span: '',
       source: 'servizi'
     },
     {
+      key: 'software',
       icon: <IconDigitali />,
-      title: 'Software su Misura',
+      title: t('services.software.title'),
       source: 'servizi',
-      desc: 'Gestionali, applicazioni e integrazioni API su misura.',
-      details: 'Soluzioni digitali avanzate per la gestione aziendale. Software su misura, gestionali, applicazioni web/mobile e integrazioni API.',
+      desc: t('services.software.desc'),
+      details: t('services.software.details'),
       packages: [
-        { name: 'Gestionali', desc: 'Sistemi gestionali personalizzati per la tua azienda' },
-        { name: 'Applicazioni', desc: 'Applicazioni web e mobile su misura' },
-        { name: 'Collegamento API', desc: 'Integrazioni e collegamenti API con altri servizi' }
+        { key: 'gestionali', name: t('services.software.packages.gestionali.name'), desc: t('services.software.packages.gestionali.desc') },
+        { key: 'app', name: t('services.software.packages.app.name'), desc: t('services.software.packages.app.desc') },
+        { key: 'api', name: t('services.software.packages.api.name'), desc: t('services.software.packages.api.desc') }
       ],
       span: 'md:col-span-2',
       source: 'servizi'
     },
-  ], []);
+  ], [t]);
 
-  const projects = [
-    {
-      n: 'Sistema Gestione Cantina',
-      category: 'Gestionale',
-      tags: ['Gestionale', 'PWA', 'E-commerce'],
-      year: '2025',
-      desc: 'Sistema di gestione vitivinicolo completo per cantina con vendita online di esperienze, gestione coupon regali e spedizioni internazionali.',
-      images: []
-    },
-    {
-      n: 'CRM Magazzino',
-      category: 'Gestionale',
-      tags: ['Gestionale', 'Logistica'],
-      year: '2024',
-      desc: 'Sistema gestionale su misura per gestione magazzino, stoccaggio e spedizioni con ottimizzazione logistica avanzata.',
-      images: []
-    },
-    {
-      n: 'BPres Presenze',
-      category: 'Gestionale',
-      tags: ['Gestionale', 'HR'],
-      year: '2024',
-      desc: 'Sistema presenze completo per gestire ingressi, uscite, pause. Calcolo permessi automatici e richiesta ferie/malattia con approvazione via email.',
-      images: []
-    },
-    {
-      n: 'Sistema Autodemolizioni',
-      category: 'CRM',
-      tags: ['CRM', 'API', 'Compliance'],
-      year: '2024',
-      desc: 'CRM completo per pratiche bonifica, registrazione portali statali, API Rentri, vendita componenti, gestione serbatoi e controllo codici CER.',
-      images: []
-    },
-    {
-      n: '7Lakes Aparthotel',
-      category: 'Sito Web',
-      tags: ['Sito Web', 'Booking', 'Drone'],
-      year: '2024',
-      desc: 'Sito web con shooting drone per tour virtuale, collegamento Octorate per booking engine centralizzato con Booking.com e Airbnb.',
-      images: []
-    },
-    {
-      n: 'Salute a Domicilio',
-      category: 'Sito Web',
-      tags: ['Sito Web', 'Marketing', 'ADS'],
-      year: '2024',
-      desc: 'Sito web, analisi marketing intelligence, landing page pubblicitarie e campagne Google Search + retargeting social.',
-      images: []
-    },
-    {
-      n: 'CRM Task e Progetti',
-      category: 'Gestionale',
-      tags: ['Gestionale', 'AI', 'Project'],
-      year: '2024',
-      desc: 'Sistema gestionale per progetti, task e andamento lavorazioni. Gestione clienti e collaboratori con integrazione AI tramite API.',
-      images: []
-    },
-    {
-      n: 'My Place Malpensa',
-      category: 'Sito Web',
-      tags: ['Sito Web', 'Booking', 'Multilingua'],
-      year: '2024',
-      desc: 'Sito web multilingua con collegamento a Octorate per booking engine centralizzato e gestione prenotazioni automatizzata.',
-      images: []
-    },
-    {
-      n: 'Marazzato Moto',
-      category: 'Sito Web',
-      tags: ['Sito Web', 'Vetrina', 'E-commerce'],
-      year: '2024',
-      desc: 'Sito web vetrina con caricamento dinamico prodotti da pannello dedicato e vetrina online per vendita moto e accessori.',
-      images: []
-    },
-    {
-      n: 'Casa Famiglia Villa Katia',
-      category: 'Marketing',
-      tags: ['Marketing', 'Meta Ads', 'Landing'],
-      year: '2024',
-      desc: 'Soluzione completa: sito web, landing page e sponsorizzazioni Meta Ads con focus su Facebook e target di riferimento specifico.',
-      images: []
-    },
-    {
-      n: 'Casa Famiglia Quercia',
-      category: 'Marketing',
-      tags: ['Marketing', 'Meta Ads', 'Social'],
-      year: '2024',
-      desc: 'Sito web, landing page e campagne sponsorizzate Meta Ads per casa famiglia con strategia marketing mirata.',
-      images: []
-    },
-    {
-      n: 'Casa Famiglia Gramsci',
-      category: 'Marketing',
-      tags: ['Marketing', 'Social', 'Landing'],
-      year: '2024',
-      desc: 'Progetto completo con sito web istituzionale, landing page dedicate e campagne pubblicitarie social mirate.',
-      images: []
-    },
-    {
-      n: 'Casa Famiglia Benissimo',
-      category: 'Marketing',
-      tags: ['Marketing', 'Facebook Ads', 'Web'],
-      year: '2024',
-      desc: 'Sviluppo sito web, landing page ottimizzate e strategia marketing digitale con campagne Facebook Ads mirate.',
-      images: []
-    },
-    {
-      n: 'Casa Alloggio Sociale Anziani',
-      category: 'Marketing',
-      tags: ['Marketing', 'Web', 'Social'],
-      year: '2024',
-      desc: 'Casa alloggio sociale per anziani ad Abbiategrasso: sito web istituzionale, landing page e campagne marketing dedicate.',
-      images: []
-    },
-  ];
+  // Per-project static metadata (not translated). Localized name, desc, and tags come from the messages file.
+  const projectMeta = useMemo(() => ([
+    { key: 'cantina', categoryKey: 'management', year: '2025' },
+    { key: 'crmMagazzino', categoryKey: 'management', year: '2024' },
+    { key: 'bpres', categoryKey: 'management', year: '2024' },
+    { key: 'autodemolizioni', categoryKey: 'crm', year: '2024' },
+    { key: 'sevenLakes', categoryKey: 'website', year: '2024' },
+    { key: 'saluteDomicilio', categoryKey: 'website', year: '2024' },
+    { key: 'crmTask', categoryKey: 'management', year: '2024' },
+    { key: 'myPlace', categoryKey: 'website', year: '2024' },
+    { key: 'marazzato', categoryKey: 'website', year: '2024' },
+    { key: 'villaKatia', categoryKey: 'marketing', year: '2024' },
+    { key: 'quercia', categoryKey: 'marketing', year: '2024' },
+    { key: 'gramsci', categoryKey: 'marketing', year: '2024' },
+    { key: 'benissimo', categoryKey: 'marketing', year: '2024' },
+    { key: 'anziani', categoryKey: 'marketing', year: '2024' },
+  ]), []);
 
-  // Group projects by category for modern view
-  const modernCategories = ['Gestionale', 'Sito Web', 'Marketing', 'CRM'];
-  const allProjectCategories = ['Tutti', ...modernCategories];
-  const groupedModernProjects = modernCategories.map(cat => ({
-    name: cat,
-    projects: projects.filter(p => p.category === cat)
-  })).filter(g => g.projects.length > 0);
+  const projects = useMemo(() => projectMeta.map(({ key, categoryKey, year }) => {
+    const rawTags = t(`projects.items.${key}.tags`);
+    return {
+      key,
+      n: t(`projects.items.${key}.name`),
+      desc: t(`projects.items.${key}.desc`),
+      tags: Array.isArray(rawTags) ? rawTags : [],
+      categoryKey,
+      year,
+      images: [],
+    };
+  }), [projectMeta, t]);
 
-  const handleCategoryChange = (cat) => {
-    if (cat === selectedCategory) return;
-    const prevIndex = allProjectCategories.indexOf(selectedCategory);
-    const nextIndex = allProjectCategories.indexOf(cat);
-    const prevIsCompact = selectedCategory === 'Tutti';
-    const nextIsCompact = cat === 'Tutti';
+  // Group projects by category for modern view. Use category KEYS as state to avoid breaking on locale change.
+  const categoryKeys = ['management', 'website', 'marketing', 'crm'];
+  const allCategoryKeys = ['all', ...categoryKeys];
+
+  const getCategoryDisplayName = (key) => t(`projects.categories.${key}`);
+
+  const handleCategoryChange = (catKey) => {
+    if (catKey === selectedCategoryKey) return;
+    const prevIndex = allCategoryKeys.indexOf(selectedCategoryKey);
+    const nextIndex = allCategoryKeys.indexOf(catKey);
+    const prevIsCompact = selectedCategoryKey === 'all';
+    const nextIsCompact = catKey === 'all';
 
     setCategoryTransitionType(prevIsCompact !== nextIsCompact ? 'morph' : 'swap');
     setCategoryDirection(nextIndex >= prevIndex ? 1 : -1);
-    setSelectedCategory(cat);
+    setSelectedCategoryKey(catKey);
   };
 
-  const isCompactCategory = selectedCategory === 'Tutti';
+  const isCompactCategory = selectedCategoryKey === 'all';
   const visibleProjects = useMemo(() => {
-    if (isCompactCategory) return groupedModernProjects.flatMap(g => g.projects);
-    return groupedModernProjects.find(g => g.name === selectedCategory)?.projects || [];
-  }, [groupedModernProjects, isCompactCategory, selectedCategory]);
+    if (isCompactCategory) return projects;
+    return projects.filter(p => p.categoryKey === selectedCategoryKey);
+  }, [projects, isCompactCategory, selectedCategoryKey]);
 
   const galleryGridVariants = {
     initial: (dir) => ({
@@ -827,18 +735,18 @@ export default function ModernSite({ onSwitchToTerminal }) {
     }),
   };
 
-  const footerServiceLinks = [
-    { label: 'Siti Web', href: '#servizi' },
-    { label: 'Marketing', href: '#servizi' },
-    { label: 'Grafica', href: '#servizi' },
-    { label: 'Video', href: '#servizi' },
-  ];
+  const footerServiceLinks = useMemo(() => ([
+    { label: t('footer.links.web'), href: '#servizi' },
+    { label: t('footer.links.marketing'), href: '#servizi' },
+    { label: t('footer.links.grafica'), href: '#servizi' },
+    { label: t('footer.links.video'), href: '#servizi' },
+  ]), [t]);
 
-  const footerCompanyLinks = [
-    { label: 'Come lavoriamo', href: '#come-lavoriamo' },
-    { label: 'Contatti', href: '#contatti' },
-    { label: 'Servizi e Prezzi', href: '#servizi' },
-  ];
+  const footerCompanyLinks = useMemo(() => ([
+    { label: t('footer.links.howWeWork'), href: '#come-lavoriamo' },
+    { label: t('footer.links.contacts'), href: '#contatti' },
+    { label: t('footer.links.pricing'), href: '#servizi' },
+  ]), [t]);
 
   // Contact form state
   const initialFormData = {
@@ -858,7 +766,15 @@ export default function ModernSite({ onSwitchToTerminal }) {
   const [formDirection, setFormDirection] = useState(1);
   const stackLayers = [1, 2, 3];
 
-  const serviziOptions = ['Siti Web', 'Marketing', 'Foto & Video', 'Grafica & Brand', 'Software su Misura', 'Case Famiglia', 'Altro'];
+  const serviziOptions = [
+    t('contact.form.step2.services.siti'),
+    t('contact.form.step2.services.marketing'),
+    t('contact.form.step2.services.foto'),
+    t('contact.form.step2.services.grafica'),
+    t('contact.form.step2.services.software'),
+    t('contact.form.step2.services.casa'),
+    t('contact.form.step2.services.altro'),
+  ];
 
   const handleInputChange = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
 
@@ -919,18 +835,18 @@ export default function ModernSite({ onSwitchToTerminal }) {
 
   const buildContactMessage = () => {
     const lines = [
-      'Nuova richiesta commerciale',
+      t('contactMessage.header'),
       '',
-      'DATI CONTATTO',
-      `Nome: ${formData.nome.trim()}`,
-      `Attivita/Azienda: ${formData.azienda.trim() || 'Non specificata'}`,
-      `Email: ${normalizedEmail}`,
-      `Cellulare: ${fullPhoneNumber}`,
+      t('contactMessage.contactSection'),
+      `${t('contactMessage.nameLabel')}: ${formData.nome.trim()}`,
+      `${t('contactMessage.companyLabel')}: ${formData.azienda.trim() || t('contactMessage.companyNotSpecified')}`,
+      `${t('contactMessage.emailLabel')}: ${normalizedEmail}`,
+      `${t('contactMessage.phoneLabel')}: ${fullPhoneNumber}`,
       '',
-      'RICHIESTA',
-      `Servizio: ${formData.servizio}`,
+      t('contactMessage.requestSection'),
+      `${t('contactMessage.serviceLabel')}: ${formData.servizio}`,
       '',
-      'DESCRIZIONE',
+      t('contactMessage.descriptionSection'),
       formData.descrizione.trim(),
     ];
 
@@ -946,7 +862,9 @@ export default function ModernSite({ onSwitchToTerminal }) {
   };
 
   const sendViaEmail = () => {
-    const subject = encodeURIComponent(`Richiesta preventivo - ${formData.servizio} - ${formData.nome.trim()}`);
+    const subject = encodeURIComponent(
+      t('contactMessage.subject', { service: formData.servizio, name: formData.nome.trim() })
+    );
     const body = encodeURIComponent(buildContactMessage());
     window.open(`mailto:info@backsoftware.it?subject=${subject}&body=${body}`, '_blank', 'noopener,noreferrer');
   };
@@ -964,7 +882,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
           <motion.button onClick={handleCloseService}
             className="clay-btn px-6 py-3 mb-6 text-sm font-bold !rounded-xl text-[#3d3828] flex items-center gap-2"
             whileHover={{ x: -5 }} whileTap={{ scale: 0.95 }}>
-            ← Torna {isProject ? 'ai progetti' : 'ai servizi'}
+            {isProject ? t('serviceModal.backToProjects') : t('serviceModal.backToServices')}
           </motion.button>
           
           <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 200 }}
@@ -1042,7 +960,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
               {/* Packages - Only for services */}
               {!isProject && selectedService.packages && (
                 <div className="mb-6">
-                  <h3 className="text-xl font-bold text-[#2d2818] mb-4 px-2">Scegli il pacchetto:</h3>
+                  <h3 className="text-xl font-bold text-[#2d2818] mb-4 px-2">{t('serviceModal.choosePackage')}</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {selectedService.packages.map((pkg, idx) => (
                       <motion.div
@@ -1053,7 +971,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
                         <h4 className="text-lg font-black text-[#2d2818] mb-2 group-hover:text-[#7c6f5b] transition-colors">{pkg.name}</h4>
                         <p className="text-sm text-[#6a6050] leading-relaxed">{pkg.desc}</p>
                         <div className="mt-4 text-xs font-bold text-[#7c6f5b] opacity-0 group-hover:opacity-100 transition-opacity">
-                          Richiedi preventivo →
+                          {t('serviceModal.requestQuote')}
                         </div>
                       </motion.div>
                     ))}
@@ -1064,11 +982,11 @@ export default function ModernSite({ onSwitchToTerminal }) {
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 px-1 sm:px-2 mt-4">
                 <button onClick={() => { handleCloseService(); setShowContactForm(true); setFormData(prev => ({ ...prev, servizio: selectedService.title })); }}
                   className="clay-btn w-full sm:w-auto px-6 py-3.5 text-[15px] sm:text-base font-bold !rounded-2xl text-[#3d3828] bg-[#fdfcf9] hover:scale-105 transition-transform flex items-center justify-center gap-2">
-                  {isProject ? 'Richiedi progetto simile' : 'Richiedi info'} <span>→</span>
+                  {isProject ? t('serviceModal.similarProject') : t('serviceModal.requestInfo')} <span>→</span>
                 </button>
                 <button onClick={handleCloseService}
                   className="clay-btn w-full sm:w-auto px-6 py-3.5 text-[15px] sm:text-base font-bold !rounded-2xl text-[#6a6050] flex items-center justify-center">
-                  {isProject ? 'Altri progetti' : 'Altri servizi'}
+                  {isProject ? t('serviceModal.otherProjects') : t('serviceModal.otherServices')}
                 </button>
               </div>
             </div>
@@ -1089,7 +1007,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
           <motion.button onClick={() => { setShowContactForm(false); setFormStep(1); setFormDirection(1); setFormData({ ...initialFormData }); }}
             className="clay-btn px-6 py-3 mb-8 text-sm font-bold !rounded-xl text-[#3d3828] flex items-center gap-2"
             whileHover={{ x: -5 }} whileTap={{ scale: 0.95 }}>
-            ← Torna alla home
+            {t('serviceModal.backToHome')}
           </motion.button>
 
           <div className="relative pb-12 sm:pb-14 [perspective:1400px]">
@@ -1154,8 +1072,8 @@ export default function ModernSite({ onSwitchToTerminal }) {
                 className="pointer-events-none absolute top-0 h-full w-24 blur-xl"
                 style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.30) 0%, rgba(255,255,255,0) 100%)' }}
               />
-            <h2 className="text-3xl sm:text-4xl font-black text-[#2d2818] mb-1 tracking-tight">Scrivici</h2>
-            <p className="text-[#6a6050] mb-8 text-sm">Ti rispondiamo entro 24 ore.</p>
+            <h2 className="text-3xl sm:text-4xl font-black text-[#2d2818] mb-1 tracking-tight">{t('contact.form.title')}</h2>
+            <p className="text-[#6a6050] mb-8 text-sm">{t('contact.form.subtitle')}</p>
 
             {/* Progress */}
             <div className="flex gap-2 mb-8">
@@ -1182,22 +1100,22 @@ export default function ModernSite({ onSwitchToTerminal }) {
                 animate="center"
                 exit="exit"
                 className="space-y-4">
-                <h3 className="text-xl font-black text-[#2d2818]">I tuoi dati</h3>
-                <input type="text" placeholder="Nome" value={formData.nome} onChange={(e) => handleInputChange('nome', e.target.value)}
+                <h3 className="text-xl font-black text-[#2d2818]">{t('contact.form.step1.title')}</h3>
+                <input type="text" placeholder={t('contact.form.step1.name')} value={formData.nome} onChange={(e) => handleInputChange('nome', e.target.value)}
                   className="w-full p-4 rounded-2xl border-2 border-[#d4cfc5] bg-[#fdfcf9] focus:border-[#7c6f5b] focus:outline-none focus:bg-[#f8f6f2] transition-colors text-[#2d2818]" />
-                <input type="text" placeholder="Nome attivita/azienda (facoltativo)" value={formData.azienda} onChange={(e) => handleInputChange('azienda', e.target.value)}
+                <input type="text" placeholder={t('contact.form.step1.company')} value={formData.azienda} onChange={(e) => handleInputChange('azienda', e.target.value)}
                   className="w-full p-4 rounded-2xl border-2 border-[#d4cfc5] bg-[#fdfcf9] focus:border-[#7c6f5b] focus:outline-none focus:bg-[#f8f6f2] transition-colors text-[#2d2818]" />
-                <input type="email" placeholder="Email" value={formData.email} onChange={(e) => handleInputChange('email', e.target.value)}
+                <input type="email" placeholder={t('contact.form.step1.email')} value={formData.email} onChange={(e) => handleInputChange('email', e.target.value)}
                   className="w-full p-4 rounded-2xl border-2 border-[#d4cfc5] bg-[#fdfcf9] focus:border-[#7c6f5b] focus:outline-none focus:bg-[#f8f6f2] transition-colors text-[#2d2818]" />
 
                 {!isEmailValid && formData.email.length > 0 && (
-                  <p className="text-xs font-semibold text-[#b94242]">Inserisci un indirizzo email valido (es. nome@azienda.it).</p>
+                  <p className="text-xs font-semibold text-[#b94242]">{t('contact.form.step1.emailError')}</p>
                 )}
 
                 <div className="grid grid-cols-3 gap-3">
                   <input
                     type="text"
-                    placeholder="+39"
+                    placeholder={t('contact.form.step1.prefix')}
                     value={formData.prefissoTelefono}
                     onChange={(e) => handleInputChange('prefissoTelefono', e.target.value)}
                     className="p-4 rounded-2xl border-2 border-[#d4cfc5] bg-[#fdfcf9] focus:border-[#7c6f5b] focus:outline-none focus:bg-[#f8f6f2] transition-colors text-[#2d2818]"
@@ -1205,7 +1123,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
                   <input
                     type="tel"
                     inputMode="numeric"
-                    placeholder="Cellulare"
+                    placeholder={t('contact.form.step1.phone')}
                     value={formData.telefono}
                     onChange={(e) => handleInputChange('telefono', e.target.value.replace(/[^\d\s]/g, ''))}
                     className="col-span-2 p-4 rounded-2xl border-2 border-[#d4cfc5] bg-[#fdfcf9] focus:border-[#7c6f5b] focus:outline-none focus:bg-[#f8f6f2] transition-colors text-[#2d2818]"
@@ -1213,12 +1131,12 @@ export default function ModernSite({ onSwitchToTerminal }) {
                 </div>
 
                 {!isPhonePrefixValid && formData.prefissoTelefono.length > 0 && (
-                  <p className="text-xs font-semibold text-[#b94242]">Prefisso non valido. Usa il formato internazionale, ad esempio +39.</p>
+                  <p className="text-xs font-semibold text-[#b94242]">{t('contact.form.step1.prefixError')}</p>
                 )}
                 {!isPhoneValid && formData.telefono.length > 0 && (
-                  <p className="text-xs font-semibold text-[#b94242]">Numero non valido. Inserisci da 6 a 14 cifre.</p>
+                  <p className="text-xs font-semibold text-[#b94242]">{t('contact.form.step1.phoneError')}</p>
                 )}
-                <p className="text-xs text-[#8a856f]">Prefisso paese e cellulare sono richiesti.</p>
+                <p className="text-xs text-[#8a856f]">{t('contact.form.step1.phoneRequired')}</p>
               </motion.div>
             )}
 
@@ -1232,7 +1150,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
                 animate="center"
                 exit="exit"
                 className="space-y-4">
-                <h3 className="text-xl font-black text-[#2d2818]">Cosa ti serve?</h3>
+                <h3 className="text-xl font-black text-[#2d2818]">{t('contact.form.step2.title')}</h3>
                 <div className="grid grid-cols-2 gap-3">
                   {serviziOptions.map(s => (
                     <button key={s} onClick={() => handleInputChange('servizio', s)}
@@ -1254,14 +1172,14 @@ export default function ModernSite({ onSwitchToTerminal }) {
                 animate="center"
                 exit="exit"
                 className="space-y-4">
-                <h3 className="text-xl font-black text-[#2d2818]">Raccontaci</h3>
+                <h3 className="text-xl font-black text-[#2d2818]">{t('contact.form.step3.title')}</h3>
                 <div className="relative">
                   <textarea
                     value={formData.descrizione}
                     onChange={(e) => handleInputChange('descrizione', e.target.value)}
                     className="w-full p-4 rounded-2xl border-2 border-[#d4cfc5] bg-[#fdfcf9] focus:border-[#7c6f5b] focus:outline-none focus:bg-[#f8f6f2] transition-colors min-h-[120px] resize-none text-[#2d2818]" />
                   {!formData.descrizione && (
-                    <ModernTypewriter servizio={formData.servizio} />
+                    <ModernTypewriter servizio={formData.servizio} t={t} />
                   )}
                 </div>
               </motion.div>
@@ -1277,23 +1195,23 @@ export default function ModernSite({ onSwitchToTerminal }) {
                 animate="center"
                 exit="exit"
                 className="space-y-5">
-                <h3 className="text-xl font-black text-[#2d2818]">Conferma e invia richiesta</h3>
-                <p className="text-sm text-[#6a6050]">Ultimo passaggio: scegli il canale di invio. Precompiliamo il messaggio in modo ordinato e professionale.</p>
+                <h3 className="text-xl font-black text-[#2d2818]">{t('contact.form.step4.title')}</h3>
+                <p className="text-sm text-[#6a6050]">{t('contact.form.step4.subtitle')}</p>
 
                 <div className="p-5 sm:p-6 rounded-3xl bg-[linear-gradient(145deg,#fffdf9_0%,#f8f4ec_100%)] border-2 border-[#d4cfc5] space-y-3 text-sm">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="font-bold text-[#2d2818]">Scheda contatto</p>
-                    <span className="text-[11px] font-black tracking-wide px-3 py-1 rounded-full bg-[#e9e3d7] text-[#5a5041]">PRONTA ALL'INVIO</span>
+                    <p className="font-bold text-[#2d2818]">{t('contact.form.step4.contactCard')}</p>
+                    <span className="text-[11px] font-black tracking-wide px-3 py-1 rounded-full bg-[#e9e3d7] text-[#5a5041]">{t('contact.form.step4.ready')}</span>
                   </div>
                   <div className="grid sm:grid-cols-2 gap-2.5">
-                    <p className="rounded-xl bg-[#fdfcf9] px-3 py-2 border border-[#e8e2d6]"><span className="font-bold text-[#8a856f]">Nome:</span> {formData.nome}</p>
-                    <p className="rounded-xl bg-[#fdfcf9] px-3 py-2 border border-[#e8e2d6]"><span className="font-bold text-[#8a856f]">Azienda:</span> {formData.azienda || 'Non specificata'}</p>
-                    <p className="rounded-xl bg-[#fdfcf9] px-3 py-2 border border-[#e8e2d6]"><span className="font-bold text-[#8a856f]">Email:</span> {normalizedEmail}</p>
-                    <p className="rounded-xl bg-[#fdfcf9] px-3 py-2 border border-[#e8e2d6]"><span className="font-bold text-[#8a856f]">Cellulare:</span> {fullPhoneNumber}</p>
+                    <p className="rounded-xl bg-[#fdfcf9] px-3 py-2 border border-[#e8e2d6]"><span className="font-bold text-[#8a856f]">{t('contact.form.step4.nameLabel')}</span> {formData.nome}</p>
+                    <p className="rounded-xl bg-[#fdfcf9] px-3 py-2 border border-[#e8e2d6]"><span className="font-bold text-[#8a856f]">{t('contact.form.step4.companyLabel')}</span> {formData.azienda || t('contact.form.step4.notSpecified')}</p>
+                    <p className="rounded-xl bg-[#fdfcf9] px-3 py-2 border border-[#e8e2d6]"><span className="font-bold text-[#8a856f]">{t('contact.form.step4.emailLabel')}</span> {normalizedEmail}</p>
+                    <p className="rounded-xl bg-[#fdfcf9] px-3 py-2 border border-[#e8e2d6]"><span className="font-bold text-[#8a856f]">{t('contact.form.step4.phoneLabel')}</span> {fullPhoneNumber}</p>
                   </div>
-                  <p className="rounded-xl bg-[#fdfcf9] px-3 py-2 border border-[#e8e2d6]"><span className="font-bold text-[#8a856f]">Servizio:</span> {formData.servizio}</p>
+                  <p className="rounded-xl bg-[#fdfcf9] px-3 py-2 border border-[#e8e2d6]"><span className="font-bold text-[#8a856f]">{t('contact.form.step4.serviceLabel')}</span> {formData.servizio}</p>
                   <div className="rounded-xl bg-[#fdfcf9] px-3 py-3 border border-[#e8e2d6]">
-                    <p className="font-bold text-[#8a856f] mb-1">Descrizione:</p>
+                    <p className="font-bold text-[#8a856f] mb-1">{t('contact.form.step4.descriptionLabel')}</p>
                     <p className="text-[#6a6050] whitespace-pre-wrap">{formData.descrizione}</p>
                   </div>
                 </div>
@@ -1301,11 +1219,11 @@ export default function ModernSite({ onSwitchToTerminal }) {
                 <div className="grid sm:grid-cols-2 gap-3">
                   <button onClick={sendViaWhatsApp}
                     className="w-full p-4 rounded-2xl text-white font-bold bg-[linear-gradient(135deg,#1fbf62_0%,#128c7e_100%)] shadow-[0_10px_24px_rgba(18,140,126,0.25)] hover:translate-y-[-1px] hover:shadow-[0_14px_28px_rgba(18,140,126,0.35)] transition-all">
-                    Invia su WhatsApp
+                    {t('contact.form.step4.sendWhatsApp')}
                   </button>
                   <button onClick={sendViaEmail}
                     className="w-full p-4 rounded-2xl text-white font-bold bg-[linear-gradient(135deg,#4a4234_0%,#2f2a1d_100%)] shadow-[0_10px_24px_rgba(47,42,29,0.25)] hover:translate-y-[-1px] hover:shadow-[0_14px_28px_rgba(47,42,29,0.35)] transition-all">
-                    Invia via Email
+                    {t('contact.form.step4.sendEmail')}
                   </button>
                 </div>
               </motion.div>
@@ -1317,12 +1235,12 @@ export default function ModernSite({ onSwitchToTerminal }) {
               <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-4 mt-8 pt-6 border-t border-[#e4dfd4]">
                 <button onClick={goToPrevStep}
                   className="clay-btn w-full sm:w-auto px-6 py-3 sm:py-4 font-bold text-[#6a6050]">
-                  ← Indietro
+                  {t('contact.form.back')}
                 </button>
                 <button onClick={goToNextStep}
                   disabled={(formStep === 1 && !isStep1Valid) || (formStep === 2 && !isStep2Valid) || (formStep === 3 && !isStep3Valid)}
                   className="flex-1 w-full clay-btn px-6 py-3 sm:py-4 font-bold !rounded-2xl text-[#3d3828] bg-[#fdfcf9] disabled:opacity-30 disabled:cursor-not-allowed hover:scale-[1.02] transition-transform">
-                  {formStep === 3 ? 'Conferma invio →' : 'Avanti →'}
+                  {formStep === 3 ? t('contact.form.confirm') : t('contact.form.next')}
                 </button>
               </div>
             )}
@@ -1390,11 +1308,12 @@ export default function ModernSite({ onSwitchToTerminal }) {
 
             {/* Logo Mobile */}
             <div className="flex items-center min-w-0 relative z-10">
-              <span className="text-[13px] font-black tracking-tight text-[#2f2a1d] leading-none truncate">Back Software</span>
+              <span className="text-[13px] font-black tracking-tight text-[#2f2a1d] leading-none truncate">{t('nav.brandName')}</span>
             </div>
 
             {/* Actions Mobile */}
             <div className="flex items-center gap-1.5 shrink-0 relative z-10">
+              <LanguageSwitcher />
               <button 
                 onClick={onSwitchToTerminal}
                 className="w-7 h-7 flex items-center justify-center rounded-full text-[#746a57] bg-[#f8f4ec] border border-[#dbd3c6]/70 active:scale-95 transition-transform"
@@ -1408,7 +1327,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
                 intensity="strong"
                 className="font-bold !text-[10px] !px-2 !py-1"
               >
-                Scrivici
+                {t('nav.writeUs')}
               </ShinyButton>
             </div>
           </div>
@@ -1469,8 +1388,8 @@ export default function ModernSite({ onSwitchToTerminal }) {
           {/* Logo Desktop */}
           <div className="flex items-center gap-3 min-w-0 relative z-10">
             <div className="min-w-0">
-              <span className="text-[16px] lg:text-[20px] font-black tracking-tight text-[#2f2a1d] leading-none truncate">Back Software</span>
-              <p className="text-[9px] lg:text-[11px] font-bold text-[#807865] opacity-80 tracking-[0.14em] uppercase truncate">Studio digitale su misura</p>
+              <span className="text-[16px] lg:text-[20px] font-black tracking-tight text-[#2f2a1d] leading-none truncate">{t('nav.brandName')}</span>
+              <p className="text-[9px] lg:text-[11px] font-bold text-[#807865] opacity-80 tracking-[0.14em] uppercase truncate">{t('nav.brandTagline')}</p>
             </div>
           </div>
 
@@ -1478,9 +1397,9 @@ export default function ModernSite({ onSwitchToTerminal }) {
           <div className="flex items-center gap-3 shrink-0 relative z-10">
             <div className="hidden md:flex items-center gap-1 rounded-full bg-[#f8f4ec] p-1 border border-[#d8d0c1]">
               {[
-                { label: 'Servizi', href: '#servizi' },
-                { label: 'Progetti', href: '#progetti' },
-                { label: 'Contatti', href: '#contatti' }
+                { label: t('nav.services'), href: '#servizi' },
+                { label: t('nav.projects'), href: '#progetti' },
+                { label: t('nav.contact'), href: '#contatti' }
               ].map((item) => (
                 <a 
                   key={item.label}
@@ -1492,11 +1411,13 @@ export default function ModernSite({ onSwitchToTerminal }) {
               ))}
             </div>
 
+            <LanguageSwitcher />
+
             <button 
               onClick={onSwitchToTerminal}
               className="px-2 py-1 text-[11px] lg:text-xs font-bold rounded-full text-[#746a57] hover:text-[#3d3528] bg-[#f8f4ec] border border-[#dbd3c6] hover:bg-[#f1e9dc] transition-all min-w-[40px] min-h-[32px] flex items-center justify-center active:scale-95"
             >
-              <span>🎮 Giochi Arcade</span>
+              <span>🎮 {t('nav.arcade')}</span>
             </button>
             
             <ShinyButton
@@ -1506,7 +1427,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
               intensity="strong"
               className="font-bold !text-sm !px-5 !py-3"
             >
-              Scrivici
+              {t('nav.writeUs')}
             </ShinyButton>
           </div>
         </div>
@@ -1527,15 +1448,15 @@ export default function ModernSite({ onSwitchToTerminal }) {
                 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.35, ease: [0.22, 1, 0.36, 1] }}
                 className="text-[3rem] sm:text-5xl md:text-6xl lg:text-6xl xl:text-7xl font-black leading-[1.12] sm:leading-[1.05] mb-6 sm:mb-8 tracking-tight text-[#2d2818]">
-                <span className="block mb-2">Software che</span>
-                <span className="block mb-2">funziona.</span>
-                <span className="text-[#8a7f6a] drop-shadow-sm block">Fatto da <span className="transition-all duration-500 ease-out hover:text-[#c4b494] hover:drop-shadow-[0_0_30px_rgba(196,180,148,0.8),0_0_60px_rgba(196,180,148,0.4)] cursor-default">persone reali</span>.</span>
+                <span className="block mb-2">{t('hero.title1')}</span>
+                <span className="block mb-2">{t('hero.title2')}</span>
+                <span className="text-[#8a7f6a] drop-shadow-sm block">{t('hero.title3')}<span className="transition-all duration-500 ease-out hover:text-[#c4b494] hover:drop-shadow-[0_0_30px_rgba(196,180,148,0.8),0_0_60px_rgba(196,180,148,0.4)] cursor-default">{t('hero.title3Highlight')}</span>.</span>
               </motion.h1>
               <motion.p
                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
                 className="text-base sm:text-base lg:text-xl xl:text-2xl leading-relaxed max-w-xl font-medium mb-6 sm:mb-10 text-[#6a6050]">
-                Tecnologia che semplifica, non complica.<br className="hidden sm:block"/> Costruiamo il tuo progetto come se fosse il nostro.
+                {t('hero.subtitle')}
               </motion.p>
               <motion.div
                 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
@@ -1548,8 +1469,8 @@ export default function ModernSite({ onSwitchToTerminal }) {
                   intensity="strong"
                   className="!w-[92vw] max-w-[420px] sm:!w-auto !rounded-2xl lg:!rounded-2xl !text-lg sm:!text-base !px-8 sm:!px-6 !py-4 sm:!py-5"
                 >
-                  <span className="sm:hidden">Parliamone →</span>
-                  <span className="hidden sm:inline">Parlaci del tuo progetto →</span>
+                  <span className="sm:hidden">{t('hero.ctaMobile')}</span>
+                  <span className="hidden sm:inline">{t('hero.ctaDesktop')}</span>
                 </ShinyButton>
               </motion.div>
             </div>
@@ -1616,18 +1537,18 @@ export default function ModernSite({ onSwitchToTerminal }) {
         <div className="relative z-10 max-w-6xl mx-auto w-full">
           <motion.div variants={itemVariants} className="mb-6 sm:mb-12 space-y-3 sm:space-y-4">
             <motion.h2 {...sectionTitleReveal} className={`${sectionTitleClass} text-[#f5f2ec]`}>
-              Perché Back Software.
+              {t('whyUs.title')}
             </motion.h2>
             <motion.p {...sectionSubtitleReveal} className="text-sm sm:text-lg leading-relaxed max-w-2xl font-medium" style={{ color: '#a09a88' }}>
-              Non siamo solo sviluppatori. Siamo partner che capiscono il tuo business.
+              {t('whyUs.subtitle')}
             </motion.p>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8">
             {[
-              { num: '01', title: 'Ascolto', desc: 'Prima di scrivere codice, ascoltiamo. Capire il problema è più importante della soluzione tecnica.' },
-              { num: '02', title: 'Chiarezza', desc: 'Niente gergo incomprensibile. Ti spieghiamo tutto in modo semplice, senza sorprese.' },
-              { num: '03', title: 'Risultati', desc: 'Non vendiamo progetti, vendiamo soluzioni che funzionano davvero nel mondo reale.' }
+              { num: '01', title: t('whyUs.cards.01.title'), desc: t('whyUs.cards.01.desc') },
+              { num: '02', title: t('whyUs.cards.02.title'), desc: t('whyUs.cards.02.desc') },
+              { num: '03', title: t('whyUs.cards.03.title'), desc: t('whyUs.cards.03.desc') }
             ].map((item, i) => (
               <motion.div key={i} variants={itemVariants}
                 className="clay-card-dark p-4 sm:p-8 relative group transition-all duration-300 sm:hover:scale-[1.02] overflow-hidden">
@@ -1653,9 +1574,9 @@ export default function ModernSite({ onSwitchToTerminal }) {
       <motion.section id="servizi" variants={itemVariants} className="modern-snap-section flex flex-col justify-center px-4 sm:px-6 lg:px-10 pt-20 sm:pt-24 pb-12 sm:py-20">
         <div className="max-w-6xl mx-auto w-full">
           <motion.div variants={itemVariants} className="mb-6 sm:mb-8 space-y-2 sm:space-y-4">
-            <motion.h2 {...sectionTitleReveal} className={`${sectionTitleClass} text-[#2d2818]`}>Cosa facciamo.</motion.h2>
+            <motion.h2 {...sectionTitleReveal} className={`${sectionTitleClass} text-[#2d2818]`}>{t('services.title')}</motion.h2>
             <motion.p {...sectionSubtitleReveal} className="text-sm sm:text-lg text-[#6a6050] font-medium">
-              Soluzioni concrete per problemi reali.
+              {t('services.subtitle')}
             </motion.p>
           </motion.div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
@@ -1699,9 +1620,9 @@ export default function ModernSite({ onSwitchToTerminal }) {
         <div className="relative z-10 max-w-6xl mx-auto w-full shrink-0">
           <div className="mt-3 sm:mt-4 mb-8 sm:mb-10 lg:mb-12 flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5 sm:gap-6">
             <motion.div variants={itemVariants} className="space-y-4 lg:max-w-2xl">
-              <motion.h2 className={`${sectionTitleClass} text-[#f5f2ec]`}>Galleria Progetti.</motion.h2>
+              <motion.h2 className={`${sectionTitleClass} text-[#f5f2ec]`}>{t('projects.title')}</motion.h2>
               <motion.p className="text-base sm:text-lg font-medium" style={{ color: '#a09a88' }}>
-                {projects.length} Successi Reali
+                {t('projects.subtitle', { count: projects.length })}
               </motion.p>
             </motion.div>
 
@@ -1713,17 +1634,17 @@ export default function ModernSite({ onSwitchToTerminal }) {
                   border: '1px solid rgba(255, 248, 230, 0.08)',
                   borderTopColor: 'rgba(255, 248, 230, 0.12)',
                 }}>
-                  {allProjectCategories.map((cat) => (
+                  {allCategoryKeys.map((catKey) => (
                     <button
-                      key={cat}
-                      onClick={() => handleCategoryChange(cat)}
+                      key={catKey}
+                      onClick={() => handleCategoryChange(catKey)}
                       className={`relative flex-1 lg:flex-none px-2 sm:px-6 py-2 sm:py-3 text-[11px] sm:text-base font-bold transition-all duration-200 rounded-[1.25rem] sm:rounded-[1.5rem] whitespace-nowrap ${
-                        selectedCategory === cat
+                        selectedCategoryKey === catKey
                           ? 'text-[#f5f2ec]'
                           : 'text-[#8a7f6a] hover:text-[#c4bba8]'
                       }`}
                     >
-                      {selectedCategory === cat && (
+                      {selectedCategoryKey === catKey && (
                         <motion.div
                           layoutId="categoryPill"
                           className="absolute inset-0 rounded-[1.5rem]"
@@ -1736,7 +1657,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
                           transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                         />
                       )}
-                      <span className="relative z-10">{cat}</span>
+                      <span className="relative z-10">{getCategoryDisplayName(catKey)}</span>
                     </button>
                   ))}
                 </div>
@@ -1759,13 +1680,13 @@ export default function ModernSite({ onSwitchToTerminal }) {
               <AnimatePresence initial={false} custom={categoryDirection}>
                 {visibleProjects.map((p, i) => (
                   <ProjectCard
-                    key={`slot-${i}`}
+                    key={`slot-${p.key}`}
                     project={p}
                     index={i}
                     direction={categoryDirection}
                     enableMorph={true}
                     isCompact={isCompactCategory}
-                    onClick={() => setSelectedService({ title: p.n, icon: '', details: p.desc, source: 'progetti', images: p.images || [], category: p.category })}
+                    onClick={() => setSelectedService({ title: p.n, icon: '', details: p.desc, source: 'progetti', images: p.images || [], category: getCategoryDisplayName(p.categoryKey) })}
                   />
                 ))}
               </AnimatePresence>
@@ -1773,7 +1694,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
           ) : (
             <AnimatePresence mode="wait" initial={false} custom={categoryDirection}>
               <motion.div
-                key={selectedCategory}
+                key={selectedCategoryKey}
                 variants={galleryGridVariants}
                 custom={categoryDirection}
                 initial="initial"
@@ -1783,13 +1704,13 @@ export default function ModernSite({ onSwitchToTerminal }) {
               >
                 {visibleProjects.map((p, i) => (
                   <ProjectCard
-                    key={`${selectedCategory}-${p.n}`}
+                    key={`${selectedCategoryKey}-${p.key}`}
                     project={p}
                     index={i}
                     direction={categoryDirection}
                     enableMorph={false}
                     isCompact={false}
-                    onClick={() => setSelectedService({ title: p.n, icon: '', details: p.desc, source: 'progetti', images: p.images || [], category: p.category })}
+                    onClick={() => setSelectedService({ title: p.n, icon: '', details: p.desc, source: 'progetti', images: p.images || [], category: getCategoryDisplayName(p.categoryKey) })}
                   />
                 ))}
               </motion.div>
@@ -1807,9 +1728,9 @@ export default function ModernSite({ onSwitchToTerminal }) {
           transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
         >
           <motion.div variants={itemVariants} className="mb-8 text-center space-y-4">
-            <motion.h2 {...sectionTitleReveal} className={`${sectionTitleClass} text-[#2d2818]`}>Parliamo del tuo futuro.</motion.h2>
+            <motion.h2 {...sectionTitleReveal} className={`${sectionTitleClass} text-[#2d2818]`}>{t('contact.title')}</motion.h2>
             <motion.p {...sectionSubtitleReveal} className="text-base sm:text-lg text-[#6a6050] font-medium max-w-2xl mx-auto">
-              Parlaci del tuo progetto. Prima analizziamo, poi ti diciamo cosa serve davvero.
+              {t('contact.subtitle')}
             </motion.p>
           </motion.div>
           <div className="clay-card p-6 sm:p-12 lg:p-20 text-center relative overflow-hidden bg-gradient-to-br from-[#f8f6f2] to-[#eeeae0] border-2 border-[#d4cfc5]/40">
@@ -1821,13 +1742,13 @@ export default function ModernSite({ onSwitchToTerminal }) {
               size="lg"
               className="font-black"
             >
-              Compila il form
+              {t('contact.formCta')}
             </ShinyButton>
             <a href="mailto:info@backsoftware.it" className="clay-btn px-6 sm:px-8 py-4 sm:py-5 text-base sm:text-lg font-bold !rounded-2xl text-[#6a6050] hover:text-[#3d3828] transition-colors flex items-center gap-2 sm:gap-3">
-              <span className="text-xl sm:text-2xl">✉</span> E-mail
+              <span className="text-xl sm:text-2xl">✉</span> {t('contact.email')}
             </a>
             <a href="tel:+393513052627" className="group flex flex-col items-start gap-1">
-              <span className="text-xs sm:text-sm font-black text-[#8a856f] uppercase tracking-widest opacity-60">O chiamaci:</span>
+              <span className="text-xs sm:text-sm font-black text-[#8a856f] uppercase tracking-widest opacity-60">{t('contact.callUs')}</span>
               <span className="text-base sm:text-2xl font-black text-[#3d3828] border-b-2 border-[#7c6f5b]/20 group-hover:border-[#7c6f5b] transition-colors">+39 351 305 2627</span>
             </a>
           </div>
@@ -1902,6 +1823,17 @@ export default function ModernSite({ onSwitchToTerminal }) {
                 background: 'linear-gradient(180deg, transparent 0%, hsl(calc(var(--footer-stroke-h) + 5) var(--footer-stroke-s) 74% / 0.5) var(--footer-stroke-y), transparent 100%)',
               }}
             />
+            {/* Close button */}
+            <button
+              onClick={() => setShowFooter(false)}
+              aria-label={t('footer.close')}
+              className="absolute top-3 right-3 sm:top-5 sm:right-5 z-10 w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-[#6a6050] hover:text-[#3d3828] hover:bg-[#e8e2d8]/60 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="sm:w-[22px] sm:h-[22px]">
+                <path d="M18 6 6 18" />
+                <path d="m6 6 12 12" />
+              </svg>
+            </button>
             <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-5 sm:gap-8 lg:gap-14">
               <div className="flex flex-col sm:flex-row lg:flex-col items-start gap-3 sm:gap-4">
                 <div className="relative w-24 h-24 sm:w-32 sm:h-32 lg:w-40 lg:h-40 shrink-0">
@@ -1928,14 +1860,14 @@ export default function ModernSite({ onSwitchToTerminal }) {
                 </div>
                 <div className="sm:flex-1 lg:flex-none">
                   <p className="text-xs sm:text-sm text-[#6a6050] leading-relaxed">
-                    Progettiamo e sviluppiamo soluzioni digitali con obiettivi chiari, tempi definiti e supporto continuo.
+                    {t('footer.description')}
                   </p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-5 sm:gap-6 lg:gap-8">
                 <div>
-                  <h5 className="text-[11px] sm:text-xs font-black uppercase tracking-[0.18em] sm:tracking-[0.2em] text-[#8a7f6a] mb-2 sm:mb-3">Servizi</h5>
+                  <h5 className="text-[11px] sm:text-xs font-black uppercase tracking-[0.18em] sm:tracking-[0.2em] text-[#8a7f6a] mb-2 sm:mb-3">{t('footer.services')}</h5>
                   <div className="space-y-1 sm:space-y-2">
                     {footerServiceLinks.map((link) => (
                       <a
@@ -1950,7 +1882,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
                 </div>
 
                 <div>
-                  <h5 className="text-[11px] sm:text-xs font-black uppercase tracking-[0.18em] sm:tracking-[0.2em] text-[#8a7f6a] mb-2 sm:mb-3">Azienda</h5>
+                  <h5 className="text-[11px] sm:text-xs font-black uppercase tracking-[0.18em] sm:tracking-[0.2em] text-[#8a7f6a] mb-2 sm:mb-3">{t('footer.company')}</h5>
                   <div className="space-y-1 sm:space-y-2">
                     {footerCompanyLinks.map((link) => (
                       <a
@@ -1965,34 +1897,34 @@ export default function ModernSite({ onSwitchToTerminal }) {
                 </div>
 
                 <div className="col-span-2 sm:col-span-1">
-                  <h5 className="text-[11px] sm:text-xs font-black uppercase tracking-[0.18em] sm:tracking-[0.2em] text-[#8a7f6a] mb-2 sm:mb-3">Contatti</h5>
+                  <h5 className="text-[11px] sm:text-xs font-black uppercase tracking-[0.18em] sm:tracking-[0.2em] text-[#8a7f6a] mb-2 sm:mb-3">{t('footer.contacts')}</h5>
                   <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm text-[#4b4336]">
                     <a href="mailto:info@backsoftware.it" className="block font-semibold hover:text-[#2d2818] transition-colors">
                       info@backsoftware.it
                     </a>
                     <a href="mailto:julian.rovera@pec.it" className="block font-semibold hover:text-[#2d2818] transition-colors truncate">
-                      PEC: julian.rovera@pec.it
+                      {t('footer.pec')} julian.rovera@pec.it
                     </a>
                     <a href="tel:+393513052627" className="block font-semibold hover:text-[#2d2818] transition-colors">
                       +39 351 305 2627
                     </a>
-                    <p className="font-medium text-[#7a705d]">Ivrea (TO)</p>
+                    <p className="font-medium text-[#7a705d]">{t('footer.address')}</p>
                   </div>
                 </div>
               </div>
             </div>
 
             <div className="mt-5 sm:mt-6 lg:mt-8 pt-4 sm:pt-5 border-t border-[#b8ad98]/30 flex flex-col sm:flex-row gap-2 sm:gap-3 sm:items-center sm:justify-between text-[10px] sm:text-xs text-[#7a705d]">
-              <p>© {new Date().getFullYear()} Back Software</p>
+              <p>{t('footer.copyright', { year: new Date().getFullYear() })}</p>
               <div className="flex flex-wrap gap-x-2 sm:gap-x-3 gap-y-1">
-                <span>P.IVA: IT13227980011</span>
+                <span>{t('footer.vat')}</span>
                 <span aria-hidden="true" className="hidden sm:inline">|</span>
-                <span className="hidden sm:inline">C.F.: RVRJLN05E26B455T</span>
+                <span className="hidden sm:inline">{t('footer.cf')}</span>
                 <span aria-hidden="true">|</span>
-                <span className="hidden sm:inline">Privacy Policy</span>
+                <span className="hidden sm:inline">{t('footer.privacy')}</span>
                 <span aria-hidden="true" className="hidden sm:inline">|</span>
                 <a href="https://www.backsoftware.it/cookies" target="_blank" rel="noreferrer" className="hover:text-[#5e5444] transition-colors">
-                  Cookie Policy
+                  {t('footer.cookies')}
                 </a>
               </div>
             </div>

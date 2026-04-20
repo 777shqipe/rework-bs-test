@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useI18n } from '../lib/i18n-context';
 import SnakeGame from './games/SnakeGame';
 import FlappyGame from './games/FlappyGame';
 import DinoGame from './games/DinoGame';
@@ -21,18 +22,18 @@ const APPS = {
   ARCADE: 'ARCADE',
 };
 
-const APP_TITLES = {
-  [APPS.ORACLE]: 'SFERA MAGICA',
-  [APPS.SLOT]: 'SLOT PREMI',
-  [APPS.EXCUSE]: 'SCUSE',
-  [APPS.ARCADE]: 'SALA GIOCHI',
+const APP_TITLE_KEYS = {
+  [APPS.ORACLE]: 'terminal.apps.oracle',
+  [APPS.SLOT]: 'terminal.apps.slot',
+  [APPS.EXCUSE]: 'terminal.apps.excuse',
+  [APPS.ARCADE]: 'terminal.apps.arcade',
 };
 
-const GAME_TITLES = {
-  [GAMES.SNAKE]: 'SNAKE',
-  [GAMES.FLAPPY]: 'FLAPPY',
-  [GAMES.DINO]: 'DINO RUN',
-  [GAMES.SPACE]: 'INVADERS',
+const GAME_TITLE_KEYS = {
+  [GAMES.SNAKE]: 'terminal.games.snake',
+  [GAMES.FLAPPY]: 'terminal.games.flappy',
+  [GAMES.DINO]: 'terminal.games.dino',
+  [GAMES.SPACE]: 'terminal.games.space',
 };
 
 /* ===========================================================
@@ -40,22 +41,19 @@ const GAME_TITLES = {
 =========================================================== */
 
 function OracleApp({ color }) {
+  const { t } = useI18n();
   const [val, setVal] = useState('');
   const [status, setStatus] = useState('idle'); // idle, loading1, loading2, result
   const [result, setResult] = useState('');
 
-  const answers = [
-    "I dati confermano: procedi. (Se ti serve una mano tecnica, sai dove trovarci).",
-    "Pessima idea. Ha le stesse probabilità di successo di un sito su Floppy Disk.",
-    "Decisamente sì. Qualsiasi cosa è meglio del Comic Sans nel 2026.",
-    "Non posso sbilanciarmi senza caffeina. Offri un caffè a Back Software.",
-    "Il CSS del tuo destino è corrotto. Richiedi una review UX urgente.",
-    "Le stelle dicono di sì, e Google Analytics pure."
-  ];
+  const answers = useMemo(() => {
+    const arr = t('terminal.oracle.answers');
+    return Array.isArray(arr) ? arr : [];
+  }, [t]);
 
   const onSubmit = (e) => {
     e.preventDefault();
-    if (!val.trim()) return;
+    if (!val.trim() || answers.length === 0) return;
     setStatus('loading1');
     setTimeout(() => setStatus('loading2'), 800);
     setTimeout(() => {
@@ -67,8 +65,8 @@ function OracleApp({ color }) {
   return (
     <div className="w-full h-full flex flex-col p-4 sm:p-6 justify-center">
       <div className="text-center mb-6">
-        <h2 className="text-xl sm:text-2xl font-bold mb-2">LA SFERA MAGICA DEL BUSINESS</h2>
-        <p className="text-xs sm:text-sm opacity-80">Digita un dubbio sul tuo lavoro e consulta l'Oracolo di Ivrea.</p>
+        <h2 className="text-xl sm:text-2xl font-bold mb-2">{t('terminal.oracle.title')}</h2>
+        <p className="text-xs sm:text-sm opacity-80">{t('terminal.oracle.subtitle')}</p>
       </div>
 
       {status === 'idle' && (
@@ -77,20 +75,20 @@ function OracleApp({ color }) {
             type="text" 
             value={val}
             onChange={e => setVal(e.target.value)}
-            placeholder="es: dovrei lanciare un e-commerce?"
+            placeholder={t('terminal.oracle.placeholder')}
             className="bg-transparent border-b-2 outline-none px-2 py-1 text-sm sm:text-base text-center placeholder:opacity-40 uppercase"
             style={{ borderColor: color, color: color }}
             autoFocus
           />
           <button type="submit" className="border-2 px-4 py-2 font-bold hover:bg-white/10 transition-colors" style={{ borderColor: color, color: color }}>
-            CHIEDI ALL'ORACOLO
+            {t('terminal.oracle.ask')}
           </button>
         </form>
       )}
 
       {status.startsWith('loading') && (
         <div className="text-center font-mono opacity-80 animate-pulse text-sm sm:text-base">
-          {status === 'loading1' ? '[Connessione agli astri digitali in corso...]' : '[Analisi dell\'algoritmo di Google...]'}
+          {status === 'loading1' ? t('terminal.oracle.loading1') : t('terminal.oracle.loading2')}
         </div>
       )}
 
@@ -100,7 +98,7 @@ function OracleApp({ color }) {
             {result}
           </div>
           <button onClick={() => { setVal(''); setStatus('idle'); }} className="text-sm opacity-70 hover:opacity-100 underline underline-offset-4">
-            ← FAI UN'ALTRA DOMANDA
+            {t('terminal.oracle.again')}
           </button>
         </div>
       )}
@@ -109,6 +107,7 @@ function OracleApp({ color }) {
 }
 
 function SlotApp({ color }) {
+  const { t } = useI18n();
   const [status, setStatus] = useState('idle'); // idle, spinning, result
   const [slots, setSlots] = useState(['?', '?', '?']);
   const [prize, setPrize] = useState('');
@@ -135,30 +134,30 @@ function SlotApp({ color }) {
     const roll = Math.random();
     if (roll > 0.85) {
       setSlots(['☕', '☕', '☕']);
-      setPrize("Hai vinto: Un Espresso Sospeso! ☕ Passa in agenzia a Ivrea per riscuoterlo.");
+      setPrize(t('terminal.slot.prizes.coffee'));
     } else if (roll > 0.70) {
       setSlots(['🐛', '🐛', '🐛']);
-      setPrize("Hai vinto: 3 Bug in produzione! 🎉 (Tranquillo, li risolviamo noi).");
+      setPrize(t('terminal.slot.prizes.bugs'));
     } else if (roll > 0.55) {
       setSlots(['🍕', '🍕', '🍕']);
-      setPrize("Hai vinto: Essere il primo a sdebitarti offrendo la pizza al nostro team!");
+      setPrize(t('terminal.slot.prizes.pizza'));
     } else if (roll > 0.40) {
       setSlots(['🤡', '🤡', '🤡']);
-      setPrize("Hai vinto: Un cliente che ti dice 'Sì ma mio cugino lo fa a meno'. Condoglianze.");
+      setPrize(t('terminal.slot.prizes.client'));
     } else if (roll > 0.25) {
       setSlots(['💻', '💻', '💻']);
-      setPrize("Hai vinto: L'immensa stima dei nerd di Back Software! (Fa curriculum).");
+      setPrize(t('terminal.slot.prizes.nerd'));
     } else {
       setSlots(['💩', '💀', '💣']);
-      setPrize("Hai vinto... assolutamente nulla! Ma ritenta, l'algoritmo oggi è clemente.");
+      setPrize(t('terminal.slot.prizes.nothing'));
     }
     setStatus('result');
   };
 
   return (
     <div className="w-full h-full flex flex-col items-center justify-center p-4">
-      <h2 className="text-xl sm:text-2xl font-bold mb-2 text-center">GANCIO DELLA FORTUNA</h2>
-      <p className="text-xs sm:text-sm opacity-80 mb-8 text-center max-w-xs">Estrai un premio dalla macchinetta virtuale di Back Software.</p>
+      <h2 className="text-xl sm:text-2xl font-bold mb-2 text-center">{t('terminal.slot.title')}</h2>
+      <p className="text-xs sm:text-sm opacity-80 mb-8 text-center max-w-xs">{t('terminal.slot.subtitle')}</p>
 
       <div className="flex gap-4 text-4xl sm:text-6xl mb-8 font-mono border-4 p-4 rounded-lg bg-black/50 tracking-widest" style={{ borderColor: color }}>
         <span>{slots[0]}</span>
@@ -168,7 +167,7 @@ function SlotApp({ color }) {
 
       {status === 'idle' && (
         <button onClick={spin} className="border-2 px-8 py-3 text-lg font-bold hover:bg-white/10 transition-colors animate-pulse" style={{ borderColor: color }}>
-          TIRA LA LEVA
+          {t('terminal.slot.spin')}
         </button>
       )}
 
@@ -176,7 +175,7 @@ function SlotApp({ color }) {
         <div className="text-center animate-bounce-in max-w-sm">
           <p className="font-bold text-sm sm:text-base mb-6 border border-dashed p-3">{prize}</p>
           <button onClick={() => setStatus('idle')} className="text-sm opacity-70 hover:opacity-100 underline underline-offset-4">
-            ← RIPROVA
+            {t('terminal.slot.tryAgain')}
           </button>
         </div>
       )}
@@ -185,25 +184,21 @@ function SlotApp({ color }) {
 }
 
 function ExcuseApp({ color }) {
+  const { t } = useI18n();
   const [excuse, setExcuse] = useState('');
   const [status, setStatus] = useState('idle'); // idle, generating, done
 
-  const excuses = [
-    "I DNS non si sono allineati con i meridiani terrestri, ci vorranno 24 ore.",
-    "Un brillamento solare ha resettato la cache del microservizio in Nord Europa.",
-    "Il server ha aderito allo sciopero dei mezzi, stiamo negoziando con la RAM.",
-    "C'è un memory leak causato da un gatto sulla tastiera del datacenter in Germania.",
-    "Si è rotto il tubo del flusso canalizzatore nel backend. Attendo il tecnico.",
-    "Deploy on Friday? La macchina del caffè ha preso il controllo dell'infrastruttura.",
-    "Il framework JavaScript ha deciso di riscriversi da solo per crisi d'identità.",
-    "C'è troppa latenza quantistica nel cavo router in corridoio."
-  ];
+  const excuses = useMemo(() => {
+    const arr = t('terminal.excuse.excuses');
+    return Array.isArray(arr) ? arr : [];
+  }, [t]);
 
   const generate = () => {
+    if (excuses.length === 0) return;
     setStatus('generating');
     setTimeout(() => {
       let rand;
-      do { rand = excuses[Math.floor(Math.random() * excuses.length)]; } while (rand === excuse);
+      do { rand = excuses[Math.floor(Math.random() * excuses.length)]; } while (rand === excuse && excuses.length > 1);
       setExcuse(rand);
       setStatus('done');
     }, 1500); // 1.5 seconds typing delay
@@ -211,14 +206,14 @@ function ExcuseApp({ color }) {
 
   return (
     <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center">
-      <h2 className="text-xl sm:text-2xl font-bold mb-2">GENERATORE DI ALIBI</h2>
+      <h2 className="text-xl sm:text-2xl font-bold mb-2">{t('terminal.excuse.title')}</h2>
       <p className="text-xs sm:text-sm opacity-80 mb-8 max-w-sm">
-        Devi giustificare un ritardo con il capo o un cliente? Ci pensiamo noi.
+        {t('terminal.excuse.subtitle')}
       </p>
 
       {status === 'generating' ? (
         <div className="text-center font-mono opacity-80 animate-pulse text-sm sm:text-base">
-          [Calcolo supercazzola tecnologicamente ineccepibile in corso...]
+          {t('terminal.excuse.loading')}
         </div>
       ) : excuse ? (
         <div className="max-w-md animate-bounce-in">
@@ -226,12 +221,12 @@ function ExcuseApp({ color }) {
             "{excuse}"
           </div>
           <button onClick={generate} className="border-2 px-6 py-2 font-bold hover:bg-white/10 transition-colors" style={{ borderColor: color }}>
-            GENERA UN'ALTRA SCUSA
+            {t('terminal.excuse.generateAnother')}
           </button>
         </div>
       ) : (
         <button onClick={generate} className="border-2 px-8 py-3 text-lg font-bold hover:bg-white/10 transition-colors" style={{ borderColor: color }}>
-          GENERA SCUSA
+          {t('terminal.excuse.generate')}
         </button>
       )}
     </div>
@@ -243,6 +238,7 @@ function ExcuseApp({ color }) {
    Contains Apps & Arcades
 =========================================================== */
 export default function TerminalExperience({ onSwitchToModern }) {
+  const { t } = useI18n();
   const [bootPhase, setBootPhase] = useState('boot');
   const [screenAnim, setScreenAnim] = useState('');
   const [terminalColor, setTerminalColor] = useState('amber');
@@ -309,7 +305,7 @@ export default function TerminalExperience({ onSwitchToModern }) {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                {GAME_TITLES[game]}
+                {t(GAME_TITLE_KEYS[game])}
               </motion.button>
             ))}
           </div>
@@ -332,9 +328,11 @@ export default function TerminalExperience({ onSwitchToModern }) {
       );
       default: return <OracleApp color={color} />;
     }
-  }, [currentApp, currentGame, terminalColor, COLOR_PROFILES, renderGame]);
+  }, [currentApp, currentGame, terminalColor, COLOR_PROFILES, renderGame, t]);
 
   const profile = COLOR_PROFILES[terminalColor];
+
+  const bootTitleHtml = useMemo(() => ({ __html: t('terminal.boot.title') }), [t]);
 
   return (
     <div className="w-full h-full overflow-hidden select-none flex items-center justify-center p-0 fixed inset-0 z-[9999]"
@@ -469,7 +467,7 @@ export default function TerminalExperience({ onSwitchToModern }) {
                           whileHover={{ scale: 1.08 }}
                           whileTap={{ scale: 0.95 }}
                         >
-                          {APP_TITLES[app]}
+                          {t(APP_TITLE_KEYS[app])}
                         </motion.button>
                       ))}
                     </div>
@@ -482,16 +480,15 @@ export default function TerminalExperience({ onSwitchToModern }) {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         className="text-lg sm:text-xl font-black tracking-widest animate-pulse text-center"
-                      >
-                        BACK OS v2.0<br/>TERMINAL EDITION
-                      </motion.div>
+                        dangerouslySetInnerHTML={bootTitleHtml}
+                      />
                       <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.2 }}
                         className="text-[10px] sm:text-xs mt-2 opacity-70"
                       >
-                        BOOTING SYSTEM...
+                        {t('terminal.boot.loading')}
                       </motion.div>
                     </div>
                   )}
@@ -590,8 +587,8 @@ export default function TerminalExperience({ onSwitchToModern }) {
                     whileTap={{ scale: 0.95 }}
                     style={{ fontFamily: 'system-ui, sans-serif' }}
                   >
-                    <span className="hidden xs:inline">Exit →</span>
-                    <span className="xs:hidden">Exit</span>
+                    <span className="hidden xs:inline">{t('terminal.arcade.exit')}</span>
+                    <span className="xs:hidden">{t('terminal.arcade.exit').replace(/[→\s]+$/, '')}</span>
                   </motion.button>
                 )}
                 {Object.entries(COLOR_PROFILES).map(([name, p]) => (
