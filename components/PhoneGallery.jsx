@@ -102,6 +102,9 @@ export default function PhoneGallery({
               alt={galleryImages[currentIndex].alt || `Slide ${currentIndex + 1}`}
               className="w-full h-full object-cover"
               draggable={false}
+              width={800}
+              height={600}
+              loading="lazy"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#2a2a2a] to-[#1a1a1a]">

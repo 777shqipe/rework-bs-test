@@ -6,6 +6,8 @@ import { useI18n } from '../lib/i18n-context';
 import { ShinyButton } from './ui/shiny-button';
 import PhoneGallery from './PhoneGallery';
 import LanguageSwitcher from './LanguageSwitcher';
+import { getServices } from '../data/services';
+import { projectMeta, buildProjects } from '../data/projects';
 
 /* ===========================================================
    MODERN TYPEWRITER — animated placeholder for modern form
@@ -125,9 +127,9 @@ function ProjectCard({ project, index, isCompact, onClick, direction, enableMorp
       <div className={`absolute opacity-[0.05] font-black tracking-tighter text-[#d4cabb] select-none ${isCompact ? 'top-0 right-0 p-2 sm:p-3 text-2xl sm:text-4xl' : 'top-1 right-1 sm:top-0 sm:right-0 p-2 sm:p-3 text-4xl sm:text-4xl'}`}>{project.year}</div>
 
       <div className={isCompact ? '' : 'flex justify-between items-start mb-3'}>
-        <h4 className={`font-black leading-tight text-[#ede8de] group-hover:text-[#f5f2ec] ${isCompact ? 'text-sm pr-8' : 'text-base sm:text-lg max-w-[80%]'}`}>
+        <h3 className={`font-black leading-tight text-[#ede8de] group-hover:text-[#f5f2ec] ${isCompact ? 'text-sm pr-8' : 'text-base sm:text-lg max-w-[80%]'}`}>
           {project.n}
-        </h4>
+        </h3>
         {!isCompact && <div className="w-8 h-8 flex items-center justify-center rounded-full text-sm clay-pill-dark text-[#b8ad98] group-hover:rotate-45 transition-transform">↗</div>}
       </div>
 
@@ -567,126 +569,12 @@ export default function ModernSite({ onSwitchToTerminal }) {
     }, 50);
   };
 
-  const services = useMemo(() => [
-    {
-      key: 'caseFamiglia',
-      icon: <IconCasaFamiglia />,
-      title: t('services.caseFamiglia.title'),
-      desc: t('services.caseFamiglia.desc'),
-      details: t('services.caseFamiglia.details'),
-      packages: [
-        { key: '6mesi', name: t('services.caseFamiglia.packages.6mesi.name'), desc: t('services.caseFamiglia.packages.6mesi.desc') },
-        { key: '3mesi', name: t('services.caseFamiglia.packages.3mesi.name'), desc: t('services.caseFamiglia.packages.3mesi.desc') },
-        { key: 'spot', name: t('services.caseFamiglia.packages.spot.name'), desc: t('services.caseFamiglia.packages.spot.desc') }
-      ],
-      span: 'md:col-span-2',
-      source: 'servizi'
-    },
-    {
-      key: 'sitiLanding',
-      icon: <IconSitiLanding />,
-      title: t('services.sitiLanding.title'),
-      source: 'servizi',
-      desc: t('services.sitiLanding.desc'),
-      details: t('services.sitiLanding.details'),
-      packages: [
-        { key: '5-10', name: t('services.sitiLanding.packages.5-10.name'), desc: t('services.sitiLanding.packages.5-10.desc') },
-        { key: 'landing', name: t('services.sitiLanding.packages.landing.name'), desc: t('services.sitiLanding.packages.landing.desc') }
-      ],
-      span: '',
-      source: 'servizi'
-    },
-    {
-      key: 'marketing',
-      icon: <IconMarketing />,
-      title: t('services.marketing.title'),
-      source: 'servizi',
-      desc: t('services.marketing.desc'),
-      details: t('services.marketing.details'),
-      packages: [
-        { key: 'analisi', name: t('services.marketing.packages.analisi.name'), desc: t('services.marketing.packages.analisi.desc') },
-        { key: 'meta', name: t('services.marketing.packages.meta.name'), desc: t('services.marketing.packages.meta.desc') },
-        { key: 'google', name: t('services.marketing.packages.google.name'), desc: t('services.marketing.packages.google.desc') }
-      ],
-      span: '',
-      source: 'servizi'
-    },
-    {
-      key: 'fotoVideo',
-      icon: <IconFotoVideo />,
-      title: t('services.fotoVideo.title'),
-      source: 'servizi',
-      desc: t('services.fotoVideo.desc'),
-      details: t('services.fotoVideo.details'),
-      packages: [
-        { key: 'foto', name: t('services.fotoVideo.packages.foto.name'), desc: t('services.fotoVideo.packages.foto.desc') },
-        { key: 'drone', name: t('services.fotoVideo.packages.drone.name'), desc: t('services.fotoVideo.packages.drone.desc') },
-        { key: 'staff', name: t('services.fotoVideo.packages.staff.name'), desc: t('services.fotoVideo.packages.staff.desc') }
-      ],
-      span: '',
-      source: 'servizi'
-    },
-    {
-      key: 'graficaCopy',
-      icon: <IconGraficaCopy />,
-      title: t('services.graficaCopy.title'),
-      source: 'servizi',
-      desc: t('services.graficaCopy.desc'),
-      details: t('services.graficaCopy.details'),
-      packages: [
-        { key: 'grafica', name: t('services.graficaCopy.packages.grafica.name'), desc: t('services.graficaCopy.packages.grafica.desc') },
-        { key: 'copy', name: t('services.graficaCopy.packages.copy.name'), desc: t('services.graficaCopy.packages.copy.desc') }
-      ],
-      span: '',
-      source: 'servizi'
-    },
-    {
-      key: 'software',
-      icon: <IconDigitali />,
-      title: t('services.software.title'),
-      source: 'servizi',
-      desc: t('services.software.desc'),
-      details: t('services.software.details'),
-      packages: [
-        { key: 'gestionali', name: t('services.software.packages.gestionali.name'), desc: t('services.software.packages.gestionali.desc') },
-        { key: 'app', name: t('services.software.packages.app.name'), desc: t('services.software.packages.app.desc') },
-        { key: 'api', name: t('services.software.packages.api.name'), desc: t('services.software.packages.api.desc') }
-      ],
-      span: 'md:col-span-2',
-      source: 'servizi'
-    },
-  ], [t]);
+  const services = useMemo(() => getServices(t), [t]);
 
   // Per-project static metadata (not translated). Localized name, desc, and tags come from the messages file.
-  const projectMeta = useMemo(() => ([
-    { key: 'cantina', categoryKey: 'management', year: '2025' },
-    { key: 'crmMagazzino', categoryKey: 'management', year: '2024' },
-    { key: 'bpres', categoryKey: 'management', year: '2024' },
-    { key: 'autodemolizioni', categoryKey: 'crm', year: '2024' },
-    { key: 'sevenLakes', categoryKey: 'website', year: '2024' },
-    { key: 'saluteDomicilio', categoryKey: 'website', year: '2024' },
-    { key: 'crmTask', categoryKey: 'management', year: '2024' },
-    { key: 'myPlace', categoryKey: 'website', year: '2024' },
-    { key: 'marazzato', categoryKey: 'website', year: '2024' },
-    { key: 'villaKatia', categoryKey: 'marketing', year: '2024' },
-    { key: 'quercia', categoryKey: 'marketing', year: '2024' },
-    { key: 'gramsci', categoryKey: 'marketing', year: '2024' },
-    { key: 'benissimo', categoryKey: 'marketing', year: '2024' },
-    { key: 'anziani', categoryKey: 'marketing', year: '2024' },
-  ]), []);
+  const projectMetaStatic = useMemo(() => projectMeta, []);
 
-  const projects = useMemo(() => projectMeta.map(({ key, categoryKey, year }) => {
-    const rawTags = t(`projects.items.${key}.tags`);
-    return {
-      key,
-      n: t(`projects.items.${key}.name`),
-      desc: t(`projects.items.${key}.desc`),
-      tags: Array.isArray(rawTags) ? rawTags : [],
-      categoryKey,
-      year,
-      images: [],
-    };
-  }), [projectMeta, t]);
+  const projects = useMemo(() => buildProjects(projectMetaStatic, t), [t]);
 
   // Group projects by category for modern view. Use category KEYS as state to avoid breaking on locale change.
   const categoryKeys = ['management', 'website', 'marketing', 'crm'];
@@ -756,12 +644,27 @@ export default function ModernSite({ onSwitchToTerminal }) {
     prefissoTelefono: '+39',
     telefono: '',
     servizio: '',
-    descrizione: ''
+    descrizione: '',
+    website: ''
   };
 
   const [formData, setFormData] = useState({
     ...initialFormData
   });
+
+  useEffect(() => {
+    try {
+      const draft = sessionStorage.getItem('contact_draft');
+      if (draft) setFormData(JSON.parse(draft));
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('contact_draft', JSON.stringify(formData));
+    } catch {}
+  }, [formData]);
+
   const [formStep, setFormStep] = useState(1);
   const [formDirection, setFormDirection] = useState(1);
   const stackLayers = [1, 2, 3];
@@ -858,10 +761,14 @@ export default function ModernSite({ onSwitchToTerminal }) {
   };
 
   const sendViaWhatsApp = () => {
+    if (formData.website) return;
+    window.dataLayer?.push({ event: 'lead_submit', channel: 'whatsapp' });
     window.open(`https://wa.me/393513052627?text=${generateWhatsAppMessage()}`, '_blank', 'noopener,noreferrer');
   };
 
   const sendViaEmail = () => {
+    if (formData.website) return;
+    window.dataLayer?.push({ event: 'lead_submit', channel: 'email' });
     const subject = encodeURIComponent(
       t('contactMessage.subject', { service: formData.servizio, name: formData.nome.trim() })
     );
@@ -1101,6 +1008,16 @@ export default function ModernSite({ onSwitchToTerminal }) {
                 exit="exit"
                 className="space-y-4">
                 <h3 className="text-xl font-black text-[#2d2818]">{t('contact.form.step1.title')}</h3>
+                <input
+                  type="text"
+                  name="website"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={formData.website || ''}
+                  onChange={(e) => handleInputChange('website', e.target.value)}
+                  className="absolute opacity-0 w-0 h-0 pointer-events-none"
+                  aria-hidden="true"
+                />
                 <input type="text" placeholder={t('contact.form.step1.name')} value={formData.nome} onChange={(e) => handleInputChange('nome', e.target.value)}
                   className="w-full p-4 rounded-2xl border-2 border-[#d4cfc5] bg-[#fdfcf9] focus:border-[#7c6f5b] focus:outline-none focus:bg-[#f8f6f2] transition-colors text-[#2d2818]" />
                 <input type="text" placeholder={t('contact.form.step1.company')} value={formData.azienda} onChange={(e) => handleInputChange('azienda', e.target.value)}
@@ -1318,7 +1235,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
                 onClick={onSwitchToTerminal}
                 className="w-7 h-7 flex items-center justify-center rounded-full text-[#746a57] bg-[#f8f4ec] border border-[#dbd3c6]/70 active:scale-95 transition-transform"
               >
-                <span className="text-[10px]">🎮</span>
+                <span className="text-[10px]" aria-label="Apri arcade retro">🎮</span>
               </button>
               <ShinyButton
                 href="#contatti"
@@ -1417,7 +1334,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
               onClick={onSwitchToTerminal}
               className="px-2 py-1 text-[11px] lg:text-xs font-bold rounded-full text-[#746a57] hover:text-[#3d3528] bg-[#f8f4ec] border border-[#dbd3c6] hover:bg-[#f1e9dc] transition-all min-w-[40px] min-h-[32px] flex items-center justify-center active:scale-95"
             >
-              <span>🎮 {t('nav.arcade')}</span>
+              <span aria-hidden="true">🎮</span> {t('nav.arcade')}
             </button>
             
             <ShinyButton
@@ -1558,9 +1475,9 @@ export default function ModernSite({ onSwitchToTerminal }) {
                 <div className="text-4xl sm:text-6xl font-black mb-2 sm:mb-4 tracking-tighter opacity-[0.08] group-hover:opacity-[0.15] transition-opacity duration-500 select-none" style={{ color: '#d4cabb', WebkitTextStroke: '1px rgba(212, 202, 187, 0.15)' }}>
                   {item.num}
                 </div>
-                <h4 className="text-lg sm:text-2xl font-black mb-2 sm:mb-3 tracking-tight text-[#ede8de] group-hover:text-[#f5f2ec] transition-colors duration-300">
+                <h3 className="text-lg sm:text-2xl font-black mb-2 sm:mb-3 tracking-tight text-[#ede8de] group-hover:text-[#f5f2ec] transition-colors duration-300">
                   {item.title}
-                </h4>
+                </h3>
                 <p className="text-sm sm:text-base leading-relaxed" style={{ color: '#9a9484' }}>
                   {item.desc}
                 </p>
@@ -1588,7 +1505,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
                 className={`clay-card py-3 sm:py-5 px-4 sm:px-6 flex items-center gap-3 sm:gap-5 cursor-pointer group min-h-[72px] sm:min-h-[108px] ${s.span}`}>
                 <span className="w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center text-lg sm:text-xl clay-pill bg-[#f5f2ec] shadow-sm group-hover:scale-110 transition-transform shrink-0">{s.icon}</span>
                 <div className="min-w-0 flex-1">
-                  <h4 className="text-sm sm:text-base font-black text-[#2d2818] group-hover:text-[#7c6f5b] transition-colors leading-tight">{s.title}</h4>
+                  <h3 className="text-sm sm:text-base font-black text-[#2d2818] group-hover:text-[#7c6f5b] transition-colors leading-tight">{s.title}</h3>
                   <p className="text-[11px] sm:text-xs text-[#6a6050] opacity-80 line-clamp-2">{s.desc}</p>
                 </div>
                 <span className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full text-xs sm:text-sm transition-transform group-hover:rotate-45 bg-[#f5f2ec] border border-[#d4cfc5] text-[#3d3828] shrink-0" aria-hidden="true">

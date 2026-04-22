@@ -42,7 +42,6 @@ export async function generateMetadata({ params }) {
       template: '%s | Back Software',
     },
     description: meta.description,
-    keywords: seo.keywords || [],
     alternates: {
       canonical: `/${locale}`,
       languages: {
@@ -124,6 +123,15 @@ function JsonLd({ locale, messages }) {
           latitude: '45.4668',
           longitude: '7.8742',
         },
+        vatID: 'IT13227980011',
+        taxID: 'RVRJLN05E26B455T',
+        contactPoint: {
+          '@type': 'ContactPoint',
+          contactType: 'customer service',
+          telephone: '+393513052627',
+          email: 'julian.rovera@pec.it',
+          availableLanguage: ['Italian', 'English'],
+        },
         sameAs: [
           'https://www.instagram.com/backsoftware/',
           'https://www.linkedin.com/company/backsoftware',
@@ -188,35 +196,6 @@ function JsonLd({ locale, messages }) {
         publisher: {
           '@id': 'https://backsoftware.it/#business',
         },
-      },
-      {
-        '@type': 'BreadcrumbList',
-        itemListElement: [
-          {
-            '@type': 'ListItem',
-            position: 1,
-            name: breadcrumbs.home || jsonLd.businessName,
-            item: `https://backsoftware.it/${locale}`,
-          },
-          {
-            '@type': 'ListItem',
-            position: 2,
-            name: jsonLd.services[0],
-            item: `https://backsoftware.it/${locale}#servizi`,
-          },
-          {
-            '@type': 'ListItem',
-            position: 3,
-            name: jsonLd.services[1],
-            item: `https://backsoftware.it/${locale}#progetti`,
-          },
-          {
-            '@type': 'ListItem',
-            position: 4,
-            name: jsonLd.services[2],
-            item: `https://backsoftware.it/${locale}#contatti`,
-          },
-        ],
       },
     ],
   };

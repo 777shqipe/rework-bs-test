@@ -33,12 +33,14 @@ export default function SnakeGame({ color }) {
     nextDirection: { x: 0, y: 0 },
     speed: INITIAL_SPEED,
     lastMoveTime: 0,
-    lastMoveTime: 0,
     particles: [],
     floatingTexts: [],
     glowIntensity: 0,
     screenShake: 0,
     walls: [],
+    frameCount: 0,
+    bgStars: [],
+    bgParticles: [],
   });
 
   const { playEat, playPowerup, playGameOver } = useRetroAudio();
@@ -52,12 +54,14 @@ export default function SnakeGame({ color }) {
       nextDirection: { x: 1, y: 0 },
       speed: INITIAL_SPEED,
       lastMoveTime: 0,
-      lastMoveTime: 0,
       particles: [],
       floatingTexts: [],
       glowIntensity: 0,
       screenShake: 0,
       walls: [],
+      frameCount: 0,
+      bgStars: [],
+      bgParticles: [],
     };
     setScore(0);
     setCombo(0);
@@ -198,6 +202,28 @@ export default function SnakeGame({ color }) {
       }
 
       const state = gameState.current;
+      state.frameCount++;
+
+      // Initialize background elements once
+      if (state.bgStars.length === 0) {
+        state.bgStars = Array.from({ length: 60 }, () => ({
+          x: Math.random() * dimensions.width,
+          y: Math.random() * dimensions.height,
+          size: Math.random() * 1.5 + 0.5,
+          speed: Math.random() * 0.2 + 0.05,
+          brightness: Math.random(),
+        }));
+      }
+      if (state.bgParticles.length === 0) {
+        state.bgParticles = Array.from({ length: 25 }, () => ({
+          x: Math.random() * dimensions.width,
+          y: Math.random() * dimensions.height,
+          size: Math.random() * 2 + 1,
+          vx: (Math.random() - 0.5) * 0.25,
+          vy: (Math.random() - 0.5) * 0.25,
+          offset: Math.random() * Math.PI * 2,
+        }));
+      }
       
       if (timestamp - state.lastMoveTime > state.speed) {
         state.lastMoveTime = timestamp;
@@ -306,12 +332,44 @@ export default function SnakeGame({ color }) {
         }
       }
 
-      // Clear and draw
-      ctx.fillStyle = '#070b07';
+      // Deep space gradient background
+      const bgGradient = ctx.createRadialGradient(
+        dimensions.width / 2, dimensions.height / 2, 0,
+        dimensions.width / 2, dimensions.height / 2, dimensions.width * 0.8
+      );
+      bgGradient.addColorStop(0, '#0c1a0c');
+      bgGradient.addColorStop(0.5, '#070b07');
+      bgGradient.addColorStop(1, '#020502');
+      ctx.fillStyle = bgGradient;
       ctx.fillRect(0, 0, dimensions.width, dimensions.height);
 
-      // Draw grid (subtle)
-      ctx.strokeStyle = `${color}15`;
+      // Draw ambient stars (parallax)
+      state.bgStars.forEach(star => {
+        star.x -= star.speed;
+        if (star.x < 0) star.x = dimensions.width;
+        const twinkle = Math.sin(state.frameCount * 0.05 + star.brightness * 10) * 0.5 + 0.5;
+        ctx.fillStyle = `rgba(255,255,255,${star.brightness * twinkle * 0.5})`;
+        ctx.fillRect(star.x, star.y, star.size, star.size);
+      });
+
+      // Draw floating ambient particles
+      state.bgParticles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0) p.x = dimensions.width;
+        if (p.x > dimensions.width) p.x = 0;
+        if (p.y < 0) p.y = dimensions.height;
+        if (p.y > dimensions.height) p.y = 0;
+        const alpha = 0.15 + Math.sin(state.frameCount * 0.03 + p.offset) * 0.1;
+        const aHex = Math.floor(alpha * 255).toString(16).padStart(2, '0');
+        ctx.fillStyle = color + aHex;
+        ctx.fillRect(p.x, p.y, p.size, p.size);
+      });
+
+      // Draw neon grid with subtle pulse
+      const gridAlpha = 0.08 + Math.sin(state.frameCount * 0.02) * 0.03;
+      const gHex = Math.floor(gridAlpha * 255).toString(16).padStart(2, '0');
+      ctx.strokeStyle = color + gHex;
       ctx.lineWidth = 0.5;
       for (let i = 0; i <= GRID_SIZE; i++) {
         ctx.beginPath();
@@ -591,6 +649,54 @@ export default function SnakeGame({ color }) {
           <span>↑↓←→ Move</span>
           <span>P Pause</span>
         </div>
+      </div>
+
+      {/* Mobile Touch Controls - D-Pad */}
+      <div className="mt-3 grid grid-cols-3 gap-1 select-none" style={{ maxWidth: 180 }}>
+        <div />
+        <button
+          className="w-12 h-12 rounded-lg border-2 active:scale-95 flex items-center justify-center text-lg"
+          style={{ borderColor: color, color }}
+          onTouchStart={(e) => { e.preventDefault(); if (gameOver) { resetGame(); return; } const d = gameState.current.direction; if (d.y === 0) gameState.current.nextDirection = { x: 0, y: -1 }; }}
+          onClick={() => { if (gameOver) { resetGame(); return; } const d = gameState.current.direction; if (d.y === 0) gameState.current.nextDirection = { x: 0, y: -1 }; }}
+        >
+          ▲
+        </button>
+        <div />
+        <button
+          className="w-12 h-12 rounded-lg border-2 active:scale-95 flex items-center justify-center text-lg"
+          style={{ borderColor: color, color }}
+          onTouchStart={(e) => { e.preventDefault(); if (gameOver) { resetGame(); return; } const d = gameState.current.direction; if (d.x === 0) gameState.current.nextDirection = { x: -1, y: 0 }; }}
+          onClick={() => { if (gameOver) { resetGame(); return; } const d = gameState.current.direction; if (d.x === 0) gameState.current.nextDirection = { x: -1, y: 0 }; }}
+        >
+          ◀
+        </button>
+        <button
+          className="w-12 h-12 rounded-lg border-2 active:scale-95 flex items-center justify-center text-lg"
+          style={{ borderColor: color, color }}
+          onTouchStart={(e) => { e.preventDefault(); setIsPaused(prev => !prev); }}
+          onClick={() => setIsPaused(prev => !prev)}
+        >
+          ⏸
+        </button>
+        <button
+          className="w-12 h-12 rounded-lg border-2 active:scale-95 flex items-center justify-center text-lg"
+          style={{ borderColor: color, color }}
+          onTouchStart={(e) => { e.preventDefault(); if (gameOver) { resetGame(); return; } const d = gameState.current.direction; if (d.x === 0) gameState.current.nextDirection = { x: 1, y: 0 }; }}
+          onClick={() => { if (gameOver) { resetGame(); return; } const d = gameState.current.direction; if (d.x === 0) gameState.current.nextDirection = { x: 1, y: 0 }; }}
+        >
+          ▶
+        </button>
+        <div />
+        <button
+          className="w-12 h-12 rounded-lg border-2 active:scale-95 flex items-center justify-center text-lg"
+          style={{ borderColor: color, color }}
+          onTouchStart={(e) => { e.preventDefault(); if (gameOver) { resetGame(); return; } const d = gameState.current.direction; if (d.y === 0) gameState.current.nextDirection = { x: 0, y: 1 }; }}
+          onClick={() => { if (gameOver) { resetGame(); return; } const d = gameState.current.direction; if (d.y === 0) gameState.current.nextDirection = { x: 0, y: 1 }; }}
+        >
+          ▼
+        </button>
+        <div />
       </div>
     </div>
   );

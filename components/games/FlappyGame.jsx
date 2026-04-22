@@ -434,7 +434,13 @@ export default function FlappyGame({ color }) {
       </div>
 
       {/* Game Canvas with enhanced CRT effects */}
-      <div ref={containerRef} className="relative border-2 border-[var(--t-color)] opacity-70 flex-1 w-full min-h-0 overflow-hidden" style={{ boxShadow: `0 0 30px ${color}20, inset 0 0 60px ${color}10` }}>
+      <div
+        ref={containerRef}
+        className="relative border-2 border-[var(--t-color)] opacity-70 flex-1 w-full min-h-0 overflow-hidden"
+        style={{ boxShadow: `0 0 30px ${color}20, inset 0 0 60px ${color}10` }}
+        onTouchStart={(e) => { e.preventDefault(); jump(); }}
+        onClick={jump}
+      >
         {/* CRT Scanlines overlay */}
         <div className="absolute inset-0 pointer-events-none z-10" style={{
           background: `repeating-linear-gradient(0deg, transparent, transparent 2px, ${color}03 2px, ${color}03 4px)`,
@@ -505,6 +511,16 @@ export default function FlappyGame({ color }) {
         style={{ color, fontFamily: 'system-ui, sans-serif' }}>
         <span>SPACE to fly / jump</span>
       </div>
+
+      {/* Mobile Touch Controls */}
+      <button
+        className="mt-3 w-full max-w-[200px] h-12 rounded-lg border-2 active:scale-95 flex items-center justify-center text-sm font-bold uppercase tracking-wider select-none"
+        style={{ borderColor: color, color }}
+        onTouchStart={(e) => { e.preventDefault(); jump(); }}
+        onClick={jump}
+      >
+        TAP TO FLY
+      </button>
     </div>
   );
 }

@@ -12,6 +12,30 @@ const BASE_SPEED = 5;
 const MAX_SPEED = 14;
 const DAY_NIGHT_CYCLE = 2000; // frames
 
+function generateMountains(width, height) {
+  const mountains = [];
+  let x = -80;
+  while (x < width + 80) {
+    const w = 70 + Math.random() * 90;
+    const h = 50 + Math.random() * 70;
+    mountains.push({ x, w, h, peaks: Math.floor(Math.random() * 2) + 3 });
+    x += w * 0.65;
+  }
+  return mountains;
+}
+
+function generateBushes(width, height) {
+  const bushes = [];
+  let x = -40;
+  while (x < width + 40) {
+    const w = 18 + Math.random() * 28;
+    const h = 8 + Math.random() * 14;
+    bushes.push({ x, y: height - 40 - h, w, h });
+    x += 30 + Math.random() * 70;
+  }
+  return bushes;
+}
+
 export default function DinoGame({ color }) {
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
@@ -23,6 +47,8 @@ export default function DinoGame({ color }) {
   const [isReady, setIsReady] = useState(false);
   const [timeOfDay, setTimeOfDay] = useState(0); // 0-1, 0=noon, 0.5=midnight
 
+  const { playJump, playHit, playPowerup } = useRetroAudio();
+
   const gameState = useRef({
     dino: { x: 30, y: 0, velocity: 0, isJumping: false, isDucking: false, blinkTimer: 0 },
     obstacles: [],
@@ -33,12 +59,12 @@ export default function DinoGame({ color }) {
     gameSpeed: BASE_SPEED,
     distance: 0,
     frameCount: 0,
-    moonPhase: 0,
+    moonPhase: Math.floor(Math.random() * 8),
     floatingTexts: [],
     screenShake: 0,
+    mountains: [],
+    bushes: [],
   });
-
-  const { playJump, playHit, playPowerup } = useRetroAudio();
 
   const resetGame = useCallback(() => {
     const { width, height } = dimensions;
@@ -66,6 +92,8 @@ export default function DinoGame({ color }) {
       moonPhase: Math.floor(Math.random() * 8),
       floatingTexts: [],
       screenShake: 0,
+      mountains: generateMountains(width, height),
+      bushes: generateBushes(width, height),
     };
     setScore(0);
     setTimeOfDay(0);
@@ -311,6 +339,26 @@ export default function DinoGame({ color }) {
             speed: 0.5 + Math.random() * 0.5,
           });
         }
+
+        // Update mountains (parallax)
+        state.mountains.forEach(m => m.x -= state.gameSpeed * 0.15);
+        if (state.mountains.length > 0 && state.mountains[0].x + state.mountains[0].w < -80) {
+          state.mountains.shift();
+          const last = state.mountains[state.mountains.length - 1];
+          const w = 70 + Math.random() * 90;
+          const h = 50 + Math.random() * 70;
+          state.mountains.push({ x: last.x + last.w * 0.65, w, h, peaks: Math.floor(Math.random() * 2) + 3 });
+        }
+
+        // Update bushes (parallax)
+        state.bushes.forEach(b => b.x -= state.gameSpeed * 0.4);
+        if (state.bushes.length > 0 && state.bushes[0].x + state.bushes[0].w < -40) {
+          state.bushes.shift();
+          const last = state.bushes[state.bushes.length - 1];
+          const w = 18 + Math.random() * 28;
+          const h = 8 + Math.random() * 14;
+          state.bushes.push({ x: last.x + 30 + Math.random() * 70, y: GROUND_Y - h, w, h });
+        }
       }
 
       // Day/Night sky gradient
@@ -376,6 +424,28 @@ export default function DinoGame({ color }) {
         ctx.arc(cloud.x + cloud.width / 2, cloud.y, cloud.width / 3, 0, Math.PI * 2);
         ctx.arc(cloud.x + cloud.width / 3, cloud.y - 5, cloud.width / 4, 0, Math.PI * 2);
         ctx.arc(cloud.x + cloud.width * 2 / 3, cloud.y - 5, cloud.width / 4, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // Draw mountains (parallax background)
+      state.mountains.forEach(m => {
+        ctx.fillStyle = `${color}10`;
+        ctx.beginPath();
+        ctx.moveTo(m.x, GROUND_Y);
+        const step = m.w / m.peaks;
+        for (let i = 0; i <= m.peaks; i++) {
+          ctx.lineTo(m.x + step * i, GROUND_Y - m.h * (0.5 + Math.sin(i * 1.7 + m.x * 0.01) * 0.3));
+        }
+        ctx.lineTo(m.x + m.w, GROUND_Y);
+        ctx.closePath();
+        ctx.fill();
+      });
+
+      // Draw bushes
+      state.bushes.forEach(b => {
+        ctx.fillStyle = `${color}12`;
+        ctx.beginPath();
+        ctx.ellipse(b.x + b.w/2, b.y + b.h/2, b.w/2, b.h/2, 0, 0, Math.PI*2);
         ctx.fill();
       });
 
@@ -542,7 +612,13 @@ export default function DinoGame({ color }) {
       </div>
 
       {/* Game Canvas with enhanced CRT effects */}
-      <div ref={containerRef} className="relative border-2 border-[var(--t-color)] opacity-70 flex-1 w-full min-h-0 overflow-hidden" style={{ boxShadow: `0 0 30px ${color}20, inset 0 0 60px ${color}10` }}>
+      <div
+        ref={containerRef}
+        className="relative border-2 border-[var(--t-color)] opacity-70 flex-1 w-full min-h-0 overflow-hidden"
+        style={{ boxShadow: `0 0 30px ${color}20, inset 0 0 60px ${color}10` }}
+        onTouchStart={(e) => { e.preventDefault(); jump(); }}
+        onClick={jump}
+      >
         {/* CRT Scanlines overlay */}
         <div className="absolute inset-0 pointer-events-none z-10" style={{
           background: `repeating-linear-gradient(0deg, transparent, transparent 2px, ${color}03 2px, ${color}03 4px)`,
@@ -618,6 +694,29 @@ export default function DinoGame({ color }) {
           <span>↑/SPACE Jump</span>
           <span>↓ Duck</span>
         </div>
+      </div>
+
+      {/* Mobile Touch Controls */}
+      <div className="mt-3 flex items-center justify-center gap-3 select-none">
+        <button
+          className="w-20 h-14 rounded-lg border-2 active:scale-95 flex items-center justify-center text-lg font-bold uppercase"
+          style={{ borderColor: color, color }}
+          onTouchStart={(e) => { e.preventDefault(); jump(); }}
+          onClick={jump}
+        >
+          JUMP
+        </button>
+        <button
+          className="w-20 h-14 rounded-lg border-2 active:scale-95 flex items-center justify-center text-lg font-bold uppercase"
+          style={{ borderColor: color, color }}
+          onTouchStart={(e) => { e.preventDefault(); duck(true); }}
+          onTouchEnd={(e) => { e.preventDefault(); duck(false); }}
+          onMouseDown={() => duck(true)}
+          onMouseUp={() => duck(false)}
+          onMouseLeave={() => duck(false)}
+        >
+          DUCK
+        </button>
       </div>
     </div>
   );

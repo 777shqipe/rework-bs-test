@@ -3,14 +3,14 @@
 ## ✅ Completato
 
 ### 1. robots.txt
-- Posizione: `public/robots.txt`
+- Posizione: `app/robots.js` (Next.js genera automaticamente `robots.txt` al build)
 - Permette crawling di tutto il sito
 - Puntamento corretto a sitemap.xml
 
 ### 2. sitemap.xml
-- Posizione: `public/sitemap.xml`
-- Include: Home, Servizi, Progetti, Contatti, Cookie Policy
-- `lastmod` aggiornato al 14 Gennaio 2025
+- Posizione: `app/sitemap.js` (Next.js genera automaticamente `sitemap.xml` al build)
+- Include: Home per tutte le locale (it, en, es, fr)
+- `lastmod` dinamico alla data di build
 
 ### 3. Schema.org JSON-LD (layout.jsx)
 Implementato `@graph` con 3 entità:
@@ -47,18 +47,14 @@ Implementato `@graph` con 3 entità:
 ## ⚠️ Da Completare
 
 ### 1. Google Search Console
-Sostituire in `app/layout.jsx` riga 56:
-```javascript
-google: 'GOOGLE_SEARCH_CONSOLE_CODE_HERE',
-```
-Con il codice di verifica reale da Google Search Console.
+Inserire il codice di verifica in `app/layout.jsx` nella proprietà `metadata.verification.google`, oppure impostare la variabile d'ambiente `GOOGLE_SITE_VERIFICATION`.
 
 **Istruzioni:**
 1. Vai su https://search.google.com/search-console
 2. Aggiungi proprietà: `https://backsoftware.it`
 3. Scegli metodo "Tag HTML"
 4. Copia il codice (es: `abc123def456`)
-5. Incolla nel file layout.jsx
+5. Incolla nel file `app/layout.jsx` o imposta `GOOGLE_SITE_VERIFICATION=abc123def456`
 
 ### 2. Immagine Open Graph
 Creare `public/og-image.jpg` (1200x630 px)
