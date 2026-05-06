@@ -197,7 +197,6 @@ export default function ModernSite({ onSwitchToTerminal }) {
   const heroRef = useRef(null);
   const heroTitleRef = useRef(null);
   const heroSubtitleRef = useRef(null);
-  const heroCtaRef = useRef(null);
   const scrollContainerRef = useRef(null);
   const [headerVisible, setHeaderVisible] = useState(false);
 
@@ -811,7 +810,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
 
     // Lenis snap module: replicates CSS scroll-snap in JS
     const snap = new Snap(lenis, {
-      type: 'mandatory',
+      type: 'proximity',
       duration: 0.6,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
     });
@@ -870,7 +869,6 @@ export default function ModernSite({ onSwitchToTerminal }) {
     const heroSection = heroRef.current;
     const titleEl = heroTitleRef.current;
     const subtitleEl = heroSubtitleRef.current;
-    const ctaEl = heroCtaRef.current;
     const scroller = scrollContainerRef.current;
     if (!heroSection || !titleEl || !scroller) return;
 
@@ -942,79 +940,75 @@ export default function ModernSite({ onSwitchToTerminal }) {
             trigger: heroSection,
             scroller,
             start: 'top top',
-            end: '+=100%',
+            end: '+=200%',
             pin: true,
             scrub: 0.5,
+            snap: {
+              snapTo: [0, 0.5, 1],
+              duration: 0.35,
+              ease: 'power2.out',
+            },
           },
         });
 
-        // h1 chars cascade in from above, top-to-bottom reading order
+        // h1 chars: alternate flying in from above / below
         if (h1Chars && h1Chars.length > 0) {
           tl.from(h1Chars, {
             opacity: 0,
-            y: -60,
-            scale: 1.15,
-            rotationZ: () => gsap.utils.random(-8, 8),
+            y: (i) => i % 2 === 0 ? -80 : 80,
+            scale: 1.2,
+            rotationZ: (i) => i % 2 === 0 ? gsap.utils.random(-6, -2) : gsap.utils.random(2, 6),
+            transformOrigin: 'center center',
+            ease: 'power2.out',
+            stagger: {
+              amount: 0.45,
+              from: 'start',
+            },
+          }, 0);
+        }
+
+        // Subtitle chars: alternate flying in from above / below
+        if (subChars && subChars.length > 0) {
+          tl.from(subChars, {
+            opacity: 0,
+            y: (i) => i % 2 === 0 ? -50 : 50,
+            scale: 1.1,
+            rotationZ: (i) => i % 2 === 0 ? gsap.utils.random(-4, -1) : gsap.utils.random(1, 4),
             transformOrigin: 'center center',
             ease: 'power2.out',
             stagger: {
               amount: 0.35,
               from: 'start',
             },
-          }, 0);
-        }
-
-        // Subtitle chars cascade in from above
-        if (subChars && subChars.length > 0) {
-          tl.from(subChars, {
-            opacity: 0,
-            y: -40,
-            scale: 1.08,
-            rotationZ: () => gsap.utils.random(-5, 5),
-            transformOrigin: 'center center',
-            ease: 'power2.out',
-            stagger: {
-              amount: 0.25,
-              from: 'start',
-            },
           }, 0.1);
-        }
-
-        // CTA slides up into place
-        if (ctaEl) {
-          tl.from(ctaEl, {
-            opacity: 0,
-            y: 30,
-            ease: 'power2.out',
-          }, 0.25);
         }
 
         // "BACK SOFTWARE" fades out with slight upward drift
         tl.to(bgChars, {
           opacity: 0,
-          y: -30,
-          scale: 0.95,
-          filter: 'blur(4px)',
+          y: -40,
+          scale: 0.92,
+          filter: 'blur(6px)',
           transformOrigin: 'center center',
           ease: 'none',
           stagger: {
-            amount: 0.25,
+            amount: 0.3,
             from: 'end',
           },
-        }, 0.2);
-      }, heroSection);
+        }, 0.35);
 
-      ScrollTrigger.create({
-        trigger: heroSection,
-        scroller,
-        start: 'top top',
-        end: '+=130%',
-        onLeave: () => {
-          bgChars.forEach((char) => { char.style.willChange = 'auto'; });
-          if (h1Chars) h1Chars.forEach((char) => { char.style.willChange = 'auto'; });
-          if (subChars) subChars.forEach((char) => { char.style.willChange = 'auto'; });
-        },
-      });
+        ScrollTrigger.create({
+          trigger: heroSection,
+          scroller,
+          start: 'top top',
+          end: '+=200%',
+          onLeave: () => {
+            bgChars.forEach((char) => { char.style.willChange = 'auto'; });
+            if (h1Chars) h1Chars.forEach((char) => { char.style.willChange = 'auto'; });
+            if (subChars) subChars.forEach((char) => { char.style.willChange = 'auto'; });
+          },
+        });
+      }, heroSection);
     }, 100);
 
     return () => {
@@ -1478,12 +1472,12 @@ export default function ModernSite({ onSwitchToTerminal }) {
 
             {/* Giant watermark behind mobile header */}
             <span className="absolute inset-0 flex items-center pointer-events-none select-none overflow-visible" aria-hidden="true">
-              <span className="text-[3.2rem] sm:text-[4rem] font-black tracking-tighter leading-none whitespace-nowrap text-[#2d2818]/[0.15]" style={{ transform: 'translateX(2%)' }}>{t('nav.brandName').toUpperCase()}</span>
+              <span className="text-[3.2rem] sm:text-[4rem] font-black tracking-tighter leading-none whitespace-nowrap text-[#2d2818]/[0.22]" style={{ transform: 'translateX(2%)' }}>{t('nav.brandName').toUpperCase()}</span>
             </span>
 
             {/* Logo Mobile */}
             <div className="flex items-center min-w-0 relative z-10">
-              <p className="text-[9px] font-bold text-[#807865] opacity-80 tracking-[0.14em] uppercase truncate">{t('nav.brandTagline')}</p>
+              <p className="text-[9px] font-bold text-[#4a4336] tracking-[0.14em] uppercase truncate">{t('nav.brandTagline')}</p>
             </div>
 
             {/* Actions Mobile */}
@@ -1562,13 +1556,13 @@ export default function ModernSite({ onSwitchToTerminal }) {
 
           {/* Giant watermark behind desktop header */}
           <span className="absolute inset-0 flex items-center pointer-events-none select-none overflow-visible" aria-hidden="true">
-            <span className="text-[2.5rem] lg:text-[3rem] font-black tracking-tighter leading-none whitespace-nowrap text-[#2d2818]/[0.15]" style={{ transform: 'translateX(2%)' }}>{t('nav.brandName').toUpperCase()}</span>
+            <span className="text-[2.5rem] lg:text-[3rem] font-black tracking-tighter leading-none whitespace-nowrap text-[#2d2818]/[0.22]" style={{ transform: 'translateX(2%)' }}>{t('nav.brandName').toUpperCase()}</span>
           </span>
 
           {/* Logo Desktop */}
           <div className="flex items-center gap-3 min-w-0 relative z-10">
             <div className="min-w-0">
-              <p className="text-[9px] lg:text-[11px] font-bold text-[#807865] opacity-80 tracking-[0.14em] uppercase truncate">{t('nav.brandTagline')}</p>
+              <p className="text-[9px] lg:text-[11px] font-bold text-[#4a4336] tracking-[0.14em] uppercase truncate">{t('nav.brandTagline')}</p>
             </div>
           </div>
 
@@ -1643,67 +1637,29 @@ export default function ModernSite({ onSwitchToTerminal }) {
               </h1>
               <p
                 ref={heroSubtitleRef}
-                className="text-base sm:text-base lg:text-xl xl:text-2xl leading-relaxed max-w-xl font-medium mb-6 sm:mb-10 text-[#6a6050]">
+                className="text-base sm:text-base lg:text-xl xl:text-2xl leading-relaxed max-w-xl font-medium mb-10 text-[#6a6050] text-pretty">
                 {t('hero.subtitle')}
               </p>
-              <div
-                ref={heroCtaRef}
-                className="flex flex-wrap gap-3 sm:gap-6 items-center">
-                <ShinyButton
-                  href="#contatti"
-                  tone="espresso"
-                  size="lg"
-                  intensity="strong"
-                  className="!w-[92vw] max-w-[420px] sm:!w-auto !rounded-2xl lg:!rounded-2xl !text-lg sm:!text-base !px-8 sm:!px-6 !py-4 sm:!py-5"
-                >
-                  <span className="sm:hidden">{t('hero.ctaMobile')}</span>
-                  <span className="hidden sm:inline">{t('hero.ctaDesktop')}</span>
-                </ShinyButton>
-              </div>
             </div>
 
           </div>
 
           <motion.a
             href="#come-lavoriamo"
-            className="absolute bottom-8 sm:bottom-16 left-1/2 -translate-x-1/2 group cursor-pointer"
+            className="absolute bottom-8 sm:bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 group cursor-pointer"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.4, duration: 1, ease: [0.22, 1, 0.36, 1] }}
           >
-            <div className="relative w-14 h-14 sm:w-14 sm:h-14">
-              {/* Background circle for contrast */}
-              <div className="absolute inset-0 rounded-full bg-[#f5f2ec]/80 backdrop-blur-sm border border-[#d4cfc5]/50 shadow-[0_4px_20px_rgba(138,127,106,0.15)]" />
-              
-              {/* Rotating thin ring */}
-              <motion.svg
-                className="absolute inset-1 w-[calc(100%-8px)] h-[calc(100%-8px)]"
-                viewBox="0 0 48 48"
-                fill="none"
-                animate={{ rotate: 360 }}
-                transition={{ repeat: Infinity, duration: 12, ease: 'linear' }}
-              >
-                <circle
-                  cx="24"
-                  cy="24"
-                  r="22"
-                  stroke="currentColor"
-                  strokeWidth="1"
-                  className="text-[#b8ad98]"
-                  strokeDasharray="3 3"
-                />
-              </motion.svg>
-              {/* Arrow */}
-              <motion.div
-                className="absolute inset-0 flex items-center justify-center"
-                animate={{ y: [0, 4, 0] }}
-                transition={{ repeat: Infinity, duration: 1.8, ease: [0.4, 0, 0.6, 1] }}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-[#6a6050] group-hover:text-[#4a4336] transition-colors">
-                  <path d="M12 6v12m-6-6 6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </motion.div>
-            </div>
+            <span className="text-[9px] font-bold tracking-[0.2em] uppercase text-[#b8ad98]/70 group-hover:text-[#8a7f6a] transition-colors">scrolla e scopri</span>
+            <motion.div
+              animate={{ y: [0, 3, 0] }}
+              transition={{ repeat: Infinity, duration: 1.8, ease: [0.4, 0, 0.6, 1] }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-[#b8ad98] group-hover:text-[#6a6050] transition-colors">
+                <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </motion.div>
           </motion.a>
         </div>
       </motion.section>
