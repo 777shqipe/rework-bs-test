@@ -1638,7 +1638,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
               </h1>
               <p
                 ref={heroSubtitleRef}
-                className="text-base sm:text-base lg:text-xl xl:text-2xl leading-relaxed max-w-xl font-medium mb-10 text-[#6a6050] text-pretty">
+                className="text-base sm:text-base lg:text-xl xl:text-2xl leading-relaxed max-w-xl font-medium mb-10 text-[#6a6050] whitespace-pre-line">
                 {t('hero.subtitle')}
               </p>
             </div>
