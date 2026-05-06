@@ -983,16 +983,17 @@ export default function ModernSite({ onSwitchToTerminal }) {
           }, 0.1);
         }
 
-        // "BACK SOFTWARE" fades out with slight upward drift
+        // "BACK SOFTWARE" sweeps away right-to-left in 3D
         tl.to(bgChars, {
           opacity: 0,
-          y: -40,
-          scale: 0.92,
-          filter: 'blur(6px)',
-          transformOrigin: 'center center',
-          ease: 'none',
+          x: -200,
+          rotationY: -55,
+          scale: 0.4,
+          transformPerspective: 600,
+          transformOrigin: 'left center',
+          ease: 'power2.in',
           stagger: {
-            amount: 0.3,
+            amount: 0.4,
             from: 'end',
           },
         }, 0.35);
