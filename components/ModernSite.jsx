@@ -2,12 +2,19 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
+import Lenis from 'lenis';
+import Snap from 'lenis/snap';
+import SplitType from 'split-type';
 import { useI18n } from '../lib/i18n-context';
 import { ShinyButton } from './ui/shiny-button';
 import PhoneGallery from './PhoneGallery';
 import LanguageSwitcher from './LanguageSwitcher';
 import { getServices } from '../data/services';
 import { projectMeta, buildProjects } from '../data/projects';
+
+gsap.registerPlugin(ScrollTrigger);
 
 /* ===========================================================
    MODERN TYPEWRITER — animated placeholder for modern form
@@ -185,6 +192,14 @@ export default function ModernSite({ onSwitchToTerminal }) {
   const contactSectionRef = useRef(null);
   const footerCardRef = useRef(null);
   const [footerStrokeActive, setFooterStrokeActive] = useState(false);
+
+  // ── Hero scroll-driven typography refs ──
+  const heroRef = useRef(null);
+  const heroTitleRef = useRef(null);
+  const heroSubtitleRef = useRef(null);
+  const heroCtaRef = useRef(null);
+  const scrollContainerRef = useRef(null);
+  const [headerVisible, setHeaderVisible] = useState(false);
 
   // Orbiting text around header — pixel-perfect (mobile & desktop refs)
   const headerRefMobile = useRef(null);
@@ -776,6 +791,243 @@ export default function ModernSite({ onSwitchToTerminal }) {
     window.open(`mailto:info@backsoftware.it?subject=${subject}&body=${body}`, '_blank', 'noopener,noreferrer');
   };
 
+  /* ===========================================================
+     LENIS — smooth scroll with section snap (JS-based)
+     Replaces CSS scroll-snap for GSAP/ScrollTrigger compatibility.
+  =========================================================== */
+  useEffect(() => {
+    if (isMockupMode) return;
+
+    const scroller = scrollContainerRef.current;
+    if (!scroller) return;
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const lenis = new Lenis({
+      wrapper: scroller,
+      smoothWheel: !prefersReducedMotion,
+      syncTouch: false,
+    });
+
+    // Lenis snap module: replicates CSS scroll-snap in JS
+    const snap = new Snap(lenis, {
+      type: 'mandatory',
+      duration: 0.6,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+    });
+    const removeSnapEls = snap.addElements(scroller.querySelectorAll('.modern-snap-section'));
+
+    const onScroll = () => ScrollTrigger.update();
+    lenis.on('scroll', onScroll);
+
+    // Show header only after Hero scrolls out of view
+    const checkHeaderVisibility = () => {
+      const hero = heroRef.current;
+      if (hero) {
+        const heroBottom = hero.offsetTop + hero.offsetHeight;
+        setHeaderVisible(scroller.scrollTop > heroBottom - scroller.clientHeight * 0.3);
+      }
+    };
+    lenis.on('scroll', checkHeaderVisibility);
+    checkHeaderVisibility();
+
+    const tick = (time) => lenis.raf(time * 1000);
+    gsap.ticker.add(tick);
+    gsap.ticker.lagSmoothing(0);
+
+    // Handle anchor links (#servizi, #contatti, etc.)
+    const handleAnchorClick = (e) => {
+      const link = e.target.closest('a[href^="#"]');
+      if (!link) return;
+      const id = link.getAttribute('href').slice(1);
+      const target = document.getElementById(id);
+      if (target) {
+        e.preventDefault();
+        lenis.scrollTo(target, { offset: 0, duration: 0.8 });
+      }
+    };
+    scroller.addEventListener('click', handleAnchorClick);
+
+    return () => {
+      gsap.ticker.remove(tick);
+      gsap.ticker.lagSmoothing(500, 33);
+      lenis.off('scroll', onScroll);
+      lenis.off('scroll', checkHeaderVisibility);
+      removeSnapEls();
+      snap.destroy();
+      lenis.destroy();
+      scroller.removeEventListener('click', handleAnchorClick);
+    };
+  }, [isMockupMode]);
+
+  /* ===========================================================
+     HERO — SplitType + GSAP ScrollTrigger scrub animation
+     Phase 1: h1 chars fly in from scattered 3D positions
+              subtitle & CTA fly in from random positions
+     Phase 2: "BACK SOFTWARE" chars explode apart
+  =========================================================== */
+  useEffect(() => {
+    const heroSection = heroRef.current;
+    const titleEl = heroTitleRef.current;
+    const subtitleEl = heroSubtitleRef.current;
+    const ctaEl = heroCtaRef.current;
+    const scroller = scrollContainerRef.current;
+    if (!heroSection || !titleEl || !scroller) return;
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) return;
+
+    ScrollTrigger.scrollerProxy(scroller, {
+      scrollTop(value) {
+        if (arguments.length) {
+          scroller.scrollTop = value;
+        }
+        return scroller.scrollTop;
+      },
+      getBoundingClientRect() {
+        return { top: 0, left: 0, width: scroller.clientWidth, height: scroller.clientHeight };
+      },
+      pinType: 'transform',
+    });
+
+    const heroH1 = heroSection.querySelector('.hero-content-h1');
+    let bgSplit = null;
+    let h1Split = null;
+    let subSplit = null;
+    let ctx = null;
+    let destroyed = false;
+
+    const timeout = setTimeout(() => {
+      if (destroyed) return;
+
+      // Split the background "BACK SOFTWARE"
+      bgSplit = new SplitType(titleEl, { types: 'chars' });
+      const bgChars = bgSplit.chars;
+      if (!bgChars || bgChars.length === 0) return;
+
+      bgChars.forEach((char) => {
+        char.style.display = 'inline-block';
+        char.style.willChange = 'transform, opacity';
+      });
+
+      // Split the h1
+      let h1Chars = null;
+      if (heroH1) {
+        h1Split = new SplitType(heroH1, { types: 'chars' });
+        h1Chars = h1Split.chars;
+        if (h1Chars && h1Chars.length > 0) {
+          h1Chars.forEach((char) => {
+            char.style.display = 'inline-block';
+            char.style.willChange = 'transform, opacity';
+          });
+        }
+      }
+
+      // Split the subtitle too
+      let subChars = null;
+      if (subtitleEl) {
+        subSplit = new SplitType(subtitleEl, { types: 'chars' });
+        subChars = subSplit.chars;
+        if (subChars && subChars.length > 0) {
+          subChars.forEach((char) => {
+            char.style.display = 'inline-block';
+            char.style.willChange = 'transform, opacity';
+          });
+        }
+      }
+
+      ctx = gsap.context(() => {
+        const tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: heroSection,
+            scroller,
+            start: 'top top',
+            end: '+=100%',
+            pin: true,
+            scrub: 0.5,
+          },
+        });
+
+        // h1 chars cascade in from above, top-to-bottom reading order
+        if (h1Chars && h1Chars.length > 0) {
+          tl.from(h1Chars, {
+            opacity: 0,
+            y: -60,
+            scale: 1.15,
+            rotationZ: () => gsap.utils.random(-8, 8),
+            transformOrigin: 'center center',
+            ease: 'power2.out',
+            stagger: {
+              amount: 0.35,
+              from: 'start',
+            },
+          }, 0);
+        }
+
+        // Subtitle chars cascade in from above
+        if (subChars && subChars.length > 0) {
+          tl.from(subChars, {
+            opacity: 0,
+            y: -40,
+            scale: 1.08,
+            rotationZ: () => gsap.utils.random(-5, 5),
+            transformOrigin: 'center center',
+            ease: 'power2.out',
+            stagger: {
+              amount: 0.25,
+              from: 'start',
+            },
+          }, 0.1);
+        }
+
+        // CTA slides up into place
+        if (ctaEl) {
+          tl.from(ctaEl, {
+            opacity: 0,
+            y: 30,
+            ease: 'power2.out',
+          }, 0.25);
+        }
+
+        // "BACK SOFTWARE" fades out with slight upward drift
+        tl.to(bgChars, {
+          opacity: 0,
+          y: -30,
+          scale: 0.95,
+          filter: 'blur(4px)',
+          transformOrigin: 'center center',
+          ease: 'none',
+          stagger: {
+            amount: 0.25,
+            from: 'end',
+          },
+        }, 0.2);
+      }, heroSection);
+
+      ScrollTrigger.create({
+        trigger: heroSection,
+        scroller,
+        start: 'top top',
+        end: '+=130%',
+        onLeave: () => {
+          bgChars.forEach((char) => { char.style.willChange = 'auto'; });
+          if (h1Chars) h1Chars.forEach((char) => { char.style.willChange = 'auto'; });
+          if (subChars) subChars.forEach((char) => { char.style.willChange = 'auto'; });
+        },
+      });
+    }, 100);
+
+    return () => {
+      destroyed = true;
+      clearTimeout(timeout);
+      if (ctx) ctx.revert();
+      if (bgSplit) bgSplit.revert();
+      if (h1Split) h1Split.revert();
+      if (subSplit) subSplit.revert();
+      ScrollTrigger.clearScrollerProxy(scroller);
+    };
+  }, [t]);
+
   // Service/Project detail modal
   if (selectedService) {
     const isProject = selectedService.source === 'progetti';
@@ -1169,7 +1421,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
   }
 
   return (
-    <motion.div initial="hidden" animate="visible" variants={containerVariants}
+    <motion.div ref={scrollContainerRef} initial="hidden" animate="visible" variants={containerVariants}
       className={`h-[100dvh] w-full overflow-x-hidden overflow-y-auto font-sans modern-mode modern-snap-container selection:bg-[#7c6f5b]/20 relative overscroll-y-contain ${isMockupMode ? 'mockup-mode' : ''}`}
       style={{ background: 'linear-gradient(180deg, #f5f2ec 0%, #f2eee7 100%)' }}>
       {/* CRT Glitch Effect */}
@@ -1180,6 +1432,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
         className="fixed top-0 left-0 right-0 z-50"
         style={{ pointerEvents: 'none' }}
       >
+        <div style={{ opacity: headerVisible ? 1 : 0, transition: 'opacity 0.4s ease', pointerEvents: headerVisible ? 'auto' : 'none' }}>
         {/* Mobile Header - Compact WITH animation */}
         <div className="sm:hidden mx-auto mt-8 w-[calc(100%-2.5rem)] max-w-md">
           <div 
@@ -1223,9 +1476,14 @@ export default function ModernSite({ onSwitchToTerminal }) {
               )}
             </svg>
 
+            {/* Giant watermark behind mobile header */}
+            <span className="absolute inset-0 flex items-center pointer-events-none select-none overflow-visible" aria-hidden="true">
+              <span className="text-[3.2rem] sm:text-[4rem] font-black tracking-tighter leading-none whitespace-nowrap text-[#2d2818]/[0.15]" style={{ transform: 'translateX(2%)' }}>{t('nav.brandName').toUpperCase()}</span>
+            </span>
+
             {/* Logo Mobile */}
             <div className="flex items-center min-w-0 relative z-10">
-              <span className="text-[13px] font-black tracking-tight text-[#2f2a1d] leading-none truncate">{t('nav.brandName')}</span>
+              <p className="text-[9px] font-bold text-[#807865] opacity-80 tracking-[0.14em] uppercase truncate">{t('nav.brandTagline')}</p>
             </div>
 
             {/* Actions Mobile */}
@@ -1302,10 +1560,14 @@ export default function ModernSite({ onSwitchToTerminal }) {
             )}
           </svg>
 
+          {/* Giant watermark behind desktop header */}
+          <span className="absolute inset-0 flex items-center pointer-events-none select-none overflow-visible" aria-hidden="true">
+            <span className="text-[2.5rem] lg:text-[3rem] font-black tracking-tighter leading-none whitespace-nowrap text-[#2d2818]/[0.15]" style={{ transform: 'translateX(2%)' }}>{t('nav.brandName').toUpperCase()}</span>
+          </span>
+
           {/* Logo Desktop */}
           <div className="flex items-center gap-3 min-w-0 relative z-10">
             <div className="min-w-0">
-              <span className="text-[16px] lg:text-[20px] font-black tracking-tight text-[#2f2a1d] leading-none truncate">{t('nav.brandName')}</span>
               <p className="text-[9px] lg:text-[11px] font-bold text-[#807865] opacity-80 tracking-[0.14em] uppercase truncate">{t('nav.brandTagline')}</p>
             </div>
           </div>
@@ -1348,36 +1610,44 @@ export default function ModernSite({ onSwitchToTerminal }) {
             </ShinyButton>
           </div>
         </div>
+        </div>
       </motion.nav>
 
 
       {/* ── HERO ── */}
-      <motion.section variants={itemVariants} className="modern-snap-section flex items-center justify-center relative px-6 sm:px-6 lg:px-8 overflow-hidden">
+      <motion.section ref={heroRef} variants={itemVariants} className="flex items-center justify-center relative px-6 sm:px-6 lg:px-8 overflow-hidden" style={{ minHeight: '100dvh', height: '100dvh' }}>
         {/* Floating Accents - Hidden on mobile */}
         <div className="hidden sm:block absolute -top-10 left-10 w-24 h-24 clay-pill opacity-10 animate-float pointer-events-none" />
         <div className="hidden sm:block absolute top-40 right-10 w-32 h-32 clay-pill opacity-10 animate-float-delayed pointer-events-none" />
 
-        <div className="max-w-6xl mx-auto w-full">
+        {/* Giant background watermark — "Back Software" only */}
+        <h2
+          ref={heroTitleRef}
+          className="hero-animated-title absolute inset-0 flex items-center justify-center pointer-events-none select-none z-0"
+          aria-hidden="true"
+        >
+          <span className="block text-[17vw] sm:text-[14vw] md:text-[13vw] lg:text-[12vw] font-black tracking-tighter text-[#2d2818]/[0.20] leading-none whitespace-nowrap text-center">
+            {t('nav.brandName')}
+          </span>
+        </h2>
+
+        <div className="max-w-6xl mx-auto w-full relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             {/* Left: Text Content */}
             <div className="order-2 lg:order-1">
-              <motion.h1
-                initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, delay: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                className="text-[3rem] sm:text-5xl md:text-6xl lg:text-6xl xl:text-7xl font-black leading-[1.12] sm:leading-[1.05] mb-6 sm:mb-8 tracking-tight text-[#2d2818]">
+              <h1
+                className="hero-content-h1 text-[3rem] sm:text-5xl md:text-6xl lg:text-6xl xl:text-7xl font-black leading-[1.12] sm:leading-[1.05] mb-6 sm:mb-8 tracking-tight text-[#2d2818]">
                 <span className="block mb-2">{t('hero.title1')}</span>
                 <span className="block mb-2">{t('hero.title2')}</span>
                 <span className="text-[#8a7f6a] drop-shadow-sm block">{t('hero.title3')}<span className="transition-all duration-500 ease-out hover:text-[#c4b494] hover:drop-shadow-[0_0_30px_rgba(196,180,148,0.8),0_0_60px_rgba(196,180,148,0.4)] cursor-default">{t('hero.title3Highlight')}</span>.</span>
-              </motion.h1>
-              <motion.p
-                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
+              </h1>
+              <p
+                ref={heroSubtitleRef}
                 className="text-base sm:text-base lg:text-xl xl:text-2xl leading-relaxed max-w-xl font-medium mb-6 sm:mb-10 text-[#6a6050]">
                 {t('hero.subtitle')}
-              </motion.p>
-              <motion.div
-                initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.65, ease: [0.22, 1, 0.36, 1] }}
+              </p>
+              <div
+                ref={heroCtaRef}
                 className="flex flex-wrap gap-3 sm:gap-6 items-center">
                 <ShinyButton
                   href="#contatti"
@@ -1389,7 +1659,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
                   <span className="sm:hidden">{t('hero.ctaMobile')}</span>
                   <span className="hidden sm:inline">{t('hero.ctaDesktop')}</span>
                 </ShinyButton>
-              </motion.div>
+              </div>
             </div>
 
           </div>

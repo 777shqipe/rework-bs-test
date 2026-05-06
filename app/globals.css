@@ -260,16 +260,12 @@
 }
 
 .modern-snap-container {
-  scroll-snap-type: y mandatory;
-  scroll-behavior: smooth;
   overscroll-behavior-y: none;
   -webkit-overflow-scrolling: touch;
   will-change: scroll-position;
 }
 
 .modern-snap-section {
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
   height: 100dvh;
   min-height: 100dvh;
   max-height: 100dvh;
@@ -284,6 +280,17 @@
   overflow-y: auto;
 }
 
+/* Mobile/touch fallback: use CSS scroll-snap where Lenis smooth is disabled */
+@media (hover: none) and (pointer: coarse) {
+  .modern-snap-container {
+    scroll-snap-type: y mandatory;
+  }
+  .modern-snap-section {
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+}
+
 /* ===== MOCKUP/IFRAME PREVIEW MODE ===== */
 /* Styles applied when site is viewed inside the phone mockup iframe */
 .mockup-mode {
@@ -292,9 +299,7 @@
 }
 
 .mockup-mode .modern-snap-container {
-  /* Disable scroll snap in mockup for smoother experience */
-  scroll-snap-type: none;
-  scroll-behavior: auto;
+  /* Lenis disabled in mockup mode; native scroll suffices */
 }
 
 .mockup-mode .modern-snap-section {
@@ -842,4 +847,31 @@
     padding-left: max(0px, env(safe-area-inset-left));
     padding-right: max(0px, env(safe-area-inset-right));
   }
+}
+
+/* ===========================================================
+   HERO SCROLL-DRIVEN TYPOGRAPHY — SplitType char support
+   =========================================================== */
+.hero-animated-title .char,
+.hero-content-h1 .char,
+.hero-skeleton-reveal .char {
+  display: inline-block;
+  will-change: transform, opacity;
+  white-space: pre;
+}
+
+.hero-animated-title,
+.hero-content-h1 {
+  word-break: keep-all;
+}
+
+/* Prevent layout shift while SplitType initialises */
+.hero-animated-title,
+.hero-content-h1 {
+  word-break: keep-all;
+}
+
+/* Skeleton reveal for subtitle & CTA */
+.hero-skeleton-reveal {
+  clip-path: inset(0 0 0 0);
 }
