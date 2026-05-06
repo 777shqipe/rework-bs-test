@@ -13,6 +13,7 @@ import PhoneGallery from './PhoneGallery';
 import LanguageSwitcher from './LanguageSwitcher';
 import { getServices } from '../data/services';
 import { projectMeta, buildProjects } from '../data/projects';
+import HeroFlashlightReveal from './HeroFlashlightReveal';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -1625,6 +1626,9 @@ export default function ModernSite({ onSwitchToTerminal }) {
             {t('nav.brandName')}
           </span>
         </h2>
+
+        {/* ── R3F Flashlight Reveal Overlay ── */}
+        <HeroFlashlightReveal />
 
         <div className="max-w-6xl mx-auto w-full relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
