@@ -414,41 +414,41 @@
   background: linear-gradient(135deg, #fdfcf9 0%, #f5f2ed 100%);
 }
 
-/* Dark Claymorphism 2.0 — Rich pillow depth on warm dark surfaces */
+/* Dark Claymorphism 2.0 — Warm cocoa ceramic on rich dark surfaces */
 .clay-card-dark {
   border-radius: 32px;
-  background: linear-gradient(145deg, #2b2720 0%, #1f1d18 100%);
-  border: 1px solid rgba(255, 248, 230, 0.07);
-  border-top-color: rgba(255, 248, 230, 0.13);
-  border-left-color: rgba(255, 248, 230, 0.10);
+  background: linear-gradient(145deg, #2a2218 0%, #1e1810 100%);
+  border: 1px solid rgba(240, 232, 220, 0.07);
+  border-top-color: rgba(240, 232, 220, 0.14);
+  border-left-color: rgba(240, 232, 220, 0.10);
   box-shadow:
-    4px 6px 16px rgba(0, 0, 0, 0.3),
-    -3px -3px 10px rgba(58, 52, 40, 0.06),
-    inset 4px 4px 10px rgba(255, 248, 230, 0.025),
+    4px 6px 16px rgba(0, 0, 0, 0.35),
+    -3px -3px 10px rgba(42, 34, 24, 0.08),
+    inset 4px 4px 10px rgba(240, 232, 220, 0.025),
     inset -4px -4px 10px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(255, 248, 230, 0.08);
+    inset 0 1px 0 rgba(240, 232, 220, 0.08);
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .clay-card-dark:hover {
-  background: linear-gradient(145deg, #302c24 0%, #22201a 100%);
-  border-top-color: rgba(255, 248, 230, 0.16);
+  background: linear-gradient(145deg, #30281e 0%, #22201a 100%);
+  border-top-color: rgba(240, 232, 220, 0.18);
   box-shadow:
-    6px 8px 22px rgba(0, 0, 0, 0.35),
-    -4px -4px 14px rgba(58, 52, 40, 0.08),
-    inset 3px 3px 8px rgba(255, 248, 230, 0.03),
+    6px 8px 22px rgba(0, 0, 0, 0.4),
+    -4px -4px 14px rgba(42, 34, 24, 0.10),
+    inset 3px 3px 8px rgba(240, 232, 220, 0.03),
     inset -3px -3px 8px rgba(0, 0, 0, 0.12),
-    inset 0 1px 0 rgba(255, 248, 230, 0.12);
+    inset 0 1px 0 rgba(240, 232, 220, 0.12);
 }
 
 .clay-pill-dark {
   border-radius: 60px;
-  background: linear-gradient(145deg, #2a2620 0%, #1e1c17 100%);
+  background: linear-gradient(145deg, #2a2218 0%, #1e1810 100%);
   box-shadow:
-    inset 2px 2px 5px rgba(255, 248, 230, 0.025),
+    inset 2px 2px 5px rgba(240, 232, 220, 0.025),
     inset -2px -2px 5px rgba(0, 0, 0, 0.15),
     2px 2px 5px rgba(0, 0, 0, 0.12);
-  border: 1px solid rgba(255, 248, 230, 0.08);
+  border: 1px solid rgba(240, 232, 220, 0.08);
 }
 
 @keyframes float {
@@ -682,36 +682,36 @@
 .clay-card-dark::before {
   content: '';
   position: absolute;
-  inset: -2px;
-  border-radius: 34px;
+  inset: 0;
+  border-radius: inherit;
   background: radial-gradient(
     500px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-    rgba(196, 167, 108, 0.25),
-    rgba(212, 202, 187, 0.1) 40%,
+    rgba(212, 164, 90, 0.22),
+    rgba(232, 184, 106, 0.10) 40%,
     transparent 70%
   );
   opacity: 0;
   transition: opacity 0.4s ease;
   pointer-events: none;
-  z-index: -1;
+  z-index: 1;
 }
 
 .clay-card-dark:hover::before {
   opacity: 1;
 }
 
-/* Border glow for dark cards — more visible */
+/* Border glow for dark cards — warm amber edge */
 .clay-card-dark::after {
   content: '';
   position: absolute;
   inset: 0;
-  border-radius: 32px;
+  border-radius: inherit;
   padding: 1px;
   background: linear-gradient(
     135deg,
-    rgba(196, 180, 148, 0) 0%,
-    rgba(196, 180, 148, 0) 50%,
-    rgba(196, 180, 148, 0) 100%
+    rgba(212, 164, 90, 0) 0%,
+    rgba(212, 164, 90, 0) 50%,
+    rgba(212, 164, 90, 0) 100%
   );
   -webkit-mask: 
     linear-gradient(#fff 0 0) content-box, 
@@ -721,17 +721,18 @@
   opacity: 0;
   transition: opacity 0.5s ease, background 0.5s ease;
   pointer-events: none;
+  z-index: 2;
 }
 
 .clay-card-dark:hover::after {
   opacity: 1;
   background: linear-gradient(
     135deg,
-    rgba(196, 180, 148, 0.5) 0%,
-    rgba(180, 165, 135, 0.25) 30%,
+    rgba(212, 164, 90, 0.5) 0%,
+    rgba(196, 167, 108, 0.25) 30%,
     transparent 50%,
-    rgba(180, 165, 135, 0.25) 70%,
-    rgba(196, 180, 148, 0.4) 100%
+    rgba(196, 167, 108, 0.25) 70%,
+    rgba(212, 164, 90, 0.4) 100%
   );
 }
 
@@ -739,10 +740,10 @@
 .clay-card-dark .glow-inner {
   position: absolute;
   inset: 0;
-  border-radius: 32px;
+  border-radius: inherit;
   background: radial-gradient(
     ellipse at 50% 0%,
-    rgba(196, 180, 148, 0.08) 0%,
+    rgba(212, 164, 90, 0.08) 0%,
     transparent 60%
   );
   opacity: 0;
@@ -803,6 +804,67 @@
 
 .card-glow-subtle:hover::before {
   opacity: 1;
+}
+
+/* Flickering light effect — like a faulty neon / broken bulb */
+@keyframes broken-glow {
+  0%, 100% {
+    opacity: 1;
+    text-shadow: 0 0 20px rgba(196, 180, 148, 0.6), 0 0 40px rgba(196, 180, 148, 0.3);
+    color: #c4b494;
+  }
+  4% {
+    opacity: 0.4;
+    text-shadow: none;
+  }
+  6% {
+    opacity: 1;
+    text-shadow: 0 0 20px rgba(196, 180, 148, 0.8), 0 0 50px rgba(196, 180, 148, 0.4);
+  }
+  8% {
+    opacity: 0.6;
+    text-shadow: none;
+  }
+  10% {
+    opacity: 1;
+    text-shadow: 0 0 8px rgba(196, 180, 148, 0.5), 0 0 30px rgba(196, 180, 148, 0.2);
+  }
+  40% {
+    opacity: 1;
+    text-shadow: 0 0 10px rgba(196, 180, 148, 0.4), 0 0 25px rgba(196, 180, 148, 0.15);
+  }
+  42% {
+    opacity: 0.3;
+    text-shadow: none;
+  }
+  43% {
+    opacity: 1;
+    text-shadow: 0 0 25px rgba(196, 180, 148, 0.7), 0 0 60px rgba(196, 180, 148, 0.35);
+  }
+  45% {
+    opacity: 0.7;
+    text-shadow: 0 0 5px rgba(196, 180, 148, 0.2);
+  }
+  47% {
+    opacity: 1;
+    text-shadow: 0 0 20px rgba(196, 180, 148, 0.6), 0 0 40px rgba(196, 180, 148, 0.3);
+  }
+  80% {
+    opacity: 1;
+    text-shadow: 0 0 12px rgba(196, 180, 148, 0.5), 0 0 30px rgba(196, 180, 148, 0.2);
+  }
+  82% {
+    opacity: 0.5;
+    text-shadow: none;
+  }
+  83% {
+    opacity: 1;
+    text-shadow: 0 0 15px rgba(196, 180, 148, 0.6), 0 0 35px rgba(196, 180, 148, 0.25);
+  }
+}
+
+.hero-highlight-glow {
+  animation: broken-glow 4s ease-in-out infinite;
 }
 
 /* ===== MOBILE OPTIMIZATIONS ===== */

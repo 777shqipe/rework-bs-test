@@ -9,10 +9,10 @@ import Snap from 'lenis/snap';
 import SplitType from 'split-type';
 import { useI18n } from '../lib/i18n-context';
 import { ShinyButton } from './ui/shiny-button';
-import PhoneGallery from './PhoneGallery';
 import LanguageSwitcher from './LanguageSwitcher';
 import { getServices } from '../data/services';
 import { projectMeta, buildProjects } from '../data/projects';
+import ThreeDCarousel from './ThreeDCarousel';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -102,79 +102,6 @@ function ModernTypewriter({ servizio, t }) {
 }
 
 /* ===========================================================
-   PROJECT CARD — Animated card with FLIP layout transitions
-=========================================================== */
-function ProjectCard({ project, index, isCompact, onClick, direction, enableMorph }) {
-  return (
-    <motion.div
-      layout={enableMorph}
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -6, x: direction > 0 ? -14 : 14 }}
-      transition={{
-        duration: enableMorph ? 0.22 : 0.2,
-        delay: Math.min(index * (enableMorph ? 0.008 : 0.004), enableMorph ? 0.06 : 0.04),
-        ease: [0.22, 1, 0.36, 1],
-        layout: enableMorph ? {
-          type: 'spring',
-          stiffness: 520,
-          damping: 44,
-          mass: 0.6,
-        } : undefined,
-      }}
-      onClick={onClick}
-      className={`cursor-pointer group overflow-hidden relative clay-card-dark ${
-        isCompact
-          ? 'p-3 sm:p-4 flex flex-col justify-between min-h-[104px]'
-          : 'p-5 sm:p-6 min-h-[196px]'
-      } transform-gpu will-change-transform`}
-      whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
-    >
-      <div className="absolute top-0 left-6 right-6 h-px" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(196, 180, 148, 0.2) 50%, transparent 100%)' }} />
-      <div className={`absolute opacity-[0.05] font-black tracking-tighter text-[#d4cabb] select-none ${isCompact ? 'top-0 right-0 p-2 sm:p-3 text-2xl sm:text-4xl' : 'top-1 right-1 sm:top-0 sm:right-0 p-2 sm:p-3 text-4xl sm:text-4xl'}`}>{project.year}</div>
-
-      <div className={isCompact ? '' : 'flex justify-between items-start mb-3'}>
-        <h3 className={`font-black leading-tight text-[#ede8de] group-hover:text-[#f5f2ec] ${isCompact ? 'text-sm pr-8' : 'text-base sm:text-lg max-w-[80%]'}`}>
-          {project.n}
-        </h3>
-        {!isCompact && <div className="w-8 h-8 flex items-center justify-center rounded-full text-sm clay-pill-dark text-[#b8ad98] group-hover:rotate-45 transition-transform">↗</div>}
-      </div>
-
-      <AnimatePresence mode="wait" initial={false}>
-        {!isCompact ? (
-          <motion.div
-            key="expanded"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <p className="text-xs leading-relaxed mb-2 line-clamp-2" style={{ color: '#9a9484' }}>{project.desc}</p>
-            <div className="flex flex-wrap gap-1.5">
-              {project.tags.slice(0, 3).map(t => (
-                <span key={t} className="px-2 py-1 text-[10px] font-black uppercase tracking-wider clay-pill-dark text-[#8a7f6a]">{t}</span>
-              ))}
-            </div>
-          </motion.div>
-        ) : (
-          <motion.div
-            key="compact"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-            className="mt-auto pt-2 flex justify-between items-end"
-          >
-            <span className="text-xs text-[#7a7568] font-bold">{project.year}</span>
-            <div className="w-6 h-6 flex items-center justify-center rounded-full text-xs clay-pill-dark text-[#b8ad98] group-hover:rotate-45 transition-transform">↗</div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
-  );
-}
-
-/* ===========================================================
    MODERN SITE — CLAYMORPHISM MODE (COMPLETE LANDING PAGE)
    NOTE: Only use REAL data from https://backsoftware.it
    NEVER invent information, stats, or claims not present on the official site.
@@ -184,13 +111,14 @@ export default function ModernSite({ onSwitchToTerminal }) {
   const { t } = useI18n();
   const [showContactForm, setShowContactForm] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
-  const [selectedCategoryKey, setSelectedCategoryKey] = useState('all');
-  const [categoryDirection, setCategoryDirection] = useState(1);
-  const [categoryTransitionType, setCategoryTransitionType] = useState('morph');
   const [showFooter, setShowFooter] = useState(false);
   const [isMockupMode, setIsMockupMode] = useState(false);
   const contactSectionRef = useRef(null);
   const footerCardRef = useRef(null);
+  const footerTextRef = useRef(null);
+  const footerTitleRef = useRef(null);
+  const footerContentRef = useRef(null);
+  const footerDescRef = useRef(null);
   const [footerStrokeActive, setFooterStrokeActive] = useState(false);
 
   // ── Hero scroll-driven typography refs ──
@@ -575,11 +503,9 @@ export default function ModernSite({ onSwitchToTerminal }) {
   );
 
   const handleCloseService = () => {
-    const source = selectedService?.source;
     setSelectedService(null);
     setTimeout(() => {
-      const targetId = source === 'progetti' ? 'progetti' : 'servizi';
-      document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth' });
+      document.getElementById('servizi')?.scrollIntoView({ behavior: 'smooth' });
     }, 50);
   };
 
@@ -589,53 +515,6 @@ export default function ModernSite({ onSwitchToTerminal }) {
   const projectMetaStatic = useMemo(() => projectMeta, []);
 
   const projects = useMemo(() => buildProjects(projectMetaStatic, t), [t]);
-
-  // Group projects by category for modern view. Use category KEYS as state to avoid breaking on locale change.
-  const categoryKeys = ['management', 'website', 'marketing', 'crm'];
-  const allCategoryKeys = ['all', ...categoryKeys];
-
-  const getCategoryDisplayName = (key) => t(`projects.categories.${key}`);
-
-  const handleCategoryChange = (catKey) => {
-    if (catKey === selectedCategoryKey) return;
-    const prevIndex = allCategoryKeys.indexOf(selectedCategoryKey);
-    const nextIndex = allCategoryKeys.indexOf(catKey);
-    const prevIsCompact = selectedCategoryKey === 'all';
-    const nextIsCompact = catKey === 'all';
-
-    setCategoryTransitionType(prevIsCompact !== nextIsCompact ? 'morph' : 'swap');
-    setCategoryDirection(nextIndex >= prevIndex ? 1 : -1);
-    setSelectedCategoryKey(catKey);
-  };
-
-  const isCompactCategory = selectedCategoryKey === 'all';
-  const visibleProjects = useMemo(() => {
-    if (isCompactCategory) return projects;
-    return projects.filter(p => p.categoryKey === selectedCategoryKey);
-  }, [projects, isCompactCategory, selectedCategoryKey]);
-
-  const galleryGridVariants = {
-    initial: (dir) => ({
-      opacity: 0,
-      x: dir > 0 ? 40 : -40,
-    }),
-    animate: {
-      opacity: 1,
-      x: 0,
-      transition: {
-        duration: 0.4,
-        ease: [0.16, 1, 0.3, 1],
-      },
-    },
-    exit: (dir) => ({
-      opacity: 0,
-      x: dir > 0 ? -30 : 30,
-      transition: {
-        duration: 0.2,
-        ease: [0.4, 0, 1, 1],
-      },
-    }),
-  };
 
   const footerServiceLinks = useMemo(() => ([
     { label: t('footer.links.web'), href: '#servizi' },
@@ -808,6 +687,18 @@ export default function ModernSite({ onSwitchToTerminal }) {
       syncTouch: false,
     });
 
+    // ScrollTrigger proxy → all ST instances share this Lenis-powered scroller
+    ScrollTrigger.scrollerProxy(scroller, {
+      scrollTop(value) {
+        if (arguments.length) { scroller.scrollTop = value; }
+        return scroller.scrollTop;
+      },
+      getBoundingClientRect() {
+        return { top: 0, left: 0, width: scroller.clientWidth, height: scroller.clientHeight };
+      },
+      pinType: 'transform',
+    });
+
     // Lenis snap module: replicates CSS scroll-snap in JS
     const snap = new Snap(lenis, {
       type: 'proximity',
@@ -855,6 +746,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
       removeSnapEls();
       snap.destroy();
       lenis.destroy();
+      ScrollTrigger.clearScrollerProxy(scroller);
       scroller.removeEventListener('click', handleAnchorClick);
     };
   }, [isMockupMode]);
@@ -874,19 +766,6 @@ export default function ModernSite({ onSwitchToTerminal }) {
 
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (prefersReducedMotion) return;
-
-    ScrollTrigger.scrollerProxy(scroller, {
-      scrollTop(value) {
-        if (arguments.length) {
-          scroller.scrollTop = value;
-        }
-        return scroller.scrollTop;
-      },
-      getBoundingClientRect() {
-        return { top: 0, left: 0, width: scroller.clientWidth, height: scroller.clientHeight };
-      },
-      pinType: 'transform',
-    });
 
     const heroH1 = heroSection.querySelector('.hero-content-h1');
     let bgSplit = null;
@@ -1019,14 +898,263 @@ export default function ModernSite({ onSwitchToTerminal }) {
       if (bgSplit) bgSplit.revert();
       if (h1Split) h1Split.revert();
       if (subSplit) subSplit.revert();
-      ScrollTrigger.clearScrollerProxy(scroller);
     };
   }, [t]);
 
-  // Service/Project detail modal
+  /* ===========================================================
+     SECTIONS — GSAP ScrollTrigger scrub reveals via Lenis
+     Scrub-driven: animations map to scroll position for fluidity
+     Cada sección cresce in intensità — Why Us gentile, Contatti grandioso
+     =========================================================== */
+  useEffect(() => {
+    if (isMockupMode) return;
+    const scroller = scrollContainerRef.current;
+    if (!scroller) return;
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) return;
+
+    let ctx = null;
+    const timeout = setTimeout(() => {
+      ctx = gsap.context(() => {
+
+        /* ─── WHY US — gentle entrance, cards grow from below ─── */
+        {
+          const trigger = document.querySelector('#come-lavoriamo');
+          if (trigger) {
+            const cards = trigger.querySelectorAll('.clay-card-dark');
+            const numbers = trigger.querySelectorAll('.clay-card-dark [class*="text-4xl"], .clay-card-dark [class*="text-6xl"]');
+            const accents = trigger.querySelectorAll('.clay-card-dark > .absolute.top-0');
+
+            const tl = gsap.timeline({
+              scrollTrigger: {
+                trigger,
+                scroller,
+                start: 'top 80%',
+                end: 'top 30%',
+                scrub: 0.5,
+              },
+            });
+
+            tl.fromTo(cards,
+              { opacity: 0, y: 100, scale: 0.92, clipPath: 'inset(0% 0% 100% 0%)' },
+              {
+                opacity: 1, y: 0, scale: 1, clipPath: 'inset(0% 0% 0% 0%)',
+                stagger: 0.22,
+                ease: 'power2.out',
+              },
+              0
+            );
+
+            if (accents.length) {
+              tl.fromTo(accents,
+                { scaleX: 0, transformOrigin: 'left center' },
+                { scaleX: 1, stagger: 0.22, ease: 'power2.inOut' },
+                0.1
+              );
+            }
+
+            if (numbers.length) {
+              tl.fromTo(numbers,
+                { opacity: 0, scale: 0, y: 20 },
+                { opacity: 1, scale: 1, y: 0, stagger: 0.22, ease: 'power2.out' },
+                0.2
+              );
+            }
+          }
+        }
+
+        /* ─── SERVIZI — building momentum, wider wave ─── */
+        {
+          const trigger = document.querySelector('#servizi');
+          if (trigger) {
+            const cards = trigger.querySelectorAll('.clay-card');
+            const icons = trigger.querySelectorAll('.clay-card .clay-pill');
+
+            const tl = gsap.timeline({
+              scrollTrigger: {
+                trigger,
+                scroller,
+                start: 'top 78%',
+                end: 'top 22%',
+                scrub: 0.6,
+              },
+            });
+
+            tl.fromTo(cards,
+              { opacity: 0, y: 100, scale: 0.88, clipPath: 'inset(0% 0% 100% 0%)' },
+              {
+                opacity: 1, y: 0, scale: 1, clipPath: 'inset(0% 0% 0% 0%)',
+                stagger: { each: 0.18, from: 'start' },
+                ease: 'power3.out',
+              },
+              0
+            );
+
+            if (icons.length) {
+              tl.fromTo(icons,
+                { opacity: 0, scale: 0, rotateY: 110, transformOrigin: 'center center' },
+                {
+                  opacity: 1, scale: 1, rotateY: 0,
+                  stagger: { each: 0.16, from: 'start' },
+                  ease: 'power2.out',
+                },
+                0.25
+              );
+            }
+          }
+        }
+
+        /* ─── PROGETTI — full impact, dramatic sweep ─── */
+        {
+          const trigger = document.querySelector('#progetti');
+          if (trigger) {
+            const pills = trigger.querySelectorAll('button');
+            const grid = trigger.querySelector('.grid');
+            const gridCards = grid ? gsap.utils.toArray(grid.children) : [];
+
+            const tl = gsap.timeline({
+              scrollTrigger: {
+                trigger,
+                scroller,
+                start: 'top 82%',
+                end: 'top 15%',
+                scrub: 0.65,
+              },
+            });
+
+            if (pills.length) {
+              tl.fromTo(pills,
+                { opacity: 0, y: -35, scale: 0.82 },
+                {
+                  opacity: 1, y: 0, scale: 1,
+                  stagger: { each: 0.08, from: 'start' },
+                  ease: 'power2.out',
+                },
+                0
+              );
+            }
+
+            if (gridCards.length) {
+              tl.fromTo(gridCards,
+                { opacity: 0, y: 80, scale: 0.88, rotationX: 4, transformOrigin: 'center 150%' },
+                {
+                  opacity: 1, y: 0, scale: 1, rotationX: 0,
+                  stagger: { each: 0.14, from: 'start' },
+                  ease: 'power3.out',
+                },
+                0.12
+              );
+            }
+          }
+        }
+
+        /* ─── CONTATTI — crescendo finale ─── */
+        {
+          const trigger = document.querySelector('#contatti');
+          if (trigger) {
+            const card = trigger.querySelector('.clay-card');
+            if (card) {
+              const ctas = card.querySelectorAll('.shiny-cta, .clay-btn, a[href^="tel"]');
+
+              const tl = gsap.timeline({
+                scrollTrigger: {
+                  trigger,
+                  scroller,
+                  start: 'top 80%',
+                  end: 'top 15%',
+                  scrub: 0.7,
+                },
+              });
+
+              tl.fromTo(card,
+                { opacity: 0, scale: 0.78, y: 80 },
+                { opacity: 1, scale: 1, y: 0, ease: 'power3.out' },
+                0
+              );
+
+              if (ctas.length) {
+                tl.fromTo(ctas,
+                  { opacity: 0, y: 30, scale: 0.85 },
+                  {
+                    opacity: 1, y: 0, scale: 1,
+                    stagger: 0.2,
+                    ease: 'power2.out',
+                  },
+                  0.35
+                );
+              }
+            }
+          }
+        }
+
+      }, scroller);
+    }, 250);
+
+    return () => {
+      clearTimeout(timeout);
+      if (ctx) ctx.revert();
+    };
+  }, [isMockupMode]);
+
+  /* ─── FOOTER TEXT — all chars fly in from top/bottom on open ─── */
+  useEffect(() => {
+    if (!showFooter) return;
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) return;
+
+    const splits = [];
+    const timeouts = [];
+
+    const animateText = (el, delay, stagger = 0.05) => {
+      if (!el) return;
+      const split = new SplitType(el, { types: 'chars' });
+      splits.push(split);
+      const chars = split.chars;
+      if (!chars || chars.length === 0) return;
+      chars.forEach((c) => {
+        c.style.display = 'inline-block';
+        c.style.willChange = 'transform, opacity';
+      });
+      gsap.fromTo(chars,
+        { opacity: 0, y: (i) => i % 2 === 0 ? -22 : 22, scale: 0.75, rotationZ: (i) => i % 2 === 0 ? -3 : 3 },
+        {
+          opacity: 1, y: 0, scale: 1, rotationZ: 0,
+          duration: 0.6,
+          stagger: { each: stagger, from: 'start' },
+          ease: 'power3.out',
+          delay,
+        }
+      );
+    };
+
+    timeouts.push(setTimeout(() => {
+      // 1. Center title
+      animateText(footerTitleRef.current, 0, 0.06);
+
+      // 2. Description
+      animateText(footerDescRef.current, 0.25, 0.025);
+
+      // 3. Section headings
+      const headings = footerContentRef.current?.querySelectorAll('h5');
+      if (headings) {
+        headings.forEach((h, i) => animateText(h, 0.4 + i * 0.1, 0.04));
+      }
+
+      // 4. Links
+      const links = footerContentRef.current?.querySelectorAll('a, p');
+      if (links) {
+        links.forEach((l, i) => animateText(l, 0.6 + i * 0.04, 0.02));
+      }
+    }, 200));
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+      splits.forEach((s) => s.revert());
+    };
+  }, [showFooter]);
+
+  // Service detail modal
   if (selectedService) {
-    const isProject = selectedService.source === 'progetti';
-    
     return (
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         className="w-full pt-4 sm:pt-6 lg:pt-10 pb-6 sm:pb-10 lg:pb-20 px-4 sm:px-10 lg:px-20 h-[100dvh] flex flex-col font-sans modern-mode relative overflow-y-auto overflow-x-hidden overscroll-y-contain"
@@ -1036,83 +1164,21 @@ export default function ModernSite({ onSwitchToTerminal }) {
           <motion.button onClick={handleCloseService}
             className="clay-btn px-6 py-3 mb-6 text-sm font-bold !rounded-xl text-[#3d3828] flex items-center gap-2"
             whileHover={{ x: -5 }} whileTap={{ scale: 0.95 }}>
-            {isProject ? t('serviceModal.backToProjects') : t('serviceModal.backToServices')}
+            {t('serviceModal.backToServices')}
           </motion.button>
           
-          <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 200 }}
-            className={`${isProject ? 'grid lg:grid-cols-2 gap-8 lg:gap-12 items-center justify-items-center' : ''}`}>
-            
-            {/* Phone Mockup with Gallery - Only for projects */}
-            {isProject && (
-              <div className="order-2 lg:order-2 flex justify-center lg:justify-start lg:-ml-4">
-                <div 
-                  className="relative w-[280px] sm:w-[300px]"
-                  style={{ height: '580px' }}
-                >
-                  {/* Phone Body Shadow */}
-                  <div 
-                    className="absolute -inset-4 blur-2xl opacity-20 rounded-[3rem]"
-                    style={{ background: 'radial-gradient(circle at center, rgba(124, 111, 91, 0.5) 0%, transparent 70%)' }}
-                  />
-                  
-                  {/* Phone Body */}
-                  <div 
-                    className="relative h-full bg-[#1a1a1a] rounded-[2.5rem] p-3 shadow-2xl"
-                    style={{
-                      boxShadow: `
-                        0 25px 50px -12px rgba(0, 0, 0, 0.5),
-                        0 0 0 1px rgba(255, 255, 255, 0.1) inset,
-                        0 2px 4px rgba(255, 255, 255, 0.1) inset
-                      `
-                    }}
-                  >
-                    {/* Side Buttons */}
-                    <div className="absolute -left-1 top-[18%] w-1.5 h-8 bg-[#2a2a2a] rounded-l" />
-                    <div className="absolute -left-1 top-[28%] w-1.5 h-16 bg-[#2a2a2a] rounded-l" />
-                    <div className="absolute -right-1 top-[22%] w-1.5 h-12 bg-[#2a2a2a] rounded-r" />
-                    
-                    {/* Screen with Gallery */}
-                    <div className="h-full rounded-[2rem] overflow-hidden bg-black relative">
-                      {/* Notch */}
-                      <div className="absolute top-2 left-1/2 -translate-x-1/2 w-[40%] h-6 bg-black rounded-full z-30" />
-                      
-                      <PhoneGallery 
-                        images={selectedService.images || []}
-                        className="w-full h-full"
-                        autoPlay={true}
-                        interval={4000}
-                      />
-                    </div>
-                  </div>
-                  
-                  {/* Reflection/Gloss */}
-                  <div 
-                    className="absolute inset-0 rounded-[2.5rem] pointer-events-none"
-                    style={{
-                      background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 30%, transparent 70%, rgba(255,255,255,0.05) 100%)',
-                    }}
-                  />
-                </div>
-              </div>
-            )}
+<motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 200 }}>
             
             {/* Content */}
-            <div className={`${isProject ? 'order-1 lg:order-1' : ''}`}>
+            <div>
               <div className="clay-card p-10 sm:p-16 lg:p-20 mb-8">
-                {!isProject && <div className="text-5xl mb-4">{selectedService.icon}</div>}
+                <div className="text-5xl mb-4">{selectedService.icon}</div>
                 <h2 className="text-3xl sm:text-4xl font-black text-[#2d2818] mb-4 tracking-tight">{selectedService.title}</h2>
                 <p className="text-lg leading-relaxed text-[#6a6050] font-medium">{selectedService.details}</p>
-                
-                {/* Project-specific extra info */}
-                {isProject && selectedService.category && (
-                  <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#7c6f5b]/10 text-[#7c6f5b] text-sm font-medium">
-                    <span>{selectedService.category}</span>
-                  </div>
-                )}
               </div>
               
-              {/* Packages - Only for services */}
-              {!isProject && selectedService.packages && (
+              {/* Packages */}
+              {selectedService.packages && (
                 <div className="mb-6">
                   <h3 className="text-xl font-bold text-[#2d2818] mb-4 px-2">{t('serviceModal.choosePackage')}</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1136,15 +1202,15 @@ export default function ModernSite({ onSwitchToTerminal }) {
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 px-1 sm:px-2 mt-4">
                 <button onClick={() => { handleCloseService(); setShowContactForm(true); setFormData(prev => ({ ...prev, servizio: selectedService.title })); }}
                   className="clay-btn w-full sm:w-auto px-6 py-3.5 text-[15px] sm:text-base font-bold !rounded-2xl text-[#3d3828] bg-[#fdfcf9] hover:scale-105 transition-transform flex items-center justify-center gap-2">
-                  {isProject ? t('serviceModal.similarProject') : t('serviceModal.requestInfo')} <span>→</span>
+                  {t('serviceModal.requestInfo')} <span>→</span>
                 </button>
                 <button onClick={handleCloseService}
                   className="clay-btn w-full sm:w-auto px-6 py-3.5 text-[15px] sm:text-base font-bold !rounded-2xl text-[#6a6050] flex items-center justify-center">
-                  {isProject ? t('serviceModal.otherProjects') : t('serviceModal.otherServices')}
+                  {t('serviceModal.otherServices')}
                 </button>
               </div>
             </div>
-          </motion.div>
+</motion.div>
         </div>
       </motion.div>
     );
@@ -1455,8 +1521,8 @@ export default function ModernSite({ onSwitchToTerminal }) {
                   {orbitTextMobile && (
                     <>
                       <text
-                        fill={orbitColorMobile}
-                        style={{ fontSize: '6px', fontWeight: 700, letterSpacing: '0', opacity: 0.58, transition: 'fill 0.4s ease', textRendering: 'geometricPrecision' }}
+fill={orbitColorMobile}
+                      style={{ fontSize: '6px', fontWeight: 700, letterSpacing: '0', opacity: 0.32, transition: 'fill 0.4s ease', textRendering: 'geometricPrecision' }}
                       >
                         <textPath ref={orbitRef1Mobile} href="#header-orbit-path-mobile" startOffset="0" textLength={pathLenMobile} lengthAdjust="spacing">
                           {orbitTextMobile}
@@ -1471,9 +1537,9 @@ export default function ModernSite({ onSwitchToTerminal }) {
               )}
             </svg>
 
-            {/* Giant watermark behind mobile header */}
-            <span className="absolute inset-0 flex items-center pointer-events-none select-none overflow-visible" aria-hidden="true">
-              <span className="text-[3.2rem] sm:text-[4rem] font-black tracking-tighter leading-none whitespace-nowrap text-[#2d2818]/[0.22]" style={{ transform: 'translateX(2%)' }}>{t('nav.brandName').toUpperCase()}</span>
+            {/* Giant watermark behind mobile header — full-height immersive */}
+            <span className="absolute inset-0 flex items-center pointer-events-none select-none overflow-hidden" aria-hidden="true" style={{ padding: '0 40% 0 3%' }}>
+              <span className="text-[6vw] font-black tracking-tighter leading-[0.8] whitespace-nowrap text-[#2d2818]/[0.16]" style={{ transform: 'scaleY(1.2) translateX(-2%)' }}>{t('nav.brandName').toUpperCase()}</span>
             </span>
 
             {/* Logo Mobile */}
@@ -1535,7 +1601,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
                   <>
                     <text
                       fill={orbitColor}
-                      style={{ fontSize: '8px', fontWeight: 800, letterSpacing: '1.2px', opacity: 0.62, transition: 'fill 0.4s ease', textRendering: 'geometricPrecision' }}
+                      style={{ fontSize: '8px', fontWeight: 800, letterSpacing: '1.2px', opacity: 0.35, transition: 'fill 0.4s ease', textRendering: 'geometricPrecision' }}
                     >
                       <textPath ref={orbitRef1Desktop} href="#header-orbit-path-desktop" startOffset="0" textLength={pathLenDesktop} lengthAdjust="spacing">
                         {orbitTextDesktop}
@@ -1543,7 +1609,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
                     </text>
                     <text
                       fill={orbitColor}
-                      style={{ fontSize: '8px', fontWeight: 800, letterSpacing: '1.2px', opacity: 0.62, transition: 'fill 0.4s ease', textRendering: 'geometricPrecision' }}
+                      style={{ fontSize: '8px', fontWeight: 800, letterSpacing: '1.2px', opacity: 0.35, transition: 'fill 0.4s ease', textRendering: 'geometricPrecision' }}
                     >
                       <textPath ref={orbitRef2Desktop} href="#header-orbit-path-desktop" startOffset="0" textLength={pathLenDesktop} lengthAdjust="spacing">
                         {orbitTextDesktop}
@@ -1555,9 +1621,9 @@ export default function ModernSite({ onSwitchToTerminal }) {
             )}
           </svg>
 
-          {/* Giant watermark behind desktop header */}
-          <span className="absolute inset-0 flex items-center pointer-events-none select-none overflow-visible" aria-hidden="true">
-            <span className="text-[2.5rem] lg:text-[3rem] font-black tracking-tighter leading-none whitespace-nowrap text-[#2d2818]/[0.22]" style={{ transform: 'translateX(2%)' }}>{t('nav.brandName').toUpperCase()}</span>
+          {/* Giant watermark behind desktop header — full-height immersive */}
+          <span className="absolute inset-0 flex items-center pointer-events-none select-none overflow-hidden" aria-hidden="true" style={{ padding: '0 45% 0 3%' }}>
+            <span className="text-[3.8rem] lg:text-[4.6rem] xl:text-[5.2rem] font-black tracking-tighter leading-[0.78] whitespace-nowrap text-[#2d2818]/[0.16]" style={{ transform: 'scaleY(1.22) translateX(-1%)' }}>{t('nav.brandName').toUpperCase()}</span>
           </span>
 
           {/* Logo Desktop */}
@@ -1589,9 +1655,10 @@ export default function ModernSite({ onSwitchToTerminal }) {
 
             <button 
               onClick={onSwitchToTerminal}
-              className="px-2 py-1 text-[11px] lg:text-xs font-bold rounded-full text-[#746a57] hover:text-[#3d3528] bg-[#f8f4ec] border border-[#dbd3c6] hover:bg-[#f1e9dc] transition-all min-w-[40px] min-h-[32px] flex items-center justify-center active:scale-95"
+              className="w-8 h-8 flex items-center justify-center rounded-full text-[#746a57] hover:text-[#3d3528] bg-[#f8f4ec] border border-[#dbd3c6]/70 hover:bg-[#f1e9dc] transition-all active:scale-95"
+              aria-label={t('nav.arcade')}
             >
-              <span aria-hidden="true">🎮</span> {t('nav.arcade')}
+              🎮
             </button>
             
             <ShinyButton
@@ -1634,7 +1701,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
                 className="hero-content-h1 text-[3rem] sm:text-5xl md:text-6xl lg:text-6xl xl:text-7xl font-black leading-[1.12] sm:leading-[1.05] mb-6 sm:mb-8 tracking-tight text-[#2d2818]">
                 <span className="block mb-2">{t('hero.title1')}</span>
                 <span className="block mb-2">{t('hero.title2')}</span>
-                <span className="text-[#8a7f6a] drop-shadow-sm block">{t('hero.title3')}<span className="transition-all duration-500 ease-out hover:text-[#c4b494] hover:drop-shadow-[0_0_30px_rgba(196,180,148,0.8),0_0_60px_rgba(196,180,148,0.4)] cursor-default">{t('hero.title3Highlight')}</span>.</span>
+                <span className="text-[#8a7f6a] drop-shadow-sm block">{t('hero.title3')}<span className="whitespace-nowrap hero-highlight-glow cursor-default">{t('hero.title3Highlight')}</span>.</span>
               </h1>
               <p
                 ref={heroSubtitleRef}
@@ -1667,45 +1734,54 @@ export default function ModernSite({ onSwitchToTerminal }) {
 
       {/* ── DARK SECTION: Why Us ── */}
       <motion.section id="come-lavoriamo" data-dark-section variants={itemVariants} className="modern-snap-section flex flex-col justify-center relative px-4 sm:px-6 lg:px-10 pt-20 sm:pt-24 pb-12 sm:py-20 overflow-hidden" style={{
-        background: 'linear-gradient(135deg, #1a1810 0%, #1c1917 50%, #1a1810 100%)',
+        background: 'linear-gradient(160deg, #3d2820 0%, #2a1e16 40%, #352218 100%)',
       }}>
-        {/* Subtle dark texture overlay */}
+        {/* Warm clay ambient — rich inner glow */}
+        <div className="absolute inset-0 pointer-events-none" style={{
+          background: 'radial-gradient(ellipse 120% 80% at 50% 50%, rgba(196,167,108,0.08) 0%, transparent 70%)',
+        }} />
+        {/* Subtle texture */}
         <div className="absolute inset-0 opacity-[0.02]" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
           backgroundSize: '256px 256px',
         }} />
         {/* Ambient warm glow - hidden on mobile */}
-        <div className="hidden sm:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[60%] rounded-full opacity-[0.04] pointer-events-none" style={{ background: 'radial-gradient(ellipse, #b8a88a 0%, transparent 70%)' }} />
-        <div className="hidden sm:block absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full opacity-[0.03] pointer-events-none" style={{ background: 'radial-gradient(circle, #c4a76c 0%, transparent 60%)' }} />
+        <div className="hidden sm:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[60%] rounded-full opacity-[0.07] pointer-events-none" style={{ background: 'radial-gradient(ellipse, #d4a45a 0%, transparent 70%)' }} />
 
         <div className="relative z-10 max-w-6xl mx-auto w-full">
           <motion.div variants={itemVariants} className="mb-6 sm:mb-12 space-y-3 sm:space-y-4">
-            <motion.h2 {...sectionTitleReveal} className={`${sectionTitleClass} text-[#f5f2ec]`}>
+            <motion.h2 {...sectionTitleReveal} className={`${sectionTitleClass} text-[#f0e8dc]`}>
               {t('whyUs.title')}
             </motion.h2>
-            <motion.p {...sectionSubtitleReveal} className="text-sm sm:text-lg leading-relaxed max-w-2xl font-medium" style={{ color: '#a09a88' }}>
+            <motion.p {...sectionSubtitleReveal} className="text-sm sm:text-lg leading-relaxed max-w-2xl font-medium" style={{ color: '#a89880' }}>
               {t('whyUs.subtitle')}
             </motion.p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             {[
               { num: '01', title: t('whyUs.cards.01.title'), desc: t('whyUs.cards.01.desc') },
               { num: '02', title: t('whyUs.cards.02.title'), desc: t('whyUs.cards.02.desc') },
               { num: '03', title: t('whyUs.cards.03.title'), desc: t('whyUs.cards.03.desc') }
             ].map((item, i) => (
               <motion.div key={i} variants={itemVariants}
-                className="clay-card-dark p-4 sm:p-8 relative group transition-all duration-300 sm:hover:scale-[1.02] overflow-hidden">
-                {/* Top accent line — glows on hover */}
-                <div className="absolute top-0 left-6 sm:left-8 right-6 sm:right-8 h-px transition-all duration-500 sm:group-hover:left-6 sm:group-hover:right-6" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(196, 180, 148, 0.25) 50%, transparent 100%)' }} />
-                <div className="hidden sm:block absolute top-0 left-12 right-12 h-px opacity-0 group-hover:opacity-100 blur-[2px] transition-all duration-500" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(196, 180, 148, 0.4) 50%, transparent 100%)' }} />
-                <div className="text-4xl sm:text-6xl font-black mb-2 sm:mb-4 tracking-tighter opacity-[0.08] group-hover:opacity-[0.15] transition-opacity duration-500 select-none" style={{ color: '#d4cabb', WebkitTextStroke: '1px rgba(212, 202, 187, 0.15)' }}>
+                className="clay-card-dark p-5 sm:p-8 lg:p-10 relative group">
+                <div className="glow-inner" />
+                {/* Warm top accent — claymorphism glow */}
+                <div className="absolute top-0 left-0 right-0 h-[1px] opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{
+                  background: 'linear-gradient(90deg, transparent 0%, rgba(212,164,90,0.5) 50%, transparent 100%)',
+                  boxShadow: '0 0 12px rgba(212,164,90,0.3)',
+                }} />
+                {/* Subtle inner highlight at top */}
+                <div className="absolute top-0 left-4 right-4 h-px opacity-30" style={{ background: 'linear-gradient(90deg, transparent, rgba(212,164,90,0.3), transparent)' }} />
+                {/* Large decorative number */}
+                <div className="relative z-10 text-5xl sm:text-7xl lg:text-8xl font-black mb-3 sm:mb-4 tracking-tighter select-none" style={{ color: '#d4a45a', opacity: 0.15, WebkitTextStroke: '1px rgba(212,164,90,0.2)' }}>
                   {item.num}
                 </div>
-                <h3 className="text-lg sm:text-2xl font-black mb-2 sm:mb-3 tracking-tight text-[#ede8de] group-hover:text-[#f5f2ec] transition-colors duration-300">
+                <h3 className="relative z-10 text-lg sm:text-xl lg:text-2xl font-black mb-2 sm:mb-3 tracking-tight text-[#f0e8dc] group-hover:text-[#ffffff] transition-colors duration-300">
                   {item.title}
                 </h3>
-                <p className="text-sm sm:text-base leading-relaxed" style={{ color: '#9a9484' }}>
+                <p className="relative z-10 text-sm sm:text-base leading-relaxed" style={{ color: '#a89880' }}>
                   {item.desc}
                 </p>
               </motion.div>
@@ -1744,122 +1820,36 @@ export default function ModernSite({ onSwitchToTerminal }) {
         </div>
       </motion.section>
 
-      {/* ── PROGETTI Section (DARK) ── */}
+{/* ── PROGETTI Section (DARK) ── */}
       <motion.section id="progetti" data-dark-section variants={itemVariants}
         className="modern-snap-section flex min-h-0 flex-col px-4 sm:px-6 lg:px-10 pt-24 pb-16 sm:pb-20 overflow-hidden"
         style={{
-          background: 'linear-gradient(135deg, #1a1810 0%, #1c1917 50%, #1a1810 100%)',
+          background: 'linear-gradient(160deg, #3d2820 0%, #2a1e16 40%, #352218 100%)',
         }}
       >
-        {/* Subtle dark texture overlay */}
+        {/* Warm clay ambient glow */}
+        <div className="absolute inset-0 pointer-events-none" style={{
+          background: 'radial-gradient(ellipse 100% 70% at 50% 60%, rgba(196,167,108,0.08) 0%, transparent 70%)',
+        }} />
+        {/* Subtle noise texture */}
         <div className="absolute inset-0 opacity-[0.02]" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
           backgroundSize: '256px 256px',
         }} />
-        {/* Ambient warm glows */}
-        <div className="absolute top-1/3 left-1/4 w-[60%] h-[50%] rounded-full opacity-[0.035] pointer-events-none" style={{ background: 'radial-gradient(ellipse, #b8a88a 0%, transparent 70%)' }} />
-        <div className="absolute -bottom-32 -left-32 w-[400px] h-[400px] rounded-full opacity-[0.025] pointer-events-none" style={{ background: 'radial-gradient(circle, #c4a76c 0%, transparent 60%)' }} />
         
-        {/* Fixed header — stays at same height as "Cosa facciamo" */}
+        {/* Header */}
         <div className="relative z-10 max-w-6xl mx-auto w-full shrink-0">
-          <div className="mt-3 sm:mt-4 mb-8 sm:mb-10 lg:mb-12 flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5 sm:gap-6">
-            <motion.div variants={itemVariants} className="space-y-4 lg:max-w-2xl">
-              <motion.h2 className={`${sectionTitleClass} text-[#f5f2ec]`}>{t('projects.title')}</motion.h2>
-              <motion.p className="text-base sm:text-lg font-medium" style={{ color: '#a09a88' }}>
-                {t('projects.subtitle', { count: projects.length })}
-              </motion.p>
-            </motion.div>
-
-            {/* Category Selector - Raycast Style */}
-            <div className="self-start w-full lg:w-auto lg:mt-1 px-1">
-              <div className="w-full lg:w-auto lg:overflow-x-auto pb-1 -mx-1 px-1">
-                <div className="flex lg:inline-flex lg:min-w-max p-1.5 rounded-[2rem] justify-between lg:justify-start w-full lg:w-auto" style={{
-                  background: 'linear-gradient(145deg, rgba(43, 39, 32, 0.9) 0%, rgba(31, 29, 24, 0.95) 100%)',
-                  border: '1px solid rgba(255, 248, 230, 0.08)',
-                  borderTopColor: 'rgba(255, 248, 230, 0.12)',
-                }}>
-                  {allCategoryKeys.map((catKey) => (
-                    <button
-                      key={catKey}
-                      onClick={() => handleCategoryChange(catKey)}
-                      className={`relative flex-1 lg:flex-none px-2 sm:px-6 py-2 sm:py-3 text-[11px] sm:text-base font-bold transition-all duration-200 rounded-[1.25rem] sm:rounded-[1.5rem] whitespace-nowrap ${
-                        selectedCategoryKey === catKey
-                          ? 'text-[#f5f2ec]'
-                          : 'text-[#8a7f6a] hover:text-[#c4bba8]'
-                      }`}
-                    >
-                      {selectedCategoryKey === catKey && (
-                        <motion.div
-                          layoutId="categoryPill"
-                          className="absolute inset-0 rounded-[1.5rem]"
-                          style={{
-                            background: 'linear-gradient(145deg, rgba(58, 52, 40, 0.8) 0%, rgba(38, 35, 28, 0.9) 100%)',
-                            border: '1px solid rgba(255, 248, 230, 0.12)',
-                            borderTopColor: 'rgba(255, 248, 230, 0.18)',
-                            boxShadow: '4px 6px 14px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 248, 230, 0.08)'
-                          }}
-                          transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                        />
-                      )}
-                      <span className="relative z-10">{getCategoryDisplayName(catKey)}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
+          <motion.div variants={itemVariants} className="space-y-4 lg:max-w-2xl mb-8 sm:mb-10 lg:mb-12">
+            <motion.h2 className={`${sectionTitleClass} text-[#f0e8dc]`}>{t('projects.title')}</motion.h2>
+            <motion.p className="text-base sm:text-lg font-medium" style={{ color: '#a89880' }}>
+              {t('projects.subtitle', { count: projects.length })}
+            </motion.p>
+          </motion.div>
         </div>
 
-        {/* Scrollable cards area */}
-        <div className="relative z-10 max-w-6xl mx-auto w-full flex-1 min-h-0 overflow-y-auto pt-1 sm:pt-2">
-          {categoryTransitionType === 'morph' ? (
-            <motion.div
-              layout
-              transition={{ layout: { type: 'spring', stiffness: 380, damping: 42, mass: 0.7 } }}
-              className={`grid gap-3 sm:gap-4 ${isCompactCategory
-                ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5'
-                : 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3'
-              }`}
-            >
-              <AnimatePresence initial={false} custom={categoryDirection}>
-                {visibleProjects.map((p, i) => (
-                  <ProjectCard
-                    key={`slot-${p.key}`}
-                    project={p}
-                    index={i}
-                    direction={categoryDirection}
-                    enableMorph={true}
-                    isCompact={isCompactCategory}
-                    onClick={() => setSelectedService({ title: p.n, icon: '', details: p.desc, source: 'progetti', images: p.images || [], category: getCategoryDisplayName(p.categoryKey) })}
-                  />
-                ))}
-              </AnimatePresence>
-            </motion.div>
-          ) : (
-            <AnimatePresence mode="wait" initial={false} custom={categoryDirection}>
-              <motion.div
-                key={selectedCategoryKey}
-                variants={galleryGridVariants}
-                custom={categoryDirection}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
-              >
-                {visibleProjects.map((p, i) => (
-                  <ProjectCard
-                    key={`${selectedCategoryKey}-${p.key}`}
-                    project={p}
-                    index={i}
-                    direction={categoryDirection}
-                    enableMorph={false}
-                    isCompact={false}
-                    onClick={() => setSelectedService({ title: p.n, icon: '', details: p.desc, source: 'progetti', images: p.images || [], category: getCategoryDisplayName(p.categoryKey) })}
-                  />
-                ))}
-              </motion.div>
-            </AnimatePresence>
-          )}
+        {/* 3D Carousel */}
+        <div className="relative z-10 max-w-6xl mx-auto w-full flex-1 min-h-0 flex items-center">
+          <ThreeDCarousel projects={projects} t={t} />
         </div>
       </motion.section>
 
@@ -1990,26 +1980,26 @@ export default function ModernSite({ onSwitchToTerminal }) {
                     <defs>
                       <path id="modern-footer-circle-path" d="M100,100 m-78,0 a78,78 0 1,1 156,0 a78,78 0 1,1 -156,0" />
                     </defs>
-                    <text fill="#4f4637" className="text-[12px] font-black tracking-[2px] uppercase">
-                      <textPath href="#modern-footer-circle-path" startOffset="0%" textLength="490" lengthAdjust="spacing">
-                        backsoftware • backsoftware • backsoftware •
-                      </textPath>
-                    </text>
-                  </motion.svg>
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <span className="text-[11px] sm:text-xs font-black tracking-[0.16em] uppercase text-[#2d2818] text-center leading-tight">
-                      Back<br/>Software
-                    </span>
+<text fill="#4f4637" className="text-[12px] font-black tracking-[2px] uppercase" opacity={0.28}>
+                        <textPath ref={footerTextRef} href="#modern-footer-circle-path" startOffset="0%" textLength="490" lengthAdjust="spacing">
+backsoftware • backsoftware • backsoftware •
+                        </textPath>
+                      </text>
+                    </motion.svg>
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <span ref={footerTitleRef} className="text-[11px] sm:text-xs font-black tracking-[0.16em] uppercase text-[#2d2818] text-center leading-tight">
+                        Back<br/>Software
+                      </span>
+                    </div>
                   </div>
-                </div>
                 <div className="sm:flex-1 lg:flex-none">
-                  <p className="text-xs sm:text-sm text-[#6a6050] leading-relaxed">
+                  <p ref={footerDescRef} className="text-xs sm:text-sm text-[#6a6050] leading-relaxed">
                     {t('footer.description')}
                   </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-5 sm:gap-6 lg:gap-8">
+              <div ref={footerContentRef} className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-5 sm:gap-6 lg:gap-8">
                 <div>
                   <h5 className="text-[11px] sm:text-xs font-black uppercase tracking-[0.18em] sm:tracking-[0.2em] text-[#8a7f6a] mb-2 sm:mb-3">{t('footer.services')}</h5>
                   <div className="space-y-1 sm:space-y-2">
