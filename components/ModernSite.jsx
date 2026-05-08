@@ -12,7 +12,7 @@ import { ShinyButton } from './ui/shiny-button';
 import LanguageSwitcher from './LanguageSwitcher';
 import { getServices } from '../data/services';
 import { projectMeta, buildProjects } from '../data/projects';
-import ThreeDCarousel from './ThreeDCarousel';
+import ProjectGallery3D from './ProjectGallery3D';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -1874,7 +1874,7 @@ fill={orbitColorMobile}
 
         {/* 3D Carousel */}
         <div className="relative z-10 max-w-6xl mx-auto w-full flex-1 min-h-0 flex items-center">
-          <ThreeDCarousel projects={projects} t={t} />
+          <ProjectGallery3D projects={projects} t={t} />
         </div>
       </motion.section>
 
