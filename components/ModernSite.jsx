@@ -723,7 +723,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
 
     const tick = (time) => lenis.raf(time * 1000);
     gsap.ticker.add(tick);
-    gsap.ticker.lagSmoothing(0);
+    gsap.ticker.lagSmoothing(500, 33);
 
     // Handle anchor links (#servizi, #contatti, etc.)
     const handleAnchorClick = (e) => {
@@ -766,6 +766,8 @@ export default function ModernSite({ onSwitchToTerminal }) {
 
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (prefersReducedMotion) return;
+
+    const isMobile = window.innerWidth < 768;
 
     const heroH1 = heroSection.querySelector('.hero-content-h1');
     let bgSplit = null;
@@ -814,80 +816,103 @@ export default function ModernSite({ onSwitchToTerminal }) {
       }
 
       ctx = gsap.context(() => {
-        const tl = gsap.timeline({
-          scrollTrigger: {
+        if (isMobile) {
+          // Mobile: simple fade-in, no pin, no ScrollTrigger
+          const tl = gsap.timeline({ delay: 0.2 });
+
+          if (h1Chars && h1Chars.length > 0) {
+            tl.from(h1Chars, {
+              opacity: 0, y: 30, scale: 1.05,
+              transformOrigin: 'center center',
+              ease: 'power2.out',
+              stagger: { amount: 0.3, from: 'start' },
+            }, 0);
+          }
+
+          if (subChars && subChars.length > 0) {
+            tl.from(subChars, {
+              opacity: 0, y: 20,
+              ease: 'power2.out',
+              stagger: { amount: 0.2, from: 'start' },
+            }, 0.15);
+          }
+
+          tl.to(bgChars, {
+            opacity: 0, x: -60, rotationY: -20, scale: 0.6,
+            transformPerspective: 600, transformOrigin: 'left center',
+            ease: 'power2.in',
+            stagger: { amount: 0.3, from: 'end' },
+          }, 0.2);
+
+          tl.eventCallback('onComplete', () => {
+            bgChars.forEach((char) => { char.style.willChange = 'auto'; });
+            if (h1Chars) h1Chars.forEach((char) => { char.style.willChange = 'auto'; });
+            if (subChars) subChars.forEach((char) => { char.style.willChange = 'auto'; });
+          });
+        } else {
+          // Desktop: ScrollTrigger pin + scrub animation (original)
+          const tl = gsap.timeline({
+            scrollTrigger: {
+              trigger: heroSection,
+              scroller,
+              start: 'top top',
+              end: '+=200%',
+              pin: true,
+              scrub: 0.5,
+              snap: {
+                snapTo: [0, 0.5, 1],
+                duration: 0.35,
+                ease: 'power2.out',
+              },
+            },
+          });
+
+          // h1 chars: alternate flying in from above / below
+          if (h1Chars && h1Chars.length > 0) {
+            tl.from(h1Chars, {
+              opacity: 0,
+              y: (i) => i % 2 === 0 ? -80 : 80,
+              scale: 1.2,
+              rotationZ: (i) => i % 2 === 0 ? gsap.utils.random(-6, -2) : gsap.utils.random(2, 6),
+              transformOrigin: 'center center',
+              ease: 'power2.out',
+              stagger: { amount: 0.45, from: 'start' },
+            }, 0);
+          }
+
+          // Subtitle chars: alternate flying in from above / below
+          if (subChars && subChars.length > 0) {
+            tl.from(subChars, {
+              opacity: 0,
+              y: (i) => i % 2 === 0 ? -50 : 50,
+              scale: 1.1,
+              rotationZ: (i) => i % 2 === 0 ? gsap.utils.random(-4, -1) : gsap.utils.random(1, 4),
+              transformOrigin: 'center center',
+              ease: 'power2.out',
+              stagger: { amount: 0.35, from: 'start' },
+            }, 0.1);
+          }
+
+          // "BACK SOFTWARE" sweeps away right-to-left in 3D
+          tl.to(bgChars, {
+            opacity: 0, x: -200, rotationY: -55, scale: 0.4,
+            transformPerspective: 600, transformOrigin: 'left center',
+            ease: 'power2.in',
+            stagger: { amount: 0.4, from: 'end' },
+          }, 0.35);
+
+          ScrollTrigger.create({
             trigger: heroSection,
             scroller,
             start: 'top top',
             end: '+=200%',
-            pin: true,
-            scrub: 0.5,
-            snap: {
-              snapTo: [0, 0.5, 1],
-              duration: 0.35,
-              ease: 'power2.out',
+            onLeave: () => {
+              bgChars.forEach((char) => { char.style.willChange = 'auto'; });
+              if (h1Chars) h1Chars.forEach((char) => { char.style.willChange = 'auto'; });
+              if (subChars) subChars.forEach((char) => { char.style.willChange = 'auto'; });
             },
-          },
-        });
-
-        // h1 chars: alternate flying in from above / below
-        if (h1Chars && h1Chars.length > 0) {
-          tl.from(h1Chars, {
-            opacity: 0,
-            y: (i) => i % 2 === 0 ? -80 : 80,
-            scale: 1.2,
-            rotationZ: (i) => i % 2 === 0 ? gsap.utils.random(-6, -2) : gsap.utils.random(2, 6),
-            transformOrigin: 'center center',
-            ease: 'power2.out',
-            stagger: {
-              amount: 0.45,
-              from: 'start',
-            },
-          }, 0);
+          });
         }
-
-        // Subtitle chars: alternate flying in from above / below
-        if (subChars && subChars.length > 0) {
-          tl.from(subChars, {
-            opacity: 0,
-            y: (i) => i % 2 === 0 ? -50 : 50,
-            scale: 1.1,
-            rotationZ: (i) => i % 2 === 0 ? gsap.utils.random(-4, -1) : gsap.utils.random(1, 4),
-            transformOrigin: 'center center',
-            ease: 'power2.out',
-            stagger: {
-              amount: 0.35,
-              from: 'start',
-            },
-          }, 0.1);
-        }
-
-        // "BACK SOFTWARE" sweeps away right-to-left in 3D
-        tl.to(bgChars, {
-          opacity: 0,
-          x: -200,
-          rotationY: -55,
-          scale: 0.4,
-          transformPerspective: 600,
-          transformOrigin: 'left center',
-          ease: 'power2.in',
-          stagger: {
-            amount: 0.4,
-            from: 'end',
-          },
-        }, 0.35);
-
-        ScrollTrigger.create({
-          trigger: heroSection,
-          scroller,
-          start: 'top top',
-          end: '+=200%',
-          onLeave: () => {
-            bgChars.forEach((char) => { char.style.willChange = 'auto'; });
-            if (h1Chars) h1Chars.forEach((char) => { char.style.willChange = 'auto'; });
-            if (subChars) subChars.forEach((char) => { char.style.willChange = 'auto'; });
-          },
-        });
       }, heroSection);
     }, 100);
 
@@ -1677,7 +1702,7 @@ fill={orbitColorMobile}
 
 
       {/* ── HERO ── */}
-      <motion.section ref={heroRef} variants={itemVariants} className="flex items-center justify-center relative px-6 sm:px-6 lg:px-8 overflow-hidden" style={{ minHeight: '100dvh', height: '100dvh' }}>
+      <motion.section ref={heroRef} variants={itemVariants} className="hero-snap-anchor flex items-center justify-center relative px-4 sm:px-6 lg:px-8 overflow-hidden" style={{ minHeight: '100dvh', height: '100dvh' }}>
         {/* Floating Accents - Hidden on mobile */}
         <div className="hidden sm:block absolute -top-10 left-10 w-24 h-24 clay-pill opacity-10 animate-float pointer-events-none" />
         <div className="hidden sm:block absolute top-40 right-10 w-32 h-32 clay-pill opacity-10 animate-float-delayed pointer-events-none" />
@@ -1698,7 +1723,7 @@ fill={orbitColorMobile}
             {/* Left: Text Content */}
             <div className="order-2 lg:order-1">
               <h1
-                className="hero-content-h1 text-[3rem] sm:text-5xl md:text-6xl lg:text-6xl xl:text-7xl font-black leading-[1.12] sm:leading-[1.05] mb-6 sm:mb-8 tracking-tight text-[#2d2818]">
+                className="hero-content-h1 text-[2.25rem] sm:text-[3rem] md:text-6xl lg:text-6xl xl:text-7xl font-black leading-[1.12] sm:leading-[1.05] mb-6 sm:mb-8 tracking-tight text-[#2d2818]">
                 <span className="block mb-2">{t('hero.title1')}</span>
                 <span className="block mb-2">{t('hero.title2')}</span>
                 <span className="text-[#8a7f6a] drop-shadow-sm block">{t('hero.title3')}<span className="whitespace-nowrap hero-highlight-glow cursor-default">{t('hero.title3Highlight')}</span>.</span>
@@ -1733,7 +1758,7 @@ fill={orbitColorMobile}
       </motion.section>
 
       {/* ── DARK SECTION: Why Us ── */}
-      <motion.section id="come-lavoriamo" data-dark-section variants={itemVariants} className="modern-snap-section flex flex-col justify-center relative px-4 sm:px-6 lg:px-10 pt-20 sm:pt-24 pb-12 sm:py-20 overflow-hidden" style={{
+      <motion.section id="come-lavoriamo" data-dark-section variants={itemVariants} className="modern-snap-section snap-scroll-inner flex flex-col justify-start relative px-4 sm:px-6 lg:px-10 pt-20 sm:pt-24 pb-12 sm:py-20" style={{
         background: 'linear-gradient(160deg, #3d2820 0%, #2a1e16 40%, #352218 100%)',
       }}>
         {/* Warm clay ambient — rich inner glow */}
@@ -1749,23 +1774,23 @@ fill={orbitColorMobile}
         <div className="hidden sm:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[60%] rounded-full opacity-[0.07] pointer-events-none" style={{ background: 'radial-gradient(ellipse, #d4a45a 0%, transparent 70%)' }} />
 
         <div className="relative z-10 max-w-6xl mx-auto w-full">
-          <motion.div variants={itemVariants} className="mb-6 sm:mb-12 space-y-3 sm:space-y-4">
+          <motion.div variants={itemVariants} className="mb-4 sm:mb-12 space-y-2 sm:space-y-4">
             <motion.h2 {...sectionTitleReveal} className={`${sectionTitleClass} text-[#f0e8dc]`}>
               {t('whyUs.title')}
             </motion.h2>
-            <motion.p {...sectionSubtitleReveal} className="text-sm sm:text-lg leading-relaxed max-w-2xl font-medium" style={{ color: '#a89880' }}>
+            <motion.p {...sectionSubtitleReveal} className="text-xs sm:text-lg leading-relaxed max-w-2xl font-medium" style={{ color: '#a89880' }}>
               {t('whyUs.subtitle')}
             </motion.p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-6 lg:gap-8">
             {[
               { num: '01', title: t('whyUs.cards.01.title'), desc: t('whyUs.cards.01.desc') },
               { num: '02', title: t('whyUs.cards.02.title'), desc: t('whyUs.cards.02.desc') },
               { num: '03', title: t('whyUs.cards.03.title'), desc: t('whyUs.cards.03.desc') }
             ].map((item, i) => (
               <motion.div key={i} variants={itemVariants}
-                className="clay-card-dark p-5 sm:p-8 lg:p-10 relative group">
+                className="clay-card-dark p-4 sm:p-8 lg:p-10 relative group">
                 <div className="glow-inner" />
                 {/* Warm top accent — claymorphism glow */}
                 <div className="absolute top-0 left-0 right-0 h-[1px] opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{
@@ -1775,13 +1800,13 @@ fill={orbitColorMobile}
                 {/* Subtle inner highlight at top */}
                 <div className="absolute top-0 left-4 right-4 h-px opacity-30" style={{ background: 'linear-gradient(90deg, transparent, rgba(212,164,90,0.3), transparent)' }} />
                 {/* Large decorative number */}
-                <div className="relative z-10 text-5xl sm:text-7xl lg:text-8xl font-black mb-3 sm:mb-4 tracking-tighter select-none" style={{ color: '#d4a45a', opacity: 0.15, WebkitTextStroke: '1px rgba(212,164,90,0.2)' }}>
+                <div className="relative z-10 text-4xl sm:text-7xl lg:text-8xl font-black mb-2 sm:mb-4 tracking-tighter select-none" style={{ color: '#d4a45a', opacity: 0.15, WebkitTextStroke: '1px rgba(212,164,90,0.2)' }}>
                   {item.num}
                 </div>
-                <h3 className="relative z-10 text-lg sm:text-xl lg:text-2xl font-black mb-2 sm:mb-3 tracking-tight text-[#f0e8dc] group-hover:text-[#ffffff] transition-colors duration-300">
+                <h3 className="relative z-10 text-base sm:text-xl lg:text-2xl font-black mb-1 sm:mb-3 tracking-tight text-[#f0e8dc] group-hover:text-[#ffffff] transition-colors duration-300">
                   {item.title}
                 </h3>
-                <p className="relative z-10 text-sm sm:text-base leading-relaxed" style={{ color: '#a89880' }}>
+                <p className="relative z-10 text-xs sm:text-base leading-relaxed" style={{ color: '#a89880' }}>
                   {item.desc}
                 </p>
               </motion.div>
@@ -1791,9 +1816,9 @@ fill={orbitColorMobile}
       </motion.section>
 
       {/* ── SERVIZI Section ── */}
-      <motion.section id="servizi" variants={itemVariants} className="modern-snap-section flex flex-col justify-center px-4 sm:px-6 lg:px-10 pt-20 sm:pt-24 pb-12 sm:py-20">
+      <motion.section id="servizi" variants={itemVariants} className="modern-snap-section snap-scroll-inner flex flex-col justify-start px-4 sm:px-6 lg:px-10 pt-16 sm:pt-24 pb-10 sm:py-20">
         <div className="max-w-6xl mx-auto w-full">
-          <motion.div variants={itemVariants} className="mb-6 sm:mb-8 space-y-2 sm:space-y-4">
+          <motion.div variants={itemVariants} className="mb-4 sm:mb-8 space-y-1 sm:space-y-4">
             <motion.h2 {...sectionTitleReveal} className={`${sectionTitleClass} text-[#2d2818]`}>{t('services.title')}</motion.h2>
             <motion.p {...sectionSubtitleReveal} className="text-sm sm:text-lg text-[#6a6050] font-medium">
               {t('services.subtitle')}
@@ -1822,7 +1847,7 @@ fill={orbitColorMobile}
 
 {/* ── PROGETTI Section (DARK) ── */}
       <motion.section id="progetti" data-dark-section variants={itemVariants}
-        className="modern-snap-section flex min-h-0 flex-col px-4 sm:px-6 lg:px-10 pt-24 pb-16 sm:pb-20 overflow-hidden"
+        className="modern-snap-section snap-scroll-inner flex min-h-0 flex-col px-3 sm:px-6 lg:px-10 pt-20 pb-10 sm:pb-20"
         style={{
           background: 'linear-gradient(160deg, #3d2820 0%, #2a1e16 40%, #352218 100%)',
         }}
@@ -1839,9 +1864,9 @@ fill={orbitColorMobile}
         
         {/* Header */}
         <div className="relative z-10 max-w-6xl mx-auto w-full shrink-0">
-          <motion.div variants={itemVariants} className="space-y-4 lg:max-w-2xl mb-8 sm:mb-10 lg:mb-12">
+          <motion.div variants={itemVariants} className="space-y-2 sm:space-y-4 lg:max-w-2xl mb-4 sm:mb-10 lg:mb-12">
             <motion.h2 className={`${sectionTitleClass} text-[#f0e8dc]`}>{t('projects.title')}</motion.h2>
-            <motion.p className="text-base sm:text-lg font-medium" style={{ color: '#a89880' }}>
+            <motion.p className="text-sm sm:text-lg font-medium" style={{ color: '#a89880' }}>
               {t('projects.subtitle', { count: projects.length })}
             </motion.p>
           </motion.div>
@@ -1854,7 +1879,7 @@ fill={orbitColorMobile}
       </motion.section>
 
       {/* ── CONTATTI Section ── */}
-      <motion.section ref={contactSectionRef} id="contatti" variants={itemVariants} className="modern-snap-section flex flex-col justify-center px-4 sm:px-6 lg:px-10 pt-24 pb-16 sm:py-20 relative" style={{ background: '#f5f2ec' }}>
+      <motion.section ref={contactSectionRef} id="contatti" variants={itemVariants} className="modern-snap-section snap-scroll-inner flex flex-col justify-start px-4 sm:px-6 lg:px-10 pt-16 pb-10 sm:py-20 relative" style={{ background: '#f5f2ec' }}>
         {/* Contact content — shifts up when footer appears */}
         <motion.div
           className="max-w-6xl mx-auto w-full relative z-10"

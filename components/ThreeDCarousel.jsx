@@ -2,8 +2,8 @@
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 
-const CARD_W = 266;
-const CARD_H = 342;
+const CARD_W_DESKTOP = 266;
+const CARD_H_DESKTOP = 342;
 const AUTO_MS = 5000;
 
 const catColors = {
@@ -13,9 +13,15 @@ const catColors = {
   crm: { accent: '#8ac4a7' },
 };
 
+function getCardSize(vw) {
+  if (vw >= 768) return { w: CARD_W_DESKTOP, h: CARD_H_DESKTOP };
+  const w = Math.round(Math.min(vw * 0.62, 260));
+  const h = Math.round(w * (CARD_H_DESKTOP / CARD_W_DESKTOP));
+  return { w, h };
+}
+
 export default function ThreeDCarousel({ projects, t }) {
   const n = projects.length;
-  const step = 360 / n;
   const [current, setCurrent] = useState(0);
   const [rotation, setRotation] = useState(0);
   const [dragging, setDragging] = useState(false);
@@ -23,6 +29,24 @@ export default function ThreeDCarousel({ projects, t }) {
   const autoRef = useRef(null);
   const timerRef = useRef(null);
   const trackRef = useRef(null);
+  const [vw, setVw] = useState(0);
+
+  useEffect(() => {
+    setVw(window.innerWidth);
+    const onResize = () => setVw(window.innerWidth);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  const isMobile = vw > 0 && vw < 640;
+  const { w: CARD_W, h: CARD_H } = getCardSize(vw || 1200);
+  const step = 360 / n;
+  const radius = (() => {
+    const base = Math.max(CARD_W / (2 * Math.sin(Math.PI / n)), CARD_W * 0.8);
+    return isMobile ? Math.min(base, vw * 0.50) : base;
+  })();
+  const perspective = isMobile ? 1000 : 1400;
+  const touchSensitivity = isMobile ? 0.55 : 0.35;
 
   const goTo = useCallback((idx) => {
     const next = ((idx % n) + n) % n;
@@ -42,7 +66,7 @@ export default function ThreeDCarousel({ projects, t }) {
 
   const stopAuto = useCallback(() => clearInterval(autoRef.current), []);
 
-  useEffect(() => { startAuto(); return stopAuto; }, [startAuto, stopAuto]);
+  useEffect(() => { if (vw > 0) { startAuto(); } return stopAuto; }, [startAuto, stopAuto, vw]);
 
   const resetTimer = useCallback(() => {
     clearTimeout(timerRef.current);
@@ -59,8 +83,8 @@ export default function ThreeDCarousel({ projects, t }) {
   const onPointerMove = useCallback((e) => {
     if (!dragging) return;
     const dx = e.clientX - dragRef.current.startX;
-    setRotation(dragRef.current.startRot + dx * 0.35);
-  }, [dragging]);
+    setRotation(dragRef.current.startRot + dx * touchSensitivity);
+  }, [dragging, touchSensitivity]);
 
   const onPointerUp = useCallback(() => {
     if (!dragging) return;
@@ -77,15 +101,21 @@ export default function ThreeDCarousel({ projects, t }) {
     trackRef.current.style.transform = `rotateY(${rotation}deg)`;
   }, [rotation]);
 
-  const radius = Math.max(CARD_W / (2 * Math.sin(Math.PI / n)), CARD_W * 0.8);
+  const cardPad = isMobile ? 14 : 24;
+  const cardRadius = isMobile ? 18 : 24;
+  const tagClass = isMobile
+    ? 'px-1.5 py-0.5 text-[8px]'
+    : 'px-2 py-0.5 text-[10px]';
 
   return (
-    <div className="relative w-full select-none" style={{ perspective: '1400px' }}>
+    <div className="relative w-full select-none" style={{ perspective: `${perspective}px` }}>
       <div
         className="relative mx-auto overflow-visible"
-        style={{ height: CARD_H + 60, perspective: '1400px' }}
+        style={{ height: CARD_H + (isMobile ? 36 : 60), perspective: `${perspective}px` }}
         onMouseEnter={stopAuto}
         onMouseLeave={startAuto}
+        onTouchStart={stopAuto}
+        onTouchEnd={resetTimer}
       >
         <div
           ref={trackRef}
@@ -129,14 +159,14 @@ export default function ThreeDCarousel({ projects, t }) {
               />
             );
 
-            const opacity = Math.max(0.15, 1 - absN / 100);
-            const blur = absN > 25 ? Math.min(absN / 20, 5) : 0;
-            const scaleFactor = 1 - (absN / 2200);
+            const opacity = Math.max(0.12, 1 - absN / 105);
+            const blur = absN > 20 ? Math.min(absN / 18, 5) : 0;
+            const scaleFactor = 1 - (absN / 1800);
 
             return (
               <div
                 key={p.key}
-                className="flex flex-col justify-between p-6"
+                className="flex flex-col justify-between"
                 style={{
                   position: 'absolute',
                   left: '50%',
@@ -151,27 +181,70 @@ export default function ThreeDCarousel({ projects, t }) {
                   filter: blur > 0 ? `blur(${blur}px)` : 'none',
                   zIndex: 100 - Math.round(absN),
                   transition: dragging ? 'none' : 'opacity 0.3s, filter 0.3s, transform 0.65s cubic-bezier(0.25, 1, 0.5, 1)',
-                  borderRadius: 24,
-                  background: 'linear-gradient(145deg, #faf6ee 0%, #f0ead8 100%)',
-                  border: '1px solid rgba(166, 159, 147, 0.35)',
-                  borderTopColor: 'rgba(255, 255, 255, 0.55)',
-                  borderLeftColor: 'rgba(255, 255, 255, 0.45)',
-                  boxShadow: '8px 10px 24px rgba(42, 30, 16, 0.30), -4px -4px 16px rgba(255, 248, 235, 0.12), inset 3px 3px 8px rgba(255, 255, 255, 0.45), inset -2px -2px 6px rgba(166, 159, 147, 0.10)',
+                  borderRadius: cardRadius,
+                  padding: cardPad,
+                  background: 'linear-gradient(150deg, #faf7f0 0%, #f1ebdd 100%)',
+                  border: '1px solid rgba(166, 159, 147, 0.30)',
+                  borderTopColor: 'rgba(255, 255, 255, 0.50)',
+                  borderLeftColor: 'rgba(255, 255, 255, 0.40)',
+                  boxShadow: '6px 8px 22px rgba(42, 30, 16, 0.28), -3px -3px 14px rgba(255, 250, 238, 0.10), inset 2px 2px 7px rgba(255, 255, 255, 0.40), inset -1px -1px 5px rgba(166, 159, 147, 0.08)',
                   overflow: 'hidden',
                 }}
               >
-                <div className="absolute top-0 left-0 right-0 h-px opacity-0 group-hover:opacity-100" style={{ background: `linear-gradient(90deg, transparent 0%, ${cat.accent}60 50%, transparent 100%)` }} />
+                {/* Category badge + year */}
                 <div>
-                  <div className="absolute font-black tracking-tighter select-none top-4 right-5 text-4xl opacity-[0.06]" style={{ color: '#3d3828' }}>{p.year}</div>
-                  <span className="inline-block px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full mb-3" style={{ color: cat.accent, background: `${cat.accent}12`, border: `1px solid ${cat.accent}28` }}>
-                    {t(`projects.categories.${p.categoryKey}`)}
-                  </span>
-                  <h3 className="text-base sm:text-lg font-black leading-tight text-[#2d2818] mb-1.5 line-clamp-2">{p.n}</h3>
-                  <p className="text-xs sm:text-sm leading-relaxed line-clamp-3 text-[#6a6050]">{p.desc}</p>
+                  <div className="flex items-center justify-between mb-2">
+                    <span
+                      className="inline-flex items-center px-2 py-0.5 rounded-full font-bold uppercase tracking-wider"
+                      style={{
+                        fontSize: isMobile ? 8 : 10,
+                        color: cat.accent,
+                        background: `${cat.accent}14`,
+                        border: `1px solid ${cat.accent}2e`,
+                      }}
+                    >
+                      {t(`projects.categories.${p.categoryKey}`)}
+                    </span>
+                    <span
+                      className="font-black tracking-tighter select-none leading-none"
+                      style={{
+                        fontSize: isMobile ? 20 : 30,
+                        color: '#3d3828',
+                        opacity: 0.07,
+                      }}
+                    >
+                      {p.year}
+                    </span>
+                  </div>
+
+                  <h3
+                    className="font-black leading-tight text-[#2d2818] line-clamp-2"
+                    style={{ fontSize: isMobile ? 14 : 17, marginBottom: isMobile ? 4 : 6 }}
+                  >
+                    {p.n}
+                  </h3>
+                  <p
+                    className="leading-relaxed line-clamp-3"
+                    style={{ fontSize: isMobile ? 11 : 13, color: '#6a6050', marginBottom: isMobile ? 8 : 10 }}
+                  >
+                    {p.desc}
+                  </p>
                 </div>
-                <div className="flex flex-wrap gap-1.5 mt-auto pt-3 border-t border-[#d4cfc5]/40">
+
+                {/* Tags */}
+                <div className="flex flex-wrap gap-1 pt-2 border-t" style={{ borderColor: 'rgba(166, 159, 147, 0.25)' }}>
                   {p.tags.slice(0, 3).map(tag => (
-                    <span key={tag} className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full" style={{ color: cat.accent, background: `${cat.accent}10`, border: `1px solid ${cat.accent}1a` }}>{tag}</span>
+                    <span
+                      key={tag}
+                      className={`${tagClass} font-bold uppercase tracking-wider rounded-full`}
+                      style={{
+                        color: cat.accent,
+                        background: `${cat.accent}0e`,
+                        border: `1px solid ${cat.accent}18`,
+                      }}
+                    >
+                      {tag}
+                    </span>
                   ))}
                 </div>
               </div>
@@ -180,34 +253,45 @@ export default function ThreeDCarousel({ projects, t }) {
         </div>
       </div>
 
-      <button onClick={prev}
-        className="absolute left-2 sm:left-6 lg:left-10 top-1/2 -translate-y-1/2 z-[200] w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-200 group"
+      {/* Arrow buttons */}
+      <button
+        onClick={prev}
+        className="absolute top-1/2 -translate-y-1/2 z-[200] flex items-center justify-center rounded-full transition-all duration-200 group"
         style={{
+          left: isMobile ? 4 : 8,
+          width: isMobile ? 36 : 46,
+          height: isMobile ? 36 : 46,
           background: 'linear-gradient(145deg, rgba(61, 40, 32, 0.85) 0%, rgba(42, 30, 22, 0.95) 100%)',
           border: '1px solid rgba(212, 164, 90, 0.20)',
           borderTopColor: 'rgba(212, 164, 90, 0.30)',
-          boxShadow: '3px 4px 12px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(212, 164, 90, 0.10)',
+          boxShadow: '2px 3px 10px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(212, 164, 90, 0.10)',
           color: '#d4a45a',
         }}
         aria-label="Previous"
       >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:-translate-x-0.5 transition-transform"><path d="M15 18l-6-6 6-6"/></svg>
+        <svg width={isMobile ? 14 : 18} height={isMobile ? 14 : 18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:-translate-x-0.5 transition-transform">
+          <path d="M15 18l-6-6 6-6"/>
+        </svg>
       </button>
-      <button onClick={next}
-        className="absolute right-2 sm:right-6 lg:right-10 top-1/2 -translate-y-1/2 z-[200] w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-200 group"
+      <button
+        onClick={next}
+        className="absolute top-1/2 -translate-y-1/2 z-[200] flex items-center justify-center rounded-full transition-all duration-200 group"
         style={{
+          right: isMobile ? 4 : 8,
+          width: isMobile ? 36 : 46,
+          height: isMobile ? 36 : 46,
           background: 'linear-gradient(145deg, rgba(61, 40, 32, 0.85) 0%, rgba(42, 30, 22, 0.95) 100%)',
           border: '1px solid rgba(212, 164, 90, 0.20)',
           borderTopColor: 'rgba(212, 164, 90, 0.30)',
-          boxShadow: '3px 4px 12px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(212, 164, 90, 0.10)',
+          boxShadow: '2px 3px 10px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(212, 164, 90, 0.10)',
           color: '#d4a45a',
         }}
         aria-label="Next"
       >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-0.5 transition-transform"><path d="M9 18l6-6-6-6"/></svg>
+        <svg width={isMobile ? 14 : 18} height={isMobile ? 14 : 18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-0.5 transition-transform">
+          <path d="M9 18l6-6-6-6"/>
+        </svg>
       </button>
-
-      
     </div>
   );
 }

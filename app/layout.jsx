@@ -9,8 +9,7 @@ const shareTechMono = Share_Tech_Mono({ subsets: ['latin'], weight: '400', displ
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  maximumScale: 5,
 };
 
 // Locale-agnostic root metadata. Per-locale metadata is generated in app/[locale]/layout.jsx.

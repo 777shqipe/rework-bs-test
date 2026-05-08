@@ -273,21 +273,44 @@
   flex-shrink: 0;
   transform: translateZ(0);
   backface-visibility: hidden;
-  contain: layout style paint;
+}
+
+.hero-snap-anchor {
+  min-height: 100dvh;
+  height: 100dvh;
+  flex-shrink: 0;
+  overflow: hidden;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .modern-snap-section.snap-scroll-inner {
   overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Mobile: allow sections with inner scroll to grow beyond viewport */
+@media (max-width: 1023px) {
+  .modern-snap-section.snap-scroll-inner {
+    height: auto;
+    min-height: 100dvh;
+    max-height: none;
+  }
 }
 
 /* Mobile/touch fallback: use CSS scroll-snap where Lenis smooth is disabled */
 @media (hover: none) and (pointer: coarse) {
   .modern-snap-container {
-    scroll-snap-type: y mandatory;
+    scroll-snap-type: y proximity;
   }
   .modern-snap-section {
     scroll-snap-align: start;
-    scroll-snap-stop: always;
+    scroll-snap-stop: normal;
+  }
+  .hero-snap-anchor {
+    scroll-snap-align: start;
+    scroll-snap-stop: normal;
   }
 }
 
