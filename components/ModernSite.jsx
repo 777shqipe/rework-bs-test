@@ -13,8 +13,91 @@ import LanguageSwitcher from './LanguageSwitcher';
 import { getServices } from '../data/services';
 import { projectMeta, buildProjects } from '../data/projects';
 import ProjectGallery3D from './ProjectGallery3D';
+import InteractiveBackground from './InteractiveBackground';
 
 gsap.registerPlugin(ScrollTrigger);
+
+/* ===========================================================
+   TILT CARD — Clean dark card with soft glow
+============================================================ */
+function TiltCard({ item, onCardHover }) {
+  const cardRef = useRef(null);
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+    onCardHover?.(null);
+  };
+
+  const handleMouseEnter = () => {
+    setIsHovered(true);
+    onCardHover?.(`${item.accent}20`);
+  };
+
+  return (
+    <motion.div
+      ref={cardRef}
+      onMouseLeave={handleMouseLeave}
+      onMouseEnter={handleMouseEnter}
+      style={{
+        borderRadius: 28,
+        background: 'linear-gradient(160deg, rgba(13,17,23,0.6) 0%, rgba(5,8,14,0.8) 100%)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        border: `1px solid ${item.accent}18`,
+        boxShadow: `
+          0 2px 4px rgba(0,0,0,0.4),
+          0 8px 16px rgba(0,0,0,0.35),
+          0 16px 32px rgba(0,0,0,0.3),
+          0 32px 64px rgba(0,0,0,0.25),
+          inset 0 1px 0 ${item.accent}10,
+          inset 0 -2px 4px rgba(0,0,0,0.3)
+        `,
+      }}
+      className="relative group p-6 sm:p-8 lg:p-10 overflow-hidden"
+    >
+      {/* Soft ambient glow on hover */}
+      <div
+        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"
+        style={{
+          background: `radial-gradient(600px circle at 50% 0%, ${item.accent}10, transparent 60%)`,
+        }}
+      />
+
+      {/* Number with glow */}
+      <div
+        className="relative z-10 text-5xl sm:text-6xl lg:text-7xl font-black mb-4 tracking-tighter select-none transition-all duration-500"
+        style={{
+          color: item.accent,
+          opacity: isHovered ? 0.9 : 0.1,
+          textShadow: isHovered ? `0 0 40px ${item.accent}, 0 0 80px ${item.accent}60, 0 0 120px ${item.accent}30` : 'none',
+          transform: isHovered ? 'scale(1.08)' : 'scale(1)',
+        }}
+      >
+        {item.num}
+      </div>
+
+      {/* Title */}
+      <h3 className="relative z-10 text-lg sm:text-xl lg:text-2xl font-black mb-3 tracking-tight text-[#f0e8dc]">
+        {item.title}
+      </h3>
+
+      {/* Description */}
+      <p className="relative z-10 text-sm sm:text-base leading-relaxed text-[#a89880]">
+        {item.desc}
+      </p>
+
+      {/* Bottom accent line */}
+      <div
+        className="absolute bottom-0 left-0 h-[2px] transition-all duration-500 group-hover:w-full"
+        style={{
+          width: '0%',
+          background: `linear-gradient(90deg, ${item.accent}, transparent)`,
+        }}
+      />
+    </motion.div>
+  );
+}
 
 /* ===========================================================
    MODERN TYPEWRITER — animated placeholder for modern form
@@ -131,6 +214,8 @@ export default function ModernSite({ onSwitchToTerminal }) {
   // Orbiting text around header — pixel-perfect (mobile & desktop refs)
   const headerRefMobile = useRef(null);
   const headerRefDesktop = useRef(null);
+  const headerBrandMobileRef = useRef(null);
+  const headerBrandDesktopRef = useRef(null);
   const orbitSvgRefMobile = useRef(null);
   const orbitSvgRefDesktop = useRef(null);
   const orbitRef1Mobile = useRef(null);
@@ -144,6 +229,8 @@ export default function ModernSite({ onSwitchToTerminal }) {
   const [pathLenMobile, setPathLenMobile] = useState(0);
   const [pathLenDesktop, setPathLenDesktop] = useState(0);
   const [isDesktopView, setIsDesktopView] = useState(false);
+  const [spotlightPos, setSpotlightPos] = useState({ x: 50, y: 50 });
+  const [spotlightColor, setSpotlightColor] = useState('rgba(34,211,238,0.10)');
   const ORBIT_TOKEN = 'BACK SOFTWARE \u2022 ';
   const DESKTOP_ORBIT_FONT_SIZE = 8;
   const DESKTOP_ORBIT_LETTER_SPACING = 1.2;
@@ -710,12 +797,11 @@ export default function ModernSite({ onSwitchToTerminal }) {
     const onScroll = () => ScrollTrigger.update();
     lenis.on('scroll', onScroll);
 
-    // Show header only after Hero scrolls out of view
+    // Let the header become the destination for the hero logo transfer.
     const checkHeaderVisibility = () => {
       const hero = heroRef.current;
       if (hero) {
-        const heroBottom = hero.offsetTop + hero.offsetHeight;
-        setHeaderVisible(scroller.scrollTop > heroBottom - scroller.clientHeight * 0.3);
+        setHeaderVisible(scroller.scrollTop > Math.min(hero.offsetHeight * 0.08, 96));
       }
     };
     lenis.on('scroll', checkHeaderVisibility);
@@ -746,7 +832,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
       removeSnapEls();
       snap.destroy();
       lenis.destroy();
-      ScrollTrigger.clearScrollerProxy(scroller);
+      ScrollTrigger.getAll().forEach(st => st.kill());
       scroller.removeEventListener('click', handleAnchorClick);
     };
   }, [isMockupMode]);
@@ -773,8 +859,13 @@ export default function ModernSite({ onSwitchToTerminal }) {
     let bgSplit = null;
     let h1Split = null;
     let subSplit = null;
+    let headerBrandSplit = null;
     let ctx = null;
     let destroyed = false;
+    let mouseRaf = null;
+    let latestMouse = null;
+    let handleBgMouseMove = null;
+    let handleBgMouseLeave = null;
 
     const timeout = setTimeout(() => {
       if (destroyed) return;
@@ -784,10 +875,132 @@ export default function ModernSite({ onSwitchToTerminal }) {
       const bgChars = bgSplit.chars;
       if (!bgChars || bgChars.length === 0) return;
 
-      bgChars.forEach((char) => {
+      const activeHeaderBrand = isMobile ? headerBrandMobileRef.current : headerBrandDesktopRef.current;
+      let headerBrandChars = [];
+
+      if (activeHeaderBrand) {
+        headerBrandSplit = new SplitType(activeHeaderBrand, { types: 'chars' });
+        headerBrandChars = headerBrandSplit.chars || [];
+        gsap.set(activeHeaderBrand, { opacity: 1 });
+        gsap.set(headerBrandChars, {
+          opacity: 0,
+          filter: 'blur(5px)',
+          display: 'inline-block',
+          transformOrigin: 'center center',
+          willChange: 'transform, opacity, filter',
+        });
+      }
+
+      const getHeaderTargetChar = (index) => {
+        if (!headerBrandChars.length) return null;
+        return headerBrandChars[Math.min(index, headerBrandChars.length - 1)];
+      };
+
+      const transferToHeaderVars = {
+        x: (index, char) => {
+          const target = getHeaderTargetChar(index);
+          if (!target) return -200;
+          const sourceRect = char.getBoundingClientRect();
+          const targetRect = target.getBoundingClientRect();
+          return (targetRect.left + targetRect.width / 2) - (sourceRect.left + sourceRect.width / 2);
+        },
+        y: (index, char) => {
+          const target = getHeaderTargetChar(index);
+          if (!target) return isMobile ? -70 : -140;
+          const sourceRect = char.getBoundingClientRect();
+          const targetRect = target.getBoundingClientRect();
+          return (targetRect.top + targetRect.height / 2) - (sourceRect.top + sourceRect.height / 2);
+        },
+        scale: (index, char) => {
+          const target = getHeaderTargetChar(index);
+          if (!target) return isMobile ? 0.5 : 0.4;
+          const sourceRect = char.getBoundingClientRect();
+          const targetRect = target.getBoundingClientRect();
+          if (!sourceRect.height || !targetRect.height) return isMobile ? 0.5 : 0.4;
+          return gsap.utils.clamp(0.16, 0.56, targetRect.height / sourceRect.height);
+        },
+        opacity: headerBrandChars.length ? 0.82 : 0,
+        rotationX: (index) => gsap.utils.random(-10, 10) + (index % 2 === 0 ? -8 : 8),
+        rotationY: (index) => gsap.utils.random(-18, 18),
+        rotationZ: (index) => (index - bgChars.length / 2) * (isMobile ? 0.45 : 0.28),
+        transformPerspective: 900,
+        transformOrigin: 'center center',
+        ease: 'power3.inOut',
+        stagger: { amount: isMobile ? 0.24 : 0.44, from: 'center' },
+      };
+
+      const bgHoverChars = bgChars.map((char) => {
         char.style.display = 'inline-block';
         char.style.willChange = 'transform, opacity';
+        char.style.transformStyle = 'preserve-3d';
+
+        let inner = char.querySelector(':scope > .hero-bg-letter-hover');
+        if (!inner) {
+          inner = document.createElement('span');
+          inner.className = 'hero-bg-letter-hover';
+          while (char.firstChild) {
+            inner.appendChild(char.firstChild);
+          }
+          char.appendChild(inner);
+        }
+
+        return inner;
       });
+
+      // Mouse micro-shift lives on the inner span so it never fights ScrollTrigger.
+      handleBgMouseMove = (e) => {
+        latestMouse = { x: e.clientX, y: e.clientY };
+        if (mouseRaf) return;
+
+        mouseRaf = requestAnimationFrame(() => {
+          mouseRaf = null;
+          if (!latestMouse) return;
+
+          const heroRect = heroSection.getBoundingClientRect();
+          const mouseX = latestMouse.x - heroRect.left;
+          const mouseY = latestMouse.y - heroRect.top;
+          const influenceRadius = Math.min(Math.max(heroRect.width * 0.18, 170), 320);
+
+          bgChars.forEach((char, index) => {
+            const charRect = char.getBoundingClientRect();
+            const charCenterX = charRect.left + charRect.width / 2 - heroRect.left;
+            const charCenterY = charRect.top + charRect.height / 2 - heroRect.top;
+            const dx = charCenterX - mouseX;
+            const dy = charCenterY - mouseY;
+            const distance = Math.hypot(dx, dy);
+            const strength = Math.max(0, 1 - distance / influenceRadius);
+            const directionX = distance ? dx / distance : 0;
+            const directionY = distance ? dy / distance : 0;
+            const target = bgHoverChars[index];
+
+            gsap.to(target, {
+              x: directionX * strength * 18,
+              y: directionY * strength * 9,
+              rotationZ: -directionX * strength * 3.5,
+              duration: 0.28,
+              ease: 'power3.out',
+              overwrite: 'auto',
+            });
+          });
+        });
+      };
+      handleBgMouseLeave = () => {
+        if (mouseRaf) cancelAnimationFrame(mouseRaf);
+        mouseRaf = null;
+        latestMouse = null;
+        bgHoverChars.forEach((char) => {
+          gsap.to(char, {
+            x: 0,
+            y: 0,
+            rotationZ: 0,
+            duration: 0.55,
+            ease: 'elastic.out(1, 0.55)',
+            overwrite: 'auto',
+          });
+        });
+      };
+      heroSection.addEventListener('mousemove', handleBgMouseMove);
+      heroSection.addEventListener('mouseleave', handleBgMouseLeave);
 
       // Split the h1
       let h1Chars = null;
@@ -817,11 +1030,10 @@ export default function ModernSite({ onSwitchToTerminal }) {
 
       ctx = gsap.context(() => {
         if (isMobile) {
-          // Mobile: simple fade-in, no pin, no ScrollTrigger
-          const tl = gsap.timeline({ delay: 0.2 });
+          const introTl = gsap.timeline({ delay: 0.2 });
 
           if (h1Chars && h1Chars.length > 0) {
-            tl.from(h1Chars, {
+            introTl.from(h1Chars, {
               opacity: 0, y: 30, scale: 1.05,
               transformOrigin: 'center center',
               ease: 'power2.out',
@@ -830,22 +1042,45 @@ export default function ModernSite({ onSwitchToTerminal }) {
           }
 
           if (subChars && subChars.length > 0) {
-            tl.from(subChars, {
+            introTl.from(subChars, {
               opacity: 0, y: 20,
               ease: 'power2.out',
               stagger: { amount: 0.2, from: 'start' },
             }, 0.15);
           }
 
-          tl.to(bgChars, {
-            opacity: 0, x: -60, rotationY: -20, scale: 0.6,
-            transformPerspective: 600, transformOrigin: 'left center',
-            ease: 'power2.in',
-            stagger: { amount: 0.3, from: 'end' },
-          }, 0.2);
+          const transferTl = gsap.timeline({
+            scrollTrigger: {
+              trigger: heroSection,
+              scroller,
+              start: 'top top',
+              end: 'bottom 45%',
+              scrub: 0.45,
+              invalidateOnRefresh: true,
+            },
+          });
 
-          tl.eventCallback('onComplete', () => {
-            bgChars.forEach((char) => { char.style.willChange = 'auto'; });
+          transferTl.to(bgChars, transferToHeaderVars, 0);
+
+          if (headerBrandChars.length) {
+            transferTl.to(bgChars, {
+              opacity: 0,
+              filter: 'blur(4px)',
+              duration: 0.16,
+              ease: 'power2.in',
+              stagger: { amount: 0.08, from: 'center' },
+            }, 0.78);
+
+            transferTl.to(headerBrandChars, {
+              opacity: 1,
+              filter: 'blur(0px)',
+              duration: 0.18,
+              ease: 'power2.out',
+              stagger: { amount: 0.08, from: 'center' },
+            }, 0.76);
+          }
+
+          introTl.eventCallback('onComplete', () => {
             if (h1Chars) h1Chars.forEach((char) => { char.style.willChange = 'auto'; });
             if (subChars) subChars.forEach((char) => { char.style.willChange = 'auto'; });
           });
@@ -859,6 +1094,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
               end: '+=200%',
               pin: true,
               scrub: 0.5,
+              invalidateOnRefresh: true,
               snap: {
                 snapTo: [0, 0.5, 1],
                 duration: 0.35,
@@ -893,13 +1129,26 @@ export default function ModernSite({ onSwitchToTerminal }) {
             }, 0.1);
           }
 
-          // "BACK SOFTWARE" sweeps away right-to-left in 3D
-          tl.to(bgChars, {
-            opacity: 0, x: -200, rotationY: -55, scale: 0.4,
-            transformPerspective: 600, transformOrigin: 'left center',
-            ease: 'power2.in',
-            stagger: { amount: 0.4, from: 'end' },
-          }, 0.35);
+          // "BACK SOFTWARE" migrates into the header watermark letter by letter.
+          tl.to(bgChars, transferToHeaderVars, 0.35);
+
+          if (headerBrandChars.length) {
+            tl.to(bgChars, {
+              opacity: 0,
+              filter: 'blur(4px)',
+              duration: 0.12,
+              ease: 'power2.in',
+              stagger: { amount: 0.08, from: 'center' },
+            }, 0.86);
+
+            tl.to(headerBrandChars, {
+              opacity: 1,
+              filter: 'blur(0px)',
+              duration: 0.16,
+              ease: 'power2.out',
+              stagger: { amount: 0.08, from: 'center' },
+            }, 0.84);
+          }
 
           ScrollTrigger.create({
             trigger: heroSection,
@@ -908,6 +1157,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
             end: '+=200%',
             onLeave: () => {
               bgChars.forEach((char) => { char.style.willChange = 'auto'; });
+              headerBrandChars.forEach((char) => { char.style.willChange = 'auto'; });
               if (h1Chars) h1Chars.forEach((char) => { char.style.willChange = 'auto'; });
               if (subChars) subChars.forEach((char) => { char.style.willChange = 'auto'; });
             },
@@ -919,8 +1169,16 @@ export default function ModernSite({ onSwitchToTerminal }) {
     return () => {
       destroyed = true;
       clearTimeout(timeout);
+      if (heroSection) {
+        if (handleBgMouseMove) heroSection.removeEventListener('mousemove', handleBgMouseMove);
+        if (handleBgMouseLeave) heroSection.removeEventListener('mouseleave', handleBgMouseLeave);
+      }
+      if (mouseRaf) cancelAnimationFrame(mouseRaf);
       if (ctx) ctx.revert();
+      if (bgSplit?.chars) gsap.killTweensOf(bgSplit.chars);
+      if (headerBrandSplit?.chars) gsap.killTweensOf(headerBrandSplit.chars);
       if (bgSplit) bgSplit.revert();
+      if (headerBrandSplit) headerBrandSplit.revert();
       if (h1Split) h1Split.revert();
       if (subSplit) subSplit.revert();
     };
@@ -1525,9 +1783,9 @@ export default function ModernSite({ onSwitchToTerminal }) {
             ref={headerRefMobile}
             className="flex items-center justify-between gap-2 py-1 px-2.5 rounded-[1.5rem] pointer-events-auto relative overflow-visible"
             style={{
-              background: 'linear-gradient(145deg, rgba(248, 245, 239, 0.95) 0%, rgba(242, 237, 228, 0.92) 100%)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
+              background: 'linear-gradient(145deg, rgba(248, 245, 239, 0.70) 0%, rgba(242, 237, 228, 0.60) 100%)',
+              backdropFilter: 'blur(24px)',
+              WebkitBackdropFilter: 'blur(24px)',
               boxShadow: '0 2px 12px rgba(60, 48, 34, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6)'
             }}
           >
@@ -1564,7 +1822,13 @@ fill={orbitColorMobile}
 
             {/* Giant watermark behind mobile header — full-height immersive */}
             <span className="absolute inset-0 flex items-center pointer-events-none select-none overflow-hidden" aria-hidden="true" style={{ padding: '0 40% 0 3%' }}>
-              <span className="text-[6vw] font-black tracking-tighter leading-[0.8] whitespace-nowrap text-[#2d2818]/[0.16]" style={{ transform: 'scaleY(1.2) translateX(-2%)' }}>{t('nav.brandName').toUpperCase()}</span>
+              <span
+                ref={headerBrandMobileRef}
+                className="header-brand-transfer-target text-[6vw] font-black tracking-tighter leading-[0.8] whitespace-nowrap text-[#2d2818]/[0.128]"
+                style={{ opacity: 0, transform: 'scaleY(1.2) scaleX(0.90) translateX(-6%)' }}
+              >
+                {t('nav.brandName').toUpperCase()}
+              </span>
             </span>
 
             {/* Logo Mobile */}
@@ -1577,9 +1841,9 @@ fill={orbitColorMobile}
               <LanguageSwitcher />
               <button 
                 onClick={onSwitchToTerminal}
-                className="w-7 h-7 flex items-center justify-center rounded-full text-[#746a57] bg-[#f8f4ec] border border-[#dbd3c6]/70 active:scale-95 transition-transform"
+                className="grid place-items-center w-7 h-7 rounded-full text-[#746a57] bg-[#f8f4ec] border border-[#dbd3c6]/70 active:scale-95 transition-transform"
               >
-                <span className="text-[10px]" aria-label="Apri arcade retro">🎮</span>
+                <span className="text-[10px] leading-none -translate-y-[1px]" aria-label="Apri arcade retro">🎮</span>
               </button>
               <ShinyButton
                 href="#contatti"
@@ -1599,9 +1863,9 @@ fill={orbitColorMobile}
           ref={headerRefDesktop}
           className="hidden sm:flex max-w-6xl mx-auto mt-5 items-center justify-between gap-3 py-2.5 px-4 lg:px-5 rounded-2xl lg:rounded-[1.75rem] pointer-events-auto relative"
           style={{
-            background: 'linear-gradient(145deg, rgba(248, 245, 239, 0.58) 0%, rgba(242, 237, 228, 0.46) 100%)',
-            backdropFilter: 'blur(24px) saturate(150%)',
-            WebkitBackdropFilter: 'blur(24px) saturate(150%)',
+            background: 'linear-gradient(145deg, rgba(248, 245, 239, 0.30) 0%, rgba(242, 237, 228, 0.20) 100%)',
+            backdropFilter: 'blur(32px) saturate(120%)',
+            WebkitBackdropFilter: 'blur(32px) saturate(120%)',
             border: '1px solid rgba(255, 255, 255, 0.28)',
             boxShadow: `
               0 4px 16px rgba(60, 48, 34, 0.1),
@@ -1648,7 +1912,13 @@ fill={orbitColorMobile}
 
           {/* Giant watermark behind desktop header — full-height immersive */}
           <span className="absolute inset-0 flex items-center pointer-events-none select-none overflow-hidden" aria-hidden="true" style={{ padding: '0 45% 0 3%' }}>
-            <span className="text-[3.8rem] lg:text-[4.6rem] xl:text-[5.2rem] font-black tracking-tighter leading-[0.78] whitespace-nowrap text-[#2d2818]/[0.16]" style={{ transform: 'scaleY(1.22) translateX(-1%)' }}>{t('nav.brandName').toUpperCase()}</span>
+            <span
+              ref={headerBrandDesktopRef}
+              className="header-brand-transfer-target text-[3.8rem] lg:text-[4.6rem] xl:text-[5.2rem] font-black tracking-tighter leading-[0.78] whitespace-nowrap text-[#2d2818]/[0.128]"
+              style={{ opacity: 0, transform: 'scaleY(1.22) scaleX(0.90) translateX(-5%)' }}
+            >
+              {t('nav.brandName').toUpperCase()}
+            </span>
           </span>
 
           {/* Logo Desktop */}
@@ -1660,7 +1930,7 @@ fill={orbitColorMobile}
 
           {/* Navigation Desktop */}
           <div className="flex items-center gap-3 shrink-0 relative z-10">
-            <div className="hidden md:flex items-center gap-1 rounded-full bg-[#f8f4ec] p-1 border border-[#d8d0c1]">
+            <div className="hidden md:flex items-center gap-1 rounded-full bg-[#f8f4ec]/30 backdrop-blur-sm p-1 border border-[#d8d0c1]/50">
               {[
                 { label: t('nav.services'), href: '#servizi' },
                 { label: t('nav.projects'), href: '#progetti' },
@@ -1680,10 +1950,10 @@ fill={orbitColorMobile}
 
             <button 
               onClick={onSwitchToTerminal}
-              className="w-8 h-8 flex items-center justify-center rounded-full text-[#746a57] hover:text-[#3d3528] bg-[#f8f4ec] border border-[#dbd3c6]/70 hover:bg-[#f1e9dc] transition-all active:scale-95"
+              className="grid place-items-center w-8 h-8 rounded-full text-[#746a57] hover:text-[#3d3528] bg-[#f8f4ec] border border-[#dbd3c6]/70 hover:bg-[#f1e9dc] transition-all active:scale-95 text-xs"
               aria-label={t('nav.arcade')}
             >
-              🎮
+              <span className="leading-none -translate-y-[1px]">🎮</span>
             </button>
             
             <ShinyButton
@@ -1758,20 +2028,44 @@ fill={orbitColorMobile}
       </motion.section>
 
       {/* ── DARK SECTION: Why Us ── */}
-      <motion.section id="come-lavoriamo" data-dark-section variants={itemVariants} className="modern-snap-section snap-scroll-inner flex flex-col justify-start relative px-4 sm:px-6 lg:px-10 pt-20 sm:pt-24 pb-12 sm:py-20" style={{
-        background: 'linear-gradient(160deg, #3d2820 0%, #2a1e16 40%, #352218 100%)',
-      }}>
-        {/* Warm clay ambient — rich inner glow */}
+      <motion.section
+        id="come-lavoriamo"
+        data-dark-section
+        variants={itemVariants}
+        className="modern-snap-section snap-scroll-inner relative flex flex-col justify-start overflow-hidden px-4 sm:px-6 lg:px-10 pt-20 sm:pt-24 pb-12 sm:py-20"
+        style={{
+          background: 'linear-gradient(160deg, #080c14 0%, #0a0f1c 40%, #05070a 100%)',
+        }}
+        onMouseMove={(e) => {
+          const rect = e.currentTarget.getBoundingClientRect();
+          setSpotlightPos({
+            x: ((e.clientX - rect.left) / rect.width) * 100,
+            y: ((e.clientY - rect.top) / rect.height) * 100,
+          });
+        }}
+      >
+        {/* Interactive mouse background */}
+        <InteractiveBackground />
+
+        {/* Mouse-following spotlight overlay */}
+        <div
+          className="absolute inset-0 pointer-events-none transition-all duration-700 ease-out"
+          style={{
+            background: `radial-gradient(900px circle at ${spotlightPos.x}% ${spotlightPos.y}%, ${spotlightColor}, transparent 50%)`,
+          }}
+        />
+
+        {/* Cool ambient glow */}
         <div className="absolute inset-0 pointer-events-none" style={{
-          background: 'radial-gradient(ellipse 120% 80% at 50% 50%, rgba(196,167,108,0.08) 0%, transparent 70%)',
+          background: 'radial-gradient(ellipse 120% 80% at 50% 50%, rgba(34,211,238,0.08) 0%, transparent 70%)',
         }} />
         {/* Subtle texture */}
         <div className="absolute inset-0 opacity-[0.02]" style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
           backgroundSize: '256px 256px',
         }} />
-        {/* Ambient warm glow - hidden on mobile */}
-        <div className="hidden sm:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[60%] rounded-full opacity-[0.07] pointer-events-none" style={{ background: 'radial-gradient(ellipse, #d4a45a 0%, transparent 70%)' }} />
+        {/* Ambient cool glow - hidden on mobile */}
+        <div className="hidden sm:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[60%] rounded-full opacity-[0.07] pointer-events-none" style={{ background: 'radial-gradient(ellipse, #22d3ee 0%, transparent 70%)' }} />
 
         <div className="relative z-10 max-w-6xl mx-auto w-full">
           <motion.div variants={itemVariants} className="mb-4 sm:mb-12 space-y-2 sm:space-y-4">
@@ -1783,33 +2077,13 @@ fill={orbitColorMobile}
             </motion.p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-6 lg:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 lg:gap-10">
             {[
-              { num: '01', title: t('whyUs.cards.01.title'), desc: t('whyUs.cards.01.desc') },
-              { num: '02', title: t('whyUs.cards.02.title'), desc: t('whyUs.cards.02.desc') },
-              { num: '03', title: t('whyUs.cards.03.title'), desc: t('whyUs.cards.03.desc') }
+              { num: '01', title: t('whyUs.cards.01.title'), desc: t('whyUs.cards.01.desc'), accent: '#22d3ee' },
+              { num: '02', title: t('whyUs.cards.02.title'), desc: t('whyUs.cards.02.desc'), accent: '#a78bfa' },
+              { num: '03', title: t('whyUs.cards.03.title'), desc: t('whyUs.cards.03.desc'), accent: '#fb923c' }
             ].map((item, i) => (
-              <motion.div key={i} variants={itemVariants}
-                className="clay-card-dark p-4 sm:p-8 lg:p-10 relative group">
-                <div className="glow-inner" />
-                {/* Warm top accent — claymorphism glow */}
-                <div className="absolute top-0 left-0 right-0 h-[1px] opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{
-                  background: 'linear-gradient(90deg, transparent 0%, rgba(212,164,90,0.5) 50%, transparent 100%)',
-                  boxShadow: '0 0 12px rgba(212,164,90,0.3)',
-                }} />
-                {/* Subtle inner highlight at top */}
-                <div className="absolute top-0 left-4 right-4 h-px opacity-30" style={{ background: 'linear-gradient(90deg, transparent, rgba(212,164,90,0.3), transparent)' }} />
-                {/* Large decorative number */}
-                <div className="relative z-10 text-4xl sm:text-7xl lg:text-8xl font-black mb-2 sm:mb-4 tracking-tighter select-none" style={{ color: '#d4a45a', opacity: 0.15, WebkitTextStroke: '1px rgba(212,164,90,0.2)' }}>
-                  {item.num}
-                </div>
-                <h3 className="relative z-10 text-base sm:text-xl lg:text-2xl font-black mb-1 sm:mb-3 tracking-tight text-[#f0e8dc] group-hover:text-[#ffffff] transition-colors duration-300">
-                  {item.title}
-                </h3>
-                <p className="relative z-10 text-xs sm:text-base leading-relaxed" style={{ color: '#a89880' }}>
-                  {item.desc}
-                </p>
-              </motion.div>
+              <TiltCard key={i} item={item} onCardHover={(color) => setSpotlightColor(color || 'rgba(34,211,238,0.10)')} />
             ))}
           </div>
         </div>
@@ -1827,8 +2101,6 @@ fill={orbitColorMobile}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
             {services.map((s, i) => (
               <motion.div key={i} variants={itemVariants}
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.98 }}
                 onClick={() => setSelectedService(s)}
                 className={`clay-card py-3 sm:py-5 px-4 sm:px-6 flex items-center gap-3 sm:gap-5 cursor-pointer group min-h-[72px] sm:min-h-[108px] ${s.span}`}>
                 <span className="w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center text-lg sm:text-xl clay-pill bg-[#f5f2ec] shadow-sm group-hover:scale-110 transition-transform shrink-0">{s.icon}</span>
@@ -1847,14 +2119,14 @@ fill={orbitColorMobile}
 
 {/* ── PROGETTI Section (DARK) ── */}
       <motion.section id="progetti" data-dark-section variants={itemVariants}
-        className="modern-snap-section snap-scroll-inner flex min-h-0 flex-col px-3 sm:px-6 lg:px-10 pt-20 pb-10 sm:pb-20"
+        className="modern-snap-section snap-scroll-inner relative flex min-h-0 flex-col px-3 sm:px-6 lg:px-10 pt-20 pb-10 sm:pb-20 overflow-hidden"
         style={{
-          background: 'linear-gradient(160deg, #3d2820 0%, #2a1e16 40%, #352218 100%)',
+          background: 'linear-gradient(160deg, #080c14 0%, #0a0f1c 40%, #05070a 100%)',
         }}
       >
-        {/* Warm clay ambient glow */}
+        {/* Cool ambient glow */}
         <div className="absolute inset-0 pointer-events-none" style={{
-          background: 'radial-gradient(ellipse 100% 70% at 50% 60%, rgba(196,167,108,0.08) 0%, transparent 70%)',
+          background: 'radial-gradient(ellipse 100% 70% at 50% 60%, rgba(34,211,238,0.06) 0%, transparent 70%)',
         }} />
         {/* Subtle noise texture */}
         <div className="absolute inset-0 opacity-[0.02]" style={{
@@ -1862,18 +2134,8 @@ fill={orbitColorMobile}
           backgroundSize: '256px 256px',
         }} />
         
-        {/* Header */}
-        <div className="relative z-10 max-w-6xl mx-auto w-full shrink-0">
-          <motion.div variants={itemVariants} className="space-y-2 sm:space-y-4 lg:max-w-2xl mb-4 sm:mb-10 lg:mb-12">
-            <motion.h2 className={`${sectionTitleClass} text-[#f0e8dc]`}>{t('projects.title')}</motion.h2>
-            <motion.p className="text-sm sm:text-lg font-medium" style={{ color: '#a89880' }}>
-              {t('projects.subtitle', { count: projects.length })}
-            </motion.p>
-          </motion.div>
-        </div>
-
-        {/* 3D Carousel */}
-        <div className="relative z-10 max-w-6xl mx-auto w-full flex-1 min-h-0 flex items-center">
+        {/* Project ring gallery */}
+        <div className="relative z-10 max-w-6xl mx-auto w-full flex-1 min-h-0">
           <ProjectGallery3D projects={projects} t={t} />
         </div>
       </motion.section>

@@ -1,23 +1,10 @@
-'use client';
+import { locales } from '../../lib/i18n';
+import HomePageWrapper from '../../components/HomePageWrapper';
 
-import { useState } from 'react';
-import dynamic from 'next/dynamic';
-import ModernSite from '../../components/ModernSite';
-
-const TerminalExperience = dynamic(
-  () => import('../../components/TerminalExperience'),
-  { ssr: false }
-);
+export function generateStaticParams() {
+  return locales.map((locale) => ({ locale }));
+}
 
 export default function HomePage() {
-  const [showTerminal, setShowTerminal] = useState(false);
-
-  return (
-    <>
-      <ModernSite onSwitchToTerminal={() => setShowTerminal(true)} />
-      {showTerminal && (
-        <TerminalExperience onSwitchToModern={() => setShowTerminal(false)} />
-      )}
-    </>
-  );
+  return <HomePageWrapper />;
 }

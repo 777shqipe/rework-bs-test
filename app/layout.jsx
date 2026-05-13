@@ -36,28 +36,20 @@ export const metadata = {
   },
 };
 
-// Inline script run BEFORE hydration to set <html lang> from the pathname.
-// With `output: 'export'`, the root layout cannot know the locale at SSG time
-// (the [locale] segment is below it), so the static HTML always ships lang="it".
-// This script corrects lang the instant the page loads, well before React hydrates.
-const SYNC_LANG_SCRIPT = `(function(){try{var m=location.pathname.match(/^\\/(it|en|es|fr)(?:\\/|$)/);if(m){document.documentElement.lang=m[1];}}catch(e){}})();`;
-
 export default function RootLayout({ children }) {
   return (
     <html lang="it" suppressHydrationWarning>
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: SYNC_LANG_SCRIPT }} />
-      </head>
-      <Script strategy="afterInteractive" src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_ID || 'G-XXXXXXXXXX'}`} />
-      <Script id="gtag-init" strategy="afterInteractive">
-        {`
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-          gtag('config', '${process.env.NEXT_PUBLIC_GA_ID || 'G-XXXXXXXXXX'}');
-        `}
-      </Script>
       <body className={`${inter.className} ${vt323.className} ${shareTechMono.className}`} suppressHydrationWarning>
+        <Script src="/sync-lang.js" strategy="beforeInteractive" />
+        <Script strategy="afterInteractive" src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_ID || 'G-XXXXXXXXXX'}`} />
+        <Script id="gtag-init" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${process.env.NEXT_PUBLIC_GA_ID || 'G-XXXXXXXXXX'}');
+          `}
+        </Script>
         {children}
       </body>
     </html>
