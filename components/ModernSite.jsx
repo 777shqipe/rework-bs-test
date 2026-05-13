@@ -198,7 +198,9 @@ export default function ModernSite({ onSwitchToTerminal }) {
   const [isMockupMode, setIsMockupMode] = useState(false);
   const contactSectionRef = useRef(null);
   const footerCardRef = useRef(null);
-  const footerTextRef = useRef(null);
+  const footerOrbitSvgRef = useRef(null);
+  const footerOrbitRef1 = useRef(null);
+  const footerOrbitRef2 = useRef(null);
   const footerTitleRef = useRef(null);
   const footerContentRef = useRef(null);
   const footerDescRef = useRef(null);
@@ -211,30 +213,23 @@ export default function ModernSite({ onSwitchToTerminal }) {
   const scrollContainerRef = useRef(null);
   const [headerVisible, setHeaderVisible] = useState(false);
 
-  // Orbiting text around header — pixel-perfect (mobile & desktop refs)
-  const headerRefMobile = useRef(null);
-  const headerRefDesktop = useRef(null);
+  // Header logo transfer targets, used by the hero scroll animation.
   const headerBrandMobileRef = useRef(null);
   const headerBrandDesktopRef = useRef(null);
-  const orbitSvgRefMobile = useRef(null);
-  const orbitSvgRefDesktop = useRef(null);
-  const orbitRef1Mobile = useRef(null);
-  const orbitRef1Desktop = useRef(null);
-  const orbitRef2Mobile = useRef(null);
-  const orbitRef2Desktop = useRef(null);
-  const [headerPathMobile, setHeaderPathMobile] = useState('');
-  const [headerPathDesktop, setHeaderPathDesktop] = useState('');
-  const [orbitTextMobile, setOrbitTextMobile] = useState('');
-  const [orbitTextDesktop, setOrbitTextDesktop] = useState('');
-  const [pathLenMobile, setPathLenMobile] = useState(0);
-  const [pathLenDesktop, setPathLenDesktop] = useState(0);
+  const [footerOrbitPath, setFooterOrbitPath] = useState('');
+  const [footerOrbitText, setFooterOrbitText] = useState('');
+  const [footerOrbitPathLen, setFooterOrbitPathLen] = useState(0);
+  const [footerOrbitBox, setFooterOrbitBox] = useState({ width: 1, height: 1 });
+  const [footerOrbitMetrics, setFooterOrbitMetrics] = useState({
+    fontSize: 7,
+    letterSpacing: 0.75,
+    opacity: 0.3,
+  });
   const [isDesktopView, setIsDesktopView] = useState(false);
   const [spotlightPos, setSpotlightPos] = useState({ x: 50, y: 50 });
   const [spotlightColor, setSpotlightColor] = useState('rgba(34,211,238,0.10)');
-  const ORBIT_TOKEN = 'BACK SOFTWARE \u2022 ';
-  const DESKTOP_ORBIT_FONT_SIZE = 8;
-  const DESKTOP_ORBIT_LETTER_SPACING = 1.2;
-  const DESKTOP_ORBIT_SPEED = 16.8;
+  const FOOTER_ORBIT_TOKEN = 'BACK SOFTWARE \u2022 ';
+  const FOOTER_ORBIT_SPEED = 16.8;
 
   useEffect(() => {
     const media = window.matchMedia('(min-width: 640px)');
@@ -260,75 +255,30 @@ export default function ModernSite({ onSwitchToTerminal }) {
   }, []);
 
   useEffect(() => {
-    const recalcMobile = () => {
-      const el = headerRefMobile.current;
-      const svg = orbitSvgRefMobile.current;
-      if (!el || !svg) return;
+    const recalcFooterOrbit = () => {
+      const el = footerCardRef.current;
+      if (!el || !footerOrbitSvgRef.current) return;
 
       const w = el.clientWidth;
       const h = el.clientHeight;
-      const r = Math.min(h / 2, 16);
-      const pad = 12;
-      const left = -pad;
-      const right = w + pad;
-      const top = -pad;
-      const bottom = h + pad;
-      const rr = Math.min(r + pad, h / 2 + pad);
+      if (!w || !h) return;
 
-      const startX = (left + right) / 2;
-      const path = [
-        `M ${startX} ${top}`,
-        `H ${right - rr}`,
-        `A ${rr} ${rr} 0 0 1 ${right} ${top + rr}`,
-        `V ${bottom - rr}`,
-        `A ${rr} ${rr} 0 0 1 ${right - rr} ${bottom}`,
-        `H ${left + rr}`,
-        `A ${rr} ${rr} 0 0 1 ${left} ${bottom - rr}`,
-        `V ${top + rr}`,
-        `A ${rr} ${rr} 0 0 1 ${left + rr} ${top}`,
-        `H ${startX}`,
-        'Z',
-      ].join(' ');
-
-      setHeaderPathMobile(path);
-
-      const pathWidth = right - left;
-      const pathHeight = bottom - top;
-      const straight = 2 * (pathWidth + pathHeight - rr * 4);
-      const curved = 2 * Math.PI * rr;
-      const perimeter = straight + curved;
-      setPathLenMobile(perimeter);
-
-      const measureContext = document.createElement('canvas').getContext('2d');
-      let tokenWidth = 54;
-      if (measureContext) {
-        measureContext.font = `700 6px sans-serif`;
-        tokenWidth = measureContext.measureText(ORBIT_TOKEN).width;
-      }
-
-      const reps = Math.max(2, Math.round(perimeter / tokenWidth));
-      setOrbitTextMobile(Array(reps).fill(ORBIT_TOKEN).join(''));
-    };
-
-    const recalcDesktop = () => {
-      const el = headerRefDesktop.current;
-      if (!el) return;
-
-      const w = el.clientWidth;
-      const h = el.clientHeight;
       const computed = window.getComputedStyle(el);
-      const baseRadius = parseFloat(computed.borderTopLeftRadius) || Math.min(h / 2, 28);
-      const orbitInset = 6;
-      const left = -orbitInset;
-      const right = w + orbitInset;
-      const top = -orbitInset;
-      const bottom = h + orbitInset;
+      const baseRadius = parseFloat(computed.borderTopLeftRadius) || Math.min(w, h) * 0.08;
+      const compact = w < 640;
+      const fontSize = compact ? 6.6 : 8.4;
+      const letterSpacing = compact ? 0.55 : 1.05;
+      const orbitInset = compact ? 8 : 12;
+      const left = orbitInset;
+      const right = w - orbitInset;
+      const top = orbitInset;
+      const bottom = h - orbitInset;
       const rr = Math.max(
         0,
         Math.min(
-          baseRadius + orbitInset,
-          (w + orbitInset * 2) / 2,
-          (h + orbitInset * 2) / 2,
+          baseRadius - orbitInset,
+          (right - left) / 2,
+          (bottom - top) / 2,
         ),
       );
 
@@ -347,88 +297,66 @@ export default function ModernSite({ onSwitchToTerminal }) {
         'Z',
       ].join(' ');
 
-      setHeaderPathDesktop(path);
-
-      const pathWidth = w + orbitInset * 2;
-      const pathHeight = h + orbitInset * 2;
+      const pathWidth = right - left;
+      const pathHeight = bottom - top;
       const straight = 2 * (pathWidth + pathHeight - rr * 4);
       const curved = 2 * Math.PI * rr;
       const perimeter = straight + curved;
-      setPathLenDesktop(perimeter);
 
       const measureContext = document.createElement('canvas').getContext('2d');
-      let tokenWidth = 80;
+      let tokenWidth = compact ? 64 : 92;
       if (measureContext) {
-        measureContext.font = `800 ${DESKTOP_ORBIT_FONT_SIZE}px sans-serif`;
-        const baseWidth = measureContext.measureText(ORBIT_TOKEN).width;
-        const trackingWidth = DESKTOP_ORBIT_LETTER_SPACING * Math.max(0, ORBIT_TOKEN.length - 1);
+        measureContext.font = `800 ${fontSize}px Inter, system-ui, sans-serif`;
+        const baseWidth = measureContext.measureText(FOOTER_ORBIT_TOKEN).width;
+        const trackingWidth = letterSpacing * Math.max(0, FOOTER_ORBIT_TOKEN.length - 1);
         tokenWidth = baseWidth + trackingWidth;
       }
 
-      const reps = Math.max(2, Math.round(perimeter / tokenWidth));
-      setOrbitTextDesktop(Array(reps).fill(ORBIT_TOKEN).join(''));
-    };
+      const floorReps = Math.max(2, Math.floor(perimeter / tokenWidth));
+      const ceilReps = Math.max(2, Math.ceil(perimeter / tokenWidth));
+      const reps = [floorReps, ceilReps].reduce((best, candidate) => {
+        const bestDelta = Math.abs(perimeter - best * tokenWidth);
+        const candidateDelta = Math.abs(perimeter - candidate * tokenWidth);
+        return candidateDelta < bestDelta ? candidate : best;
+      }, floorReps);
 
-    recalcMobile();
-    recalcDesktop();
-    
-    const ro = new ResizeObserver(() => {
-      recalcMobile();
-      recalcDesktop();
-    });
-    
-    if (headerRefMobile.current) ro.observe(headerRefMobile.current);
-    if (headerRefDesktop.current) ro.observe(headerRefDesktop.current);
-    
-    return () => ro.disconnect();
-  }, []);
-
-  // Detect dark/light background under header
-  const [orbitOnDark, setOrbitOnDark] = useState(false);
-
-  useEffect(() => {
-    const check = () => {
-      const headerDesktop = headerRefDesktop.current;
-      const headerMobile = headerRefMobile.current;
-      
-      const header = headerDesktop || headerMobile;
-      if (!header) return;
-      
-      const rect = header.getBoundingClientRect();
-      const mid = rect.top + rect.height / 2;
-      const darkSections = document.querySelectorAll('[data-dark-section]');
-      let inDark = false;
-      darkSections.forEach((sec) => {
-        const r = sec.getBoundingClientRect();
-        if (r.top <= mid && r.bottom >= mid) inDark = true;
+      setFooterOrbitPath(path);
+      setFooterOrbitBox({ width: w, height: h });
+      setFooterOrbitPathLen(perimeter);
+      setFooterOrbitText(Array(reps).fill(FOOTER_ORBIT_TOKEN).join(''));
+      setFooterOrbitMetrics({
+        fontSize,
+        letterSpacing,
+        opacity: compact ? 0.26 : 0.31,
       });
-      setOrbitOnDark(inDark);
     };
-    check();
-    const scroller = document.querySelector('.modern-snap-container');
-    if (scroller) scroller.addEventListener('scroll', check, { passive: true });
-    window.addEventListener('resize', check);
+
+    recalcFooterOrbit();
+
+    const ro = new ResizeObserver(recalcFooterOrbit);
+    if (footerCardRef.current) ro.observe(footerCardRef.current);
+
+    window.addEventListener('resize', recalcFooterOrbit);
     return () => {
-      if (scroller) scroller.removeEventListener('scroll', check);
-      window.removeEventListener('resize', check);
+      ro.disconnect();
+      window.removeEventListener('resize', recalcFooterOrbit);
     };
-  }, []);
+  }, [showFooter]);
 
-  // Animate orbiting text - mobile only in mobile viewport
   useEffect(() => {
-    if (isDesktopView || pathLenMobile <= 0) return;
+    if (footerOrbitPathLen <= 0) return;
 
-    let mobileOffset = 0;
+    let offset = 0;
     let raf;
     let lastTs = performance.now();
-    const MOBILE_SPEED = 14;
+    const speed = isDesktopView ? FOOTER_ORBIT_SPEED : 13.5;
 
     const step = (ts) => {
       const dt = Math.min(0.05, (ts - lastTs) / 1000);
       lastTs = ts;
-      mobileOffset = (mobileOffset + MOBILE_SPEED * dt) % pathLenMobile;
-      if (orbitRef1Mobile.current) orbitRef1Mobile.current.setAttribute('startOffset', mobileOffset);
-      if (orbitRef2Mobile.current) orbitRef2Mobile.current.setAttribute('startOffset', mobileOffset - pathLenMobile);
+      offset = (offset + speed * dt) % footerOrbitPathLen;
+      if (footerOrbitRef1.current) footerOrbitRef1.current.setAttribute('startOffset', offset);
+      if (footerOrbitRef2.current) footerOrbitRef2.current.setAttribute('startOffset', offset - footerOrbitPathLen);
       raf = requestAnimationFrame(step);
     };
 
@@ -438,37 +366,7 @@ export default function ModernSite({ onSwitchToTerminal }) {
     });
 
     return () => cancelAnimationFrame(raf);
-  }, [isDesktopView, pathLenMobile]);
-
-  // Animate orbiting text - desktop only in desktop viewport
-  useEffect(() => {
-    if (!isDesktopView || pathLenDesktop <= 0) return;
-
-    let desktopOffset = 0;
-    let raf;
-    let lastTs = performance.now();
-
-    const step = (ts) => {
-      const dt = Math.min(0.05, (ts - lastTs) / 1000);
-      lastTs = ts;
-      desktopOffset = (desktopOffset + DESKTOP_ORBIT_SPEED * dt) % pathLenDesktop;
-      if (orbitRef1Desktop.current) orbitRef1Desktop.current.setAttribute('startOffset', desktopOffset);
-      if (orbitRef2Desktop.current) orbitRef2Desktop.current.setAttribute('startOffset', desktopOffset - pathLenDesktop);
-
-      raf = requestAnimationFrame(step);
-    };
-
-    raf = requestAnimationFrame((ts) => {
-      lastTs = ts;
-      step(ts);
-    });
-
-    return () => cancelAnimationFrame(raf);
-  }, [isDesktopView, pathLenDesktop]);
-
-  // Orbit color: brownish on light, warm beige on dark
-  const orbitColor = orbitOnDark ? '#d4cabb' : '#5a5244';
-  const orbitColorMobile = orbitColor;
+  }, [footerOrbitPathLen, isDesktopView]);
 
   // Footer reveal on wheel in contact section
   useEffect(() => {
@@ -1777,10 +1675,9 @@ export default function ModernSite({ onSwitchToTerminal }) {
         style={{ pointerEvents: 'none' }}
       >
         <div style={{ opacity: headerVisible ? 1 : 0, transition: 'opacity 0.4s ease', pointerEvents: headerVisible ? 'auto' : 'none' }}>
-        {/* Mobile Header - Compact WITH animation */}
+        {/* Mobile Header - Compact */}
         <div className="sm:hidden mx-auto mt-8 w-[calc(100%-2.5rem)] max-w-md">
           <div 
-            ref={headerRefMobile}
             className="flex items-center justify-between gap-2 py-1 px-2.5 rounded-[1.5rem] pointer-events-auto relative overflow-visible"
             style={{
               background: 'linear-gradient(145deg, rgba(248, 245, 239, 0.70) 0%, rgba(242, 237, 228, 0.60) 100%)',
@@ -1789,37 +1686,6 @@ export default function ModernSite({ onSwitchToTerminal }) {
               boxShadow: '0 2px 12px rgba(60, 48, 34, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6)'
             }}
           >
-            {/* Orbiting text border - Mobile (small) */}
-            <svg
-              ref={orbitSvgRefMobile}
-              className="absolute inset-0 w-full h-full pointer-events-none overflow-visible"
-              style={{ zIndex: 0 }}
-              aria-hidden="true"
-            >
-              {headerPathMobile && (
-                <>
-                  <defs>
-                    <path id="header-orbit-path-mobile" d={headerPathMobile} fill="none" />
-                  </defs>
-                  {orbitTextMobile && (
-                    <>
-                      <text
-fill={orbitColorMobile}
-                      style={{ fontSize: '6px', fontWeight: 700, letterSpacing: '0', opacity: 0.32, transition: 'fill 0.4s ease', textRendering: 'geometricPrecision' }}
-                      >
-                        <textPath ref={orbitRef1Mobile} href="#header-orbit-path-mobile" startOffset="0" textLength={pathLenMobile} lengthAdjust="spacing">
-                          {orbitTextMobile}
-                        </textPath>
-                        <textPath ref={orbitRef2Mobile} href="#header-orbit-path-mobile" startOffset="0" textLength={pathLenMobile} lengthAdjust="spacing">
-                          {orbitTextMobile}
-                        </textPath>
-                      </text>
-                    </>
-                  )}
-                </>
-              )}
-            </svg>
-
             {/* Giant watermark behind mobile header — full-height immersive */}
             <span className="absolute inset-0 flex items-center pointer-events-none select-none overflow-hidden" aria-hidden="true" style={{ padding: '0 40% 0 3%' }}>
               <span
@@ -1858,9 +1724,8 @@ fill={orbitColorMobile}
           </div>
         </div>
 
-        {/* Desktop Header - With animation */}
+        {/* Desktop Header */}
         <div 
-          ref={headerRefDesktop}
           className="hidden sm:flex max-w-6xl mx-auto mt-5 items-center justify-between gap-3 py-2.5 px-4 lg:px-5 rounded-2xl lg:rounded-[1.75rem] pointer-events-auto relative"
           style={{
             background: 'linear-gradient(145deg, rgba(248, 245, 239, 0.30) 0%, rgba(242, 237, 228, 0.20) 100%)',
@@ -1874,42 +1739,6 @@ fill={orbitColorMobile}
             `
           }}
         >
-          {/* Orbiting text border - Desktop */}
-          <svg
-            ref={orbitSvgRefDesktop}
-            className="absolute inset-0 w-full h-full pointer-events-none overflow-visible"
-            style={{ zIndex: 0 }}
-            aria-hidden="true"
-          >
-            {headerPathDesktop && (
-              <>
-                <defs>
-                  <path id="header-orbit-path-desktop" d={headerPathDesktop} fill="none" />
-                </defs>
-                {orbitTextDesktop && (
-                  <>
-                    <text
-                      fill={orbitColor}
-                      style={{ fontSize: '8px', fontWeight: 800, letterSpacing: '1.2px', opacity: 0.35, transition: 'fill 0.4s ease', textRendering: 'geometricPrecision' }}
-                    >
-                      <textPath ref={orbitRef1Desktop} href="#header-orbit-path-desktop" startOffset="0" textLength={pathLenDesktop} lengthAdjust="spacing">
-                        {orbitTextDesktop}
-                      </textPath>
-                    </text>
-                    <text
-                      fill={orbitColor}
-                      style={{ fontSize: '8px', fontWeight: 800, letterSpacing: '1.2px', opacity: 0.35, transition: 'fill 0.4s ease', textRendering: 'geometricPrecision' }}
-                    >
-                      <textPath ref={orbitRef2Desktop} href="#header-orbit-path-desktop" startOffset="0" textLength={pathLenDesktop} lengthAdjust="spacing">
-                        {orbitTextDesktop}
-                      </textPath>
-                    </text>
-                  </>
-                )}
-              </>
-            )}
-          </svg>
-
           {/* Giant watermark behind desktop header — full-height immersive */}
           <span className="absolute inset-0 flex items-center pointer-events-none select-none overflow-hidden" aria-hidden="true" style={{ padding: '0 45% 0 3%' }}>
             <span
@@ -2198,6 +2027,50 @@ fill={orbitColorMobile}
               aria-hidden="true"
               className="pointer-events-none absolute inset-[1px] rounded-[30px] border border-[#cdbfa8]/55"
             />
+            <svg
+              ref={footerOrbitSvgRef}
+              viewBox={`0 0 ${footerOrbitBox.width} ${footerOrbitBox.height}`}
+              preserveAspectRatio="none"
+              className="pointer-events-none absolute inset-0 h-full w-full"
+              style={{ zIndex: 2 }}
+              aria-hidden="true"
+            >
+              {footerOrbitPath && footerOrbitText && footerOrbitPathLen > 0 && (
+                <>
+                  <defs>
+                    <path id="footer-orbit-path" d={footerOrbitPath} fill="none" />
+                  </defs>
+                  <text
+                    fill="#4f4637"
+                    style={{
+                      fontSize: `${footerOrbitMetrics.fontSize}px`,
+                      fontWeight: 800,
+                      letterSpacing: `${footerOrbitMetrics.letterSpacing}px`,
+                      opacity: footerOrbitMetrics.opacity,
+                      textRendering: 'geometricPrecision',
+                    }}
+                  >
+                    <textPath ref={footerOrbitRef1} href="#footer-orbit-path" startOffset="0" textLength={footerOrbitPathLen} lengthAdjust="spacing">
+                      {footerOrbitText}
+                    </textPath>
+                  </text>
+                  <text
+                    fill="#4f4637"
+                    style={{
+                      fontSize: `${footerOrbitMetrics.fontSize}px`,
+                      fontWeight: 800,
+                      letterSpacing: `${footerOrbitMetrics.letterSpacing}px`,
+                      opacity: footerOrbitMetrics.opacity,
+                      textRendering: 'geometricPrecision',
+                    }}
+                  >
+                    <textPath ref={footerOrbitRef2} href="#footer-orbit-path" startOffset="0" textLength={footerOrbitPathLen} lengthAdjust="spacing">
+                      {footerOrbitText}
+                    </textPath>
+                  </text>
+                </>
+              )}
+            </svg>
             <div
               aria-hidden="true"
               className={`pointer-events-none absolute inset-y-4 left-0 w-[2.5px] rounded-full transition-opacity duration-500 ${footerStrokeActive ? 'opacity-100' : 'opacity-62'}`}
@@ -2255,24 +2128,10 @@ fill={orbitColorMobile}
                 <path d="m6 6 12 12" />
               </svg>
             </button>
-            <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-5 sm:gap-8 lg:gap-14">
+            <div className="relative z-10 grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-5 sm:gap-8 lg:gap-14">
               <div className="flex flex-col sm:flex-row lg:flex-col items-start gap-3 sm:gap-4">
-                <div className="relative w-24 h-24 sm:w-32 sm:h-32 lg:w-40 lg:h-40 shrink-0">
-                  <motion.svg
-                    viewBox="0 0 200 200"
-                    className="w-full h-full"
-                    animate={{ rotate: 360 }}
-                    transition={{ repeat: Infinity, ease: 'linear', duration: 18 }}
-                  >
-                    <defs>
-                      <path id="modern-footer-circle-path" d="M100,100 m-78,0 a78,78 0 1,1 156,0 a78,78 0 1,1 -156,0" />
-                    </defs>
-<text fill="#4f4637" className="text-[12px] font-black tracking-[2px] uppercase" opacity={0.28}>
-                        <textPath ref={footerTextRef} href="#modern-footer-circle-path" startOffset="0%" textLength="490" lengthAdjust="spacing">
-backsoftware • backsoftware • backsoftware •
-                        </textPath>
-                      </text>
-                    </motion.svg>
+                <div className="relative grid w-24 h-24 sm:w-32 sm:h-32 lg:w-40 lg:h-40 shrink-0 place-items-center rounded-full border border-[#d4cfc5]/70 bg-[#f6f1e8]/70 shadow-[inset_5px_5px_12px_rgba(166,159,147,0.16),inset_-5px_-5px_12px_rgba(255,255,255,0.68)]">
+                  <div className="absolute inset-3 rounded-full border border-[#cdbfa8]/45" aria-hidden="true" />
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                       <span ref={footerTitleRef} className="text-[11px] sm:text-xs font-black tracking-[0.16em] uppercase text-[#2d2818] text-center leading-tight">
                         Back<br/>Software
